@@ -46,7 +46,7 @@ const ARScene = () => {
       document.head.appendChild(arScript);
     };
     document.head.appendChild(script);
-  }, []);
+  }, [isMounted]);
 
   // Renderiza a cena A-Frame quando os scripts carregarem
   useEffect(() => {
