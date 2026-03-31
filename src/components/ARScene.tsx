@@ -18,9 +18,16 @@ const ARScene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [aframeLoaded, setAframeLoaded] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // SSR Fix: só renderiza no client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Carrega o script do A-Frame dinamicamente
   useEffect(() => {
+    if (!isMounted) return;
     if (document.querySelector('script[src*="aframe"]')) {
       setAframeLoaded(true);
       return;
@@ -39,7 +46,7 @@ const ARScene = () => {
       document.head.appendChild(arScript);
     };
     document.head.appendChild(script);
-  }, []);
+  }, [isMounted]);
 
   // Renderiza a cena A-Frame quando os scripts carregarem
   useEffect(() => {
@@ -56,7 +63,7 @@ const ARScene = () => {
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
         renderer="logarithmicDepthBuffer: true; antialias: true;"
         vr-mode-ui="enabled: false"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
       >
         <!-- Luzes para iluminar o modelo 3D -->
         <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
@@ -105,10 +112,12 @@ const ARScene = () => {
     return () => clearTimeout(timer);
   }, [aframeLoaded]);
 
+  if (!isMounted) return null;
+
   return (
     <motion.div
       ref={containerRef}
-      className="fixed inset-0 z-40"
+      className="absolute inset-0 w-full h-full bg-transparent overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
