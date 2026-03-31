@@ -63,7 +63,7 @@ const ARScene = () => {
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
         renderer="logarithmicDepthBuffer: true; antialias: true;"
         vr-mode-ui="enabled: false"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
       >
         <!-- Luzes para iluminar o modelo 3D -->
         <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
