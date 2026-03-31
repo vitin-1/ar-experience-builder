@@ -69,39 +69,17 @@ const ARScene = () => {
         <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
         <a-light type="directional" color="#ffffff" intensity="0.6" position="1 2 1"></a-light>
 
-        <!--
-          ============================================================
-          🔽 MARCADOR AR: O modelo 3D aparece quando o marcador "hiro"
-             é detectado pela câmera.
-             Para usar um marcador customizado, troque type="preset"
-             value="hiro" por type="pattern" url="/seu-marcador.patt"
-          ============================================================
-        -->
         <a-marker preset="hiro">
-          <!--
-            ============================================================
-            🔽 MODELO 3D: Troque o src abaixo pelo caminho do seu
-               arquivo .glb ou .gltf na pasta /public.
-               Ajuste position, rotation e scale conforme necessário.
-            ============================================================
-          -->
-          <a-entity
-            gltf-model="url(${MODEL_PATH})"
-            scale="0.5 0.5 0.5"
-            position="0 0 0"
-            rotation="0 0 0"
-          ></a-entity>
-
-          <!-- Cubo de exemplo (aparece sempre, mesmo sem modelo .glb) -->
-          <a-box
-            position="0 0.5 0"
-            rotation="0 45 0"
-            scale="0.3 0.3 0.3"
-            color="#0ea5e9"
-            opacity="0.8"
-            animation="property: rotation; to: 0 405 0; loop: true; dur: 4000; easing: linear;"
-          ></a-box>
+          <a-box position="0 0.5 0" color="blue"></a-box>
+          <!-- <a-entity gltf-model="url(/modelo.glb)"></a-entity> -->
         </a-marker>
+
+        <!-- Exemplo de marcador customizado .patt -->
+        <!--
+        <a-marker type="pattern" url="/pattern-hunters.patt">
+          <a-box position="0 0.5 0" color="red"></a-box>
+        </a-marker>
+        -->
 
         <a-entity camera></a-entity>
       </a-scene>
