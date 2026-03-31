@@ -112,6 +112,8 @@ const ARScene = () => {
     return () => clearTimeout(timer);
   }, [aframeLoaded]);
 
+  if (!isMounted) return null;
+
   return (
     <motion.div
       ref={containerRef}
