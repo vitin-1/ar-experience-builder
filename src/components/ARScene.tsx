@@ -27,6 +27,7 @@ const ARScene = () => {
 
   // Carrega o script do A-Frame dinamicamente
   useEffect(() => {
+    if (!isMounted) return;
     if (document.querySelector('script[src*="aframe"]')) {
       setAframeLoaded(true);
       return;
