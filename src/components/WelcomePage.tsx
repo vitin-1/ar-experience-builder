@@ -47,52 +47,89 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        {/* Logo */}
+        {/* Logo com animação */}
         <motion.div
-          className="relative mb-8"
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          className="relative mb-4"
+          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ duration: 1, delay: 0.2, type: "spring", stiffness: 100 }}
         >
-          <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl scale-150" />
+          {/* Anel brilhante girando */}
+          <motion.div
+            className="absolute inset-[-16px] rounded-full border-2 border-primary/30"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            style={{
+              background: "conic-gradient(from 0deg, transparent, hsl(var(--primary) / 0.15), transparent, transparent)",
+            }}
+          />
+          {/* Glow pulsante */}
+          <motion.div
+            className="absolute inset-[-8px] rounded-full bg-primary/10 blur-xl"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
           <img
             src={huntersLogo}
-            alt="Hunters Logo"
-            width={160}
-            height={160}
-            className="relative w-40 h-40 object-contain drop-shadow-[0_0_30px_hsl(var(--primary)/0.4)]"
+            alt="Hunters Manpower Logo"
+            width={180}
+            height={180}
+            className="relative w-44 h-44 object-contain drop-shadow-[0_0_40px_hsl(var(--primary)/0.5)] rounded-2xl"
           />
         </motion.div>
 
-        {/* Título */}
+        {/* Título HUNTERS com fonte estilizada */}
         <motion.h1
-          className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-2"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          className="text-5xl md:text-6xl font-black text-foreground tracking-[0.15em] mb-1"
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
+          initial={{ opacity: 0, letterSpacing: "0.5em" }}
+          animate={{ opacity: 1, letterSpacing: "0.15em" }}
+          transition={{ delay: 0.6, duration: 0.8 }}
         >
-          HUNTERS
+          <span className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+            HUNTERS
+          </span>
         </motion.h1>
+
+        {/* Subtítulo Manpower */}
+        <motion.p
+          className="text-xs md:text-sm uppercase tracking-[0.4em] text-primary/70 font-light mb-4"
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          Manpower
+        </motion.p>
 
         {/* Linha decorativa */}
         <motion.div
-          className="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent my-6"
+          className="w-20 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent my-5"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
+          transition={{ delay: 0.9, duration: 0.8 }}
         />
 
         {/* Quem Somos */}
         <motion.div
           className="mb-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
         >
-          <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-primary mb-4">
+          <h2
+            className="text-sm font-semibold uppercase tracking-[0.25em] text-primary mb-4"
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
+          >
             Quem Somos
           </h2>
-          <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
+          <p
+            className="text-foreground/70 leading-relaxed text-sm md:text-base font-light"
+            style={{ fontFamily: "'Raleway', sans-serif" }}
+          >
             A Hunters ManPower nasceu atua como parceira estratégica de operações
             que exigem precisão, segurança e alta performance, selecionando
             profissionais preparados para enfrentar os desafios mais complexos do
@@ -106,7 +143,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
           className="group relative px-8 py-4 rounded-xl font-semibold text-sm uppercase tracking-widest bg-primary text-primary-foreground overflow-hidden transition-all duration-300 hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 1.2 }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -124,7 +161,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
           className="mt-8 text-xs text-muted-foreground/50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
+          transition={{ delay: 1.5 }}
         >
           Powered by WebAR • A-Frame
         </motion.p>
