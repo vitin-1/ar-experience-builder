@@ -34,7 +34,7 @@ const ARScene = () => {
     }
 
     const script = document.createElement("script");
-    script.src = "https://aframe.io/releases/1.5.0/aframe.min.js";
+    script.src = "https://aframe.io/releases/1.3.0/aframe.min.js";
     script.async = true;
     script.onload = () => {
       // Carrega o AR.js após o A-Frame
@@ -70,8 +70,7 @@ const ARScene = () => {
         <a-light type="directional" color="#ffffff" intensity="0.6" position="1 2 1"></a-light>
 
         <a-marker preset="hiro">
-          <a-box position="0 0.5 0" color="blue"></a-box>
-          <!-- <a-entity gltf-model="url(/modelo.glb)"></a-entity> -->
+          <a-box position="0 0.5 0" scale="1 1 1" color="red"></a-box>
         </a-marker>
 
         <!-- Exemplo de marcador customizado .patt -->
