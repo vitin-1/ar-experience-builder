@@ -2,23 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+/* 1. Trava absoluta do root */
+html, body, :root {
+  width: 100vw !important;
+  height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important; /* Impede a tela de ir para o lado */
-  position: fixed !important;  /* Trava o viewport em dispositivos móveis */
+  overflow: hidden !important;
+  position: fixed !important;
+  touch-action: none !important; /* Evita scroll no mobile */
 }
 
-/* Fix AR.js video to fullscreen behind UI */
+/* 2. Força o vídeo do AR.js a preencher tudo sem vazar */
 #arjs-video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-width: 100vw !important;
+  min-height: 100vh !important;
+  object-fit: cover !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  z-index: -20 !important;
+}
+
+/* 3. Trava o Canvas 3D do A-Frame na mesma proporção */
+.a-canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
   object-fit: cover !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
   z-index: -10 !important;
 }
 

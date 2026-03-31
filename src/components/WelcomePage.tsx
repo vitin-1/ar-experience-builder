@@ -8,7 +8,7 @@ interface WelcomePageProps {
 const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background overflow-hidden"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background overflow-hidden pointer-events-auto"
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
     >
@@ -140,7 +140,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         {/* Botão CTA */}
         <motion.button
           onClick={onStartAR}
-          className="group relative px-8 py-4 rounded-xl font-semibold text-sm uppercase tracking-widest bg-primary text-primary-foreground overflow-hidden transition-all duration-300 hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)]"
+          className="group relative px-8 py-4 rounded-xl font-semibold text-sm uppercase tracking-widest bg-primary text-primary-foreground overflow-hidden transition-all duration-300 hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] pointer-events-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2 }}

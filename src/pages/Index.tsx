@@ -7,7 +7,7 @@ const Index = () => {
   const [showAR, setShowAR] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="fixed inset-0 w-screen h-screen pointer-events-none">
       <AnimatePresence mode="wait">
         {!showAR && <WelcomePage key="welcome" onStartAR={() => setShowAR(true)} />}
       </AnimatePresence>
