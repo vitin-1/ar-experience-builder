@@ -115,7 +115,7 @@ const ARScene = () => {
   return (
     <motion.div
       ref={containerRef}
-      className="fixed inset-0 z-40"
+      className="absolute inset-0 w-full h-full bg-transparent overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
