@@ -93,9 +93,10 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
             Quem Somos
           </h2>
           <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-            Especialistas em RH e Soluções WebAR imersivas. Combinamos tecnologia
-            de ponta com experiências interativas para transformar a maneira como
-            você se conecta com o mundo.
+            A Hunters ManPower nasceu atua como parceira estratégica de operações
+            que exigem precisão, segurança e alta performance, selecionando
+            profissionais preparados para enfrentar os desafios mais complexos do
+            ambiente offshore.
           </p>
         </motion.div>
 
