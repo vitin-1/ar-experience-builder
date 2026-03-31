@@ -127,8 +127,8 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
             Quem Somos
           </h2>
           <p
-            className="text-foreground/70 leading-relaxed text-sm md:text-base font-light"
-            style={{ fontFamily: "'Raleway', sans-serif" }}
+            className="text-foreground/90 leading-relaxed text-sm md:text-base font-light italic"
+            style={{ fontFamily: "'Raleway', sans-serif", letterSpacing: "0.02em" }}
           >
             A Hunters ManPower nasceu atua como parceira estratégica de operações
             que exigem precisão, segurança e alta performance, selecionando
