@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important; /* Impede a tela de ir para o lado */
+  position: fixed !important;  /* Trava o viewport em dispositivos móveis */
+}
+
 /* Fix AR.js video to fullscreen behind UI */
 #arjs-video {
   width: 100vw !important;

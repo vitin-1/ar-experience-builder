@@ -60,7 +60,7 @@ const ARScene = () => {
     containerRef.current.innerHTML = `
       <a-scene
         embedded
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        arjs="sourceType: webcam; debugUIEnabled: false; displayEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
         renderer="logarithmicDepthBuffer: true; antialias: true;"
         vr-mode-ui="enabled: false"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
@@ -117,7 +117,7 @@ const ARScene = () => {
   return (
     <motion.div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full bg-transparent overflow-hidden"
+      className="fixed inset-0 z-0 bg-transparent overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
