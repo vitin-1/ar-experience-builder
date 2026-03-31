@@ -18,6 +18,12 @@ const ARScene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [aframeLoaded, setAframeLoaded] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // SSR Fix: só renderiza no client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Carrega o script do A-Frame dinamicamente
   useEffect(() => {
