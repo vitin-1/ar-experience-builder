@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import huntersLogo from "@/assets/hunters-logo.png";
+import { Camera, Terminal, Code2, BookOpen } from "lucide-react";
 
 interface WelcomePageProps {
   onStartAR: () => void;
@@ -8,163 +9,172 @@ interface WelcomePageProps {
 const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background overflow-hidden pointer-events-auto"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-[#05050A] overflow-hidden pointer-events-auto text-white font-sans"
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
     >
-      {/* Efeito de brilho de fundo */}
+      {/* Background and HUD Atmosphere */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
-        <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] rounded-full bg-accent/5 blur-[80px]" />
+        {/* Glows */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-cyan-500/10 blur-[150px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full bg-purple-600/10 blur-[120px] translate-y-1/3 -translate-x-1/4" />
+        
+        {/* Particle and Data Elements */}
+        <div className="absolute top-[15%] left-[5%] flex flex-col gap-2 text-cyan-400/40 text-xs font-mono">
+            <motion.div animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 3, repeat: Infinity }}>SYS_V: 88.98</motion.div>
+            <motion.div animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}>FREQ: <span className="text-purple-400/60">144Hz</span></motion.div>
+            <div className="h-1 w-24 bg-cyan-900/50 rounded overflow-hidden mt-1">
+                <motion.div className="h-full bg-cyan-500/50" animate={{ width: ["10%", "90%", "30%"] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
+            </div>
+        </div>
+
+        <div className="absolute top-[30%] right-[8%] flex flex-col gap-2 text-purple-400/40 text-[10px] font-mono items-end hidden md:flex">
+            <div>DATA_STREAM // ACTIVE</div>
+            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }}>93.3%</motion.div>
+            <table className="mt-2 text-right opacity-50">
+                <tbody>
+                    <tr><td className="pr-3 text-cyan-500/50">Cust</td><td>0x88F</td></tr>
+                    <tr><td className="pr-3 text-cyan-500/50">Gom</td><td>ACTIVE</td></tr>
+                    <tr><td className="pr-3 text-cyan-500/50">Net</td><td>99ms</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        {/* HUD Overlay Lines */}
+        <div className="absolute top-[10%] left-0 w-full h-[1px] bg-cyan-500/10" />
+        <div className="absolute bottom-[10%] left-0 w-full h-[1px] bg-purple-500/10" />
+        <div className="absolute top-0 left-[10%] w-[1px] h-full bg-cyan-500/5" />
+        <div className="absolute top-0 right-[10%] w-[1px] h-full bg-cyan-500/5" />
       </div>
 
-      {/* Partículas decorativas */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full bg-primary/30"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              opacity: [0, 1, 0],
-              scale: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-            }}
-          />
-        ))}
-      </div>
-
-      <motion.div
-        className="relative z-10 flex flex-col items-center text-center px-6 max-w-md"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        {/* Logo com animação */}
+      <div className="flex-1 w-full flex flex-col items-center justify-center max-w-4xl px-6 z-10 py-12 overflow-y-auto no-scrollbar">
+        {/* Vertical Structure */}
         <motion.div
-          className="relative mb-4"
-          initial={{ scale: 0, rotate: -180, opacity: 0 }}
-          animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ duration: 1, delay: 0.2, type: "spring", stiffness: 100 }}
-        >
-          {/* Anel brilhante girando */}
-          <motion.div
-            className="absolute inset-[-16px] rounded-full border-2 border-primary/30"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            style={{
-              background: "conic-gradient(from 0deg, transparent, hsl(var(--primary) / 0.15), transparent, transparent)",
-            }}
-          />
-          {/* Glow pulsante */}
-          <motion.div
-            className="absolute inset-[-8px] rounded-full bg-primary/10 blur-xl"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <img
-            src={huntersLogo}
-            alt="Hunters Manpower Logo"
-            width={180}
-            height={180}
-            className="relative w-44 h-44 object-contain drop-shadow-[0_0_40px_hsl(var(--primary)/0.5)] rounded-2xl"
-          />
-        </motion.div>
-
-        {/* Título HUNTERS com fonte estilizada */}
-        <motion.h1
-          className="text-5xl md:text-6xl font-black text-foreground tracking-[0.15em] mb-1"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
-          initial={{ opacity: 0, letterSpacing: "0.5em" }}
-          animate={{ opacity: 1, letterSpacing: "0.15em" }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-        >
-          <span className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-            HUNTERS
-          </span>
-        </motion.h1>
-
-        {/* Subtítulo Manpower */}
-        <motion.p
-          className="text-xs md:text-sm uppercase tracking-[0.4em] text-primary/70 font-light mb-4"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
-          initial={{ opacity: 0, y: 10 }}
+          className="flex flex-col items-center text-center w-full"
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          Manpower
-        </motion.p>
+          {/* Logo Holográfico */}
+          <motion.div
+            className="relative mb-6 mt-4"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1.2, type: "spring" }}
+          >
+            {/* Holographic Glow */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full blur-2xl opacity-20"
+              animate={{ opacity: [0.1, 0.3, 0.1], scale: [0.9, 1.1, 0.9] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            />
+            {/* Logo Image */}
+            <div className="relative w-28 h-28 mix-blend-screen bg-cyan-950/30 rounded-full flex items-center justify-center border border-cyan-500/30 p-4 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+               <img
+                  src={huntersLogo}
+                  alt="Hunters Logo"
+                  className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+               />
+               <motion.div className="absolute inset-0 rounded-full border border-purple-500/30" animate={{ rotate: 180 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} />
+               <motion.div className="absolute inset-[-10px] rounded-full border border-cyan-500/20 border-dashed" animate={{ rotate: -180 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} />
+            </div>
+            {/* Scanline Effect over logo */}
+            <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none z-20">
+              <motion.div className="w-full h-[2px] bg-cyan-300/50 blur-[1px]" animate={{ top: ["-10%", "110%"] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} style={{ position: "absolute" }} />
+            </div>
+          </motion.div>
 
-        {/* Linha decorativa */}
-        <motion.div
-          className="w-20 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent my-5"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ delay: 0.9, duration: 0.8 }}
-        />
+          {/* Titles */}
+          <h1 className="text-3xl md:text-5xl font-bold tracking-widest text-gray-200 mb-2 uppercase drop-shadow-md" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            Hunters Manpower
+          </h1>
+          <h2 className="text-xs md:text-sm font-semibold tracking-[0.3em] text-cyan-400 mb-8 uppercase drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            QUEM SOMOS
+          </h2>
 
-        {/* Quem Somos */}
-        <motion.div
-          className="mb-10"
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0 }}
-        >
-          <h2
-            className="text-sm font-semibold uppercase tracking-[0.25em] text-primary mb-4"
+          {/* Description */}
+          <p className="text-white text-sm md:text-base max-w-2xl leading-relaxed mb-10 opacity-90 font-light text-center" style={{ fontFamily: "'Raleway', sans-serif" }}>
+            A Hunters ManPower atua como parceira estratégica de operações que exigem precisão, segurança e alta performance, selecionando profissionais preparados.
+          </p>
+
+          {/* Bullets */}
+          <div className="flex flex-col gap-4 text-left w-full max-w-2xl mb-12">
+            {[
+              {
+                title: "Precisão",
+                desc: "Foco na qualificação para entregar resultados concisos."
+              },
+              {
+                title: "Safety",
+                desc: "Desenvolvimento do profissional estratégico."
+              },
+              {
+                title: "High Performance",
+                desc: "Preparação para os desafios mais complexos do ambiente offshore."
+              }
+            ].map((bullet, i) => (
+              <motion.div 
+                key={bullet.title}
+                className="flex items-start gap-4 p-4 rounded-lg bg-white/[0.02] border border-white/5 backdrop-blur-sm"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 + i * 0.2 }}
+              >
+                 <div className="mt-1">
+                   <div className="w-2 h-2 rounded bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+                 </div>
+                 <div className="flex-1">
+                   <p className="text-sm md:text-base text-gray-300 leading-relaxed font-light" style={{ fontFamily: "'Raleway', sans-serif" }}>
+                     <strong className="text-cyan-400 font-medium tracking-wide">{bullet.title}</strong> – {bullet.desc}
+                   </p>
+                 </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Action Button */}
+          <motion.button
+            onClick={onStartAR}
+            className="group relative flex items-center justify-center gap-3 px-6 py-4 md:px-8 md:py-4 bg-transparent border border-cyan-500/50 rounded-md overflow-hidden transition-all duration-300 hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] pointer-events-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.5, type: "spring" }}
             style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
-            Quem Somos
-          </h2>
-          <p
-            className="text-foreground/90 leading-relaxed text-sm md:text-base font-light italic"
-            style={{ fontFamily: "'Raleway', sans-serif", letterSpacing: "0.02em" }}
-          >
-            A Hunters ManPower nasceu atua como parceira estratégica de operações
-            que exigem precisão, segurança e alta performance, selecionando
-            profissionais preparados para enfrentar os desafios mais complexos do
-            ambiente offshore.
-          </p>
+            {/* Button Background Effect */}
+            <div className="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors" />
+            <div className="absolute left-0 top-0 w-1 h-full bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,1)] group-hover:w-full transition-all duration-500 opacity-20" />
+            
+            <Camera className="w-5 h-5 text-cyan-400 relative z-10 group-hover:scale-110 transition-transform" />
+            <span className="relative z-10 text-cyan-50 font-semibold tracking-wider text-xs md:text-sm uppercase">
+              ABRIR CÂMERA E INICIAR RA
+            </span>
+          </motion.button>
         </motion.div>
+      </div>
 
-        {/* Botão CTA */}
-        <motion.button
-          onClick={onStartAR}
-          className="group relative px-8 py-4 rounded-xl font-semibold text-sm uppercase tracking-widest bg-primary text-primary-foreground overflow-hidden transition-all duration-300 hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] pointer-events-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <span className="relative z-10 flex items-center gap-3">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            ABRIR CÂMERA E INICIAR RA
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        </motion.button>
-
-        {/* Rodapé */}
-        <motion.p
-          className="mt-8 text-xs text-muted-foreground/50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-        >
-          Powered by WebAR • A-Frame
-        </motion.p>
+      {/* Footer / Connections */}
+      <motion.div 
+        className="w-full flex md:flex-row flex-col gap-4 justify-between items-center px-8 pb-6 text-cyan-500/40 text-xs font-mono z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2 }}
+      >
+        <div className="flex items-center gap-6">
+           <div className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer pointer-events-auto">
+             <Terminal className="w-4 h-4" /> Integrations
+           </div>
+           <div className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer pointer-events-auto">
+             <Code2 className="w-4 h-4" /> Lib
+           </div>
+           <div className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer pointer-events-auto">
+             <BookOpen className="w-4 h-4" /> Docs
+           </div>
+        </div>
+        <div className="flex items-center gap-2">
+           <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_5px_rgba(6,182,212,1)]" />
+           SYSTEM.ONLINE
+        </div>
       </motion.div>
     </motion.div>
   );
