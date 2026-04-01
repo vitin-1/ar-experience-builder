@@ -9,7 +9,7 @@ interface WelcomePageProps {
 const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0F19] overflow-y-auto no-scrollbar pointer-events-auto min-h-screen font-sans"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0F19] overflow-hidden pointer-events-auto h-[100dvh] w-screen font-sans"
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
     >
@@ -31,10 +31,10 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         </div>
       </div>
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center max-w-6xl px-6 py-12">
+      <div className="relative z-10 w-full flex flex-col items-center justify-center max-w-6xl px-6 py-4">
         {/* Logo */}
         <motion.div
-          className="relative mb-8 mt-8"
+          className="relative mb-4 mt-2"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.2, type: "spring" }}
@@ -49,28 +49,28 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
           <img
             src={huntersLogo}
             alt="Hunters Logo"
-            className="relative w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]"
+            className="relative w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]"
           />
         </motion.div>
 
         {/* Titles */}
         <motion.div 
-          className="text-center mb-10"
+          className="text-center mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
         >
-          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-widest leading-none mb-2 font-sans">
+          <h1 className="text-4xl md:text-6xl font-bold text-white tracking-widest leading-none mb-1 font-sans">
             HUNTERS
           </h1>
-          <p className="text-lg md:text-2xl text-gray-300 tracking-[0.4em] uppercase font-light">
+          <p className="text-base md:text-xl text-gray-300 tracking-[0.4em] uppercase font-light">
             MANPOWER
           </p>
         </motion.div>
 
         {/* Subtitle */}
         <motion.h2 
-          className="text-sm md:text-base font-bold tracking-[0.4em] text-[#00FFFF] mb-6 uppercase drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]"
+          className="text-sm md:text-base font-bold tracking-[0.4em] text-[#00FFFF] mb-4 uppercase drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
@@ -80,7 +80,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
 
         {/* Description */}
         <motion.p 
-          className="text-[#D1D5DB] text-center text-base md:text-lg max-w-3xl leading-relaxed mb-16 font-light"
+          className="text-[#D1D5DB] text-center text-sm md:text-base max-w-3xl leading-relaxed mb-6 font-light"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
@@ -89,7 +89,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         </motion.p>
 
         {/* Highlights Grid (3 Columns) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-5xl mb-8">
           {[
             {
               title: "Precisão",
@@ -106,7 +106,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
           ].map((bullet, i) => (
             <motion.div 
               key={bullet.title}
-              className="flex items-start gap-4 p-6 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-sm hover:border-[#00FFFF]/30 transition-colors"
+              className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-sm hover:border-[#00FFFF]/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 + i * 0.2 }}
