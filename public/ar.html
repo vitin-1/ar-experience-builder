@@ -1,81 +1,140 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <title>Hunters AR</title>
-    
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    
-    <style>
-      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
-      
-      #ui-overlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-        padding-bottom: 40px; z-index: 999; pointer-events: none;
-      }
 
-      #btn-som {
-        pointer-events: auto;
-        background: rgba(0, 0, 0, 0.8); color: #00FFFF; border: 1px solid #00FFFF;
-        padding: 15px 30px; border-radius: 30px; font-family: sans-serif; font-size: 16px;
-        cursor: pointer; box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-      }
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>Hunters AR - Debug</title>
 
-      #instrucao {
-        position: absolute; top: 40px; text-align: center;
-        background: rgba(0, 0, 0, 0.6); color: white; padding: 10px 20px;
-        border-radius: 10px; font-family: sans-serif; font-size: 14px;
-      }
-    </style>
-  </head>
-  
-  <body>
-    <div id="ui-overlay">
-      <div id="instrucao">Aponte a câmera para a logo da Hunters</div>
-      <button id="btn-som">🔈 Toque para ativar o som</button>
-    </div>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-    <a-scene 
-      mindar-image="imageTargetSrc: /targets.mind;" 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false"
-    >
-      <a-assets>
-        <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
-      </a-assets>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #222;
+    }
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    #ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 40px;
+      z-index: 9999;
+      pointer-events: none;
+    }
 
-      <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
-        <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"></a-video>
-      </a-entity>
-    </a-scene>
+    #btn-som {
+      pointer-events: auto;
+      background: rgba(0, 0, 0, 0.9);
+      color: #00FFFF;
+      border: 2px solid #00FFFF;
+      padding: 15px 30px;
+      border-radius: 30px;
+      font-family: sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    }
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const video = document.querySelector('#meuVideo');
-        const alvo = document.querySelector('#alvo-logo');
-        const btnSom = document.querySelector('#btn-som');
+    /* TELA DE RASTREIO DE ERROS (O NOSSO DETETIVE) */
+    #console-log {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 10000;
+      border-radius: 5px;
+      min-height: 50px;
+    }
+  </style>
 
-        btnSom.addEventListener('click', () => {
-          video.muted = false;
-          btnSom.style.display = 'none';
-          video.play().then(() => video.pause()).catch(() => {}); 
-        });
+  <script>
+    window.onerror = function (message, source, lineno, colno, error) {
+      const log = document.getElementById('console-log');
+      if (log) log.innerHTML += `<br>🔴 ERRO: ${message}`;
+      return false;
+    };
 
-        alvo.addEventListener("targetFound", () => {
-          video.play(); 
-        });
+    // Captura erros de promessas (como a câmera sendo rejeitada)
+    window.addEventListener("unhandledrejection", function (event) {
+      const log = document.getElementById('console-log');
+      if (log) log.innerHTML += `<br>⚠️ PROMESSA REJEITADA: ${event.reason}`;
+    });
+  </script>
+</head>
 
-        alvo.addEventListener("targetLost", () => {
+<body>
+  <div id="console-log">🟢 STATUS: Página carregou... aguardando motor AR.</div>
+
+  <div id="ui-overlay">
+    <button id="btn-som">🔈 ATIVAR SOM E CÂMERA</button>
+  </div>
+
+  <a-scene mindar-image="imageTargetSrc: /targets.mind;" color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights">
+    <a-assets>
+      <video id="meuVideo" src="/video.mp4.mp4" loop muted playsinline webkit-playsinline
+        crossorigin="anonymous"></video>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
+      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"></a-video>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const video = document.querySelector('#meuVideo');
+      const btnSom = document.querySelector('#btn-som');
+      const log = document.querySelector('#console-log');
+
+      log.innerHTML += "<br>🟢 STATUS: DOM Carregado. Pronto para iniciar.";
+
+      btnSom.addEventListener('click', () => {
+        log.innerHTML += "<br>🔵 STATUS: Botão clicado! Liberando áudio...";
+        video.muted = false;
+        btnSom.style.display = 'none';
+
+        video.play().then(() => {
+          log.innerHTML += "<br>🟢 STATUS: Áudio destravado com sucesso!";
           video.pause();
+        }).catch((err) => {
+          log.innerHTML += `<br>🔴 ERRO DE ÁUDIO: ${err.message}`;
         });
       });
-    </script>
-  </body>
+
+      const alvo = document.querySelector('#alvo-logo');
+      alvo.addEventListener("targetFound", () => {
+        log.innerHTML += "<br>🎯 ALVO ENCONTRADO! Dando play...";
+        video.play();
+      });
+
+      alvo.addEventListener("targetLost", () => {
+        log.innerHTML += "<br>❌ ALVO PERDIDO! Pausando...";
+        video.pause();
+      });
+    });
+  </script>
+</body>
+
 </html>
