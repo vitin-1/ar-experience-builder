@@ -6,6 +6,7 @@
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
+    /* Fundo preto nativo para evitar os clarões brancos da tela */
     body,
     html {
       margin: 0;
@@ -13,6 +14,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      background-color: #000;
     }
 
     #ra-ui-container {
@@ -44,6 +46,25 @@
       letter-spacing: 1px;
     }
   </style>
+
+  <script>
+    AFRAME.registerComponent('video-handler', {
+      init: function () {
+        this.video = document.querySelector('#meuVideo');
+        this.isTargetVisible = false; // Memória para saber se a logo está na tela
+
+        this.el.addEventListener('targetFound', () => {
+          this.isTargetVisible = true;
+          this.video.play();
+        });
+
+        this.el.addEventListener('targetLost', () => {
+          this.isTargetVisible = false;
+          this.video.pause();
+        });
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -60,12 +81,13 @@
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <video id="meuVideo" src="/video.mp4.mp4" loop playsinline muted preload="auto"></video>
+      <video id="meuVideo" src="/video.mp4" preload="auto" muted loop playsinline webkit-playsinline
+        crossorigin="anonymous"></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
+    <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo" video-handler>
       <a-video src="#meuVideo" position="0 0 0" width="1" height="1" rotation="0 0 0"></a-video>
     </a-entity>
 
@@ -74,46 +96,31 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const video = document.querySelector('#meuVideo');
-      const uiContainer = document.querySelector('#ra-ui-container');
       const btnIniciar = document.querySelector('#btn-iniciar');
+      const uiContainer = document.querySelector('#ra-ui-container');
       const alvo = document.querySelector('#alvo-logo');
 
-      let logoEncontrada = false; // Variável para rastrear se a câmera já está vendo a logo
-
-      // Quando a câmera ver a logo...
-      alvo.addEventListener("targetFound", () => {
-        logoEncontrada = true;
-        video.play();
-      });
-
-      // Quando perder a logo...
-      alvo.addEventListener("targetLost", () => {
-        logoEncontrada = false;
-        video.pause();
-      });
-
-      // Quando o usuário clicar no botão azul...
       btnIniciar.addEventListener('click', () => {
-        // 1. Esconde a tela de espera
+        // 1. Tira a tela preta da frente
         uiContainer.style.opacity = '0';
         setTimeout(() => { uiContainer.style.display = 'none'; }, 500);
 
         // 2. Tira o mudo do vídeo
         video.muted = false;
 
-        // 3. O "Pulo do Gato": Espera o navegador dizer "Ok, consegui dar o play" antes de pausar
+        // 3. Usa a Promise do navegador para garantir que ele entendeu o clique
         let playPromise = video.play();
 
         if (playPromise !== undefined) {
           playPromise.then(() => {
-            // SUCESSO! O vídeo destravou.
-            // Agora, ele só vai pausar se a câmera AINDA NÃO tiver achado a logo.
-            if (!logoEncontrada) {
+            // Se o navegador aceitou o Play, nós checamos: A logo está visível?
+            // Se NÃO estiver, nós pausamos imediatamente e resetamos.
+            if (!alvo.components['video-handler'].isTargetVisible) {
               video.pause();
-              video.currentTime = 0; // Volta a fita para o segundo zero
+              video.currentTime = 0;
             }
           }).catch(error => {
-            console.log("Erro no autoplay do iOS: ", error);
+            console.log("Erro de permissão no celular:", error);
           });
         }
       });
