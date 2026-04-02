@@ -15,6 +15,7 @@
       --bg: #0B0F19;
     }
 
+    /* O Body agora é transparente para a câmera poder aparecer no fundo! */
     body,
     html {
       margin: 0;
@@ -22,16 +23,19 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: var(--bg);
-      font-family: sans-serif;
+      background-color: transparent;
+      font-family: 'Segoe UI', Roboto, sans-serif;
     }
 
+    /* A cor sólida agora fica AQUI, e nós vamos apagá-la no clique */
     #ui-layer {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
+      background-color: var(--bg);
+      transition: background-color 0.8s ease;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -130,6 +134,7 @@
       font-size: 14px;
       opacity: 0.7;
       margin: 0;
+      transition: color 0.3s;
     }
 
     #btn-unlock {
@@ -144,6 +149,8 @@
       cursor: pointer;
       box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
       margin-top: 20px;
+      opacity: 0.5;
+      /* Começa meio apagado para mostrar que tá carregando */
     }
 
     @keyframes scan {
@@ -176,19 +183,20 @@
       <div class="corner tr"></div>
       <div class="corner bl"></div>
       <div class="corner br"></div>
-      <span style="color: white; font-size: 12px; opacity: 0.5; text-transform: uppercase;">Ajuste a Logo</span>
+      <span id="scan-text" style="color: white; font-size: 12px; opacity: 0.5; text-transform: uppercase;">Ajuste a
+        Logo</span>
     </div>
 
     <div class="footer-info">
       <h1>HUNTERS MANPOWER</h1>
-      <p id="status-text">Sistema pronto para escanear</p>
-      <button id="btn-unlock">ATIVAR EXPERIÊNCIA</button>
+      <p id="status-text">Carregando motor 3D...</p>
+      <button id="btn-unlock" disabled>AGUARDE...</button>
     </div>
   </div>
 
   <a-scene id="main-scene"
     mindar-image="imageTargetSrc: /targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true;" vr-mode-ui="enabled: false"
+    renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets>
       <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
@@ -202,34 +210,61 @@
   </a-scene>
 
   <script>
-    const sceneEl = document.querySelector('#main-scene');
-    const video = document.querySelector('#meuVideo');
-    const btn = document.querySelector('#btn-unlock');
-    const statusText = document.querySelector('#status-text');
-    const alvo = document.querySelector('#alvo-logo');
+    document.addEventListener("DOMContentLoaded", function () {
+      const sceneEl = document.querySelector('#main-scene');
+      const video = document.querySelector('#meuVideo');
+      const btn = document.querySelector('#btn-unlock');
+      const statusText = document.querySelector('#status-text');
+      const hud = document.querySelector('#hud-frame');
+      const uiLayer = document.querySelector('#ui-layer');
+      const alvo = document.querySelector('#alvo-logo');
 
-    btn.addEventListener('click', () => {
-      // 1. DÁ A PARTIDA MANUAL NA CÂMERA (Indispensável para celulares)
-      const mindarSystem = sceneEl.systems['mindar-image-system'];
-      mindarSystem.start();
+      // IGNIÇÃO SEGURA: Só libera o botão quando o A-Frame terminar de carregar
+      sceneEl.addEventListener('loaded', () => {
+        btn.innerHTML = "ATIVAR EXPERIÊNCIA";
+        btn.style.opacity = "1";
+        btn.disabled = false; // Destrava o botão
+        statusText.innerHTML = "Sistema pronto. Autorize a câmera.";
+      });
 
-      // 2. Libera o áudio e ajusta UI
-      video.muted = false;
-      btn.style.display = 'none';
-      statusText.innerHTML = "BUSCANDO LOGO...";
+      btn.addEventListener('click', () => {
+        try {
+          // 1. Muda os textos imediatamente para dar feedback visual
+          statusText.innerHTML = "LIGANDO CÂMERA...";
+          btn.style.display = 'none';
 
-      // Trick de áudio
-      video.play().then(() => video.pause()).catch(() => { });
-    });
+          // 2. Remove o fundo escuro para a câmera aparecer
+          uiLayer.style.backgroundColor = "transparent";
 
-    alvo.addEventListener("targetFound", () => {
-      video.play();
-      statusText.innerHTML = "SISTEMA ONLINE • REPRODUZINDO";
-    });
+          // 3. Dá a partida no motor AR
+          const mindarSystem = sceneEl.systems['mindar-image-system'];
+          mindarSystem.start();
 
-    alvo.addEventListener("targetLost", () => {
-      video.pause();
-      statusText.innerHTML = "SINAL PERDIDO: Busque a logo";
+          // 4. Prepara o áudio
+          video.muted = false;
+          video.play().then(() => video.pause()).catch(() => { });
+
+          statusText.innerHTML = "BUSCANDO LOGO...";
+        } catch (erro) {
+          statusText.innerHTML = "ERRO: O sistema AR não carregou corretamente.";
+          statusText.style.color = "red";
+        }
+      });
+
+      // Feedback visual quando encontra a logo
+      alvo.addEventListener("targetFound", () => {
+        video.play();
+        hud.style.borderColor = "#00FFFF";
+        statusText.innerHTML = "SISTEMA ONLINE • REPRODUZINDO";
+        statusText.style.color = "#00FFFF";
+      });
+
+      alvo.addEventListener("targetLost", () => {
+        video.pause();
+        hud.style.borderColor = "rgba(0, 255, 255, 0.3)";
+        statusText.innerHTML = "SINAL PERDIDO: Busque a logo";
+        statusText.style.color = "white";
+      });
     });
   </script>
 </body>
