@@ -23,10 +23,9 @@
       height: 100%;
       overflow: hidden;
       background-color: var(--bg);
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: sans-serif;
     }
 
-    /* Camada de UI Principal */
     #ui-layer {
       position: absolute;
       top: 0;
@@ -41,7 +40,6 @@
       pointer-events: none;
     }
 
-    /* Botão de Voltar Estilizado */
     .back-btn {
       pointer-events: auto;
       align-self: flex-start;
@@ -57,7 +55,6 @@
       text-decoration: none;
     }
 
-    /* Moldura de Escaneamento (HUD) */
     .scan-container {
       width: 250px;
       height: 250px;
@@ -115,7 +112,6 @@
       border-top: 0;
     }
 
-    /* Instrução Inferior */
     .footer-info {
       text-align: center;
       color: white;
@@ -136,7 +132,6 @@
       margin: 0;
     }
 
-    /* Botão de Som / Iniciar (O mais importante) */
     #btn-unlock {
       pointer-events: auto;
       background: var(--primary);
@@ -149,11 +144,6 @@
       cursor: pointer;
       box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
       margin-top: 20px;
-      transition: transform 0.2s;
-    }
-
-    #btn-unlock:active {
-      transform: scale(0.95);
     }
 
     @keyframes scan {
@@ -170,7 +160,6 @@
       }
     }
 
-    /* Esconder elementos MindAR padrão */
     .mindar-ui-overlay {
       display: none !important;
     }
@@ -187,19 +176,19 @@
       <div class="corner tr"></div>
       <div class="corner bl"></div>
       <div class="corner br"></div>
-      <span style="color: white; font-size: 12px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px;">Ajuste
-        a Logo</span>
+      <span style="color: white; font-size: 12px; opacity: 0.5; text-transform: uppercase;">Ajuste a Logo</span>
     </div>
 
     <div class="footer-info">
       <h1>HUNTERS MANPOWER</h1>
-      <p id="status-text">Aguardando inicialização...</p>
+      <p id="status-text">Sistema pronto para escanear</p>
       <button id="btn-unlock">ATIVAR EXPERIÊNCIA</button>
     </div>
   </div>
 
-  <a-scene mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no;"
-    color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+  <a-scene id="main-scene"
+    mindar-image="imageTargetSrc: /targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets>
       <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
@@ -208,38 +197,39 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
-      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"></a-video>
+      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625"></a-video>
     </a-entity>
   </a-scene>
 
   <script>
+    const sceneEl = document.querySelector('#main-scene');
     const video = document.querySelector('#meuVideo');
     const btn = document.querySelector('#btn-unlock');
     const statusText = document.querySelector('#status-text');
-    const hud = document.querySelector('#hud-frame');
     const alvo = document.querySelector('#alvo-logo');
 
-    // 1. Destrava o som e limpa a tela para a experiência
     btn.addEventListener('click', () => {
+      // 1. DÁ A PARTIDA MANUAL NA CÂMERA (Indispensável para celulares)
+      const mindarSystem = sceneEl.systems['mindar-image-system'];
+      mindarSystem.start();
+
+      // 2. Libera o áudio e ajusta UI
       video.muted = false;
       btn.style.display = 'none';
-      statusText.innerHTML = "SISTEMA ATIVO: Aponte para a logo da Hunters";
+      statusText.innerHTML = "BUSCANDO LOGO...";
 
-      // Trick para o iOS liberar o áudio
+      // Trick de áudio
       video.play().then(() => video.pause()).catch(() => { });
     });
 
-    // 2. Feedback visual quando encontra a logo
     alvo.addEventListener("targetFound", () => {
       video.play();
-      hud.style.borderColor = "#00FFFF";
-      statusText.innerHTML = "CONECTADO AO SERVIDOR • REPRODUZINDO";
+      statusText.innerHTML = "SISTEMA ONLINE • REPRODUZINDO";
     });
 
     alvo.addEventListener("targetLost", () => {
       video.pause();
-      hud.style.borderColor = "rgba(0, 255, 255, 0.3)";
-      statusText.innerHTML = "SINAL PERDIDO: Buscando logo...";
+      statusText.innerHTML = "SINAL PERDIDO: Busque a logo";
     });
   </script>
 </body>
