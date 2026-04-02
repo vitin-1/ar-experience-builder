@@ -18,16 +18,16 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         {/* Glows */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#00FFFF]/5 blur-[120px]" />
         <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-[#B026FF]/5 blur-[100px]" />
-        
+
         {/* Subtle grid and lines */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
-        
+
         {/* Particle and Data Elements */}
         <div className="absolute top-[10%] left-[5%] flex flex-col gap-2 text-cyan-500/30 text-xs font-mono">
-            <motion.div animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 3, repeat: Infinity }}>SYS_V: 88.98</motion.div>
-            <div className="h-1 w-24 bg-cyan-900/30 rounded overflow-hidden mt-1">
-                <motion.div className="h-full bg-cyan-500/40" animate={{ width: ["10%", "90%", "30%"] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
-            </div>
+          <motion.div animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 3, repeat: Infinity }}>SYS_V: 88.98</motion.div>
+          <div className="h-1 w-24 bg-cyan-900/30 rounded overflow-hidden mt-1">
+            <motion.div className="h-full bg-cyan-500/40" animate={{ width: ["10%", "90%", "30%"] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
+          </div>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         </motion.div>
 
         {/* Titles */}
-        <motion.div 
+        <motion.div
           className="text-center mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -69,7 +69,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         </motion.div>
 
         {/* Subtitle */}
-        <motion.h2 
+        <motion.h2
           className="text-sm md:text-base font-bold tracking-[0.4em] text-[#00FFFF] mb-4 uppercase drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -79,7 +79,7 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
         </motion.h2>
 
         {/* Description */}
-        <motion.p 
+        <motion.p
           className="text-[#D1D5DB] text-center text-sm md:text-base max-w-3xl leading-relaxed mb-6 font-light"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -104,28 +104,28 @@ const WelcomePage = ({ onStartAR }: WelcomePageProps) => {
               desc: " para enfrentar os desafios mais complexos do ambiente offshore."
             }
           ].map((bullet, i) => (
-            <motion.div 
+            <motion.div
               key={bullet.title}
               className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-sm hover:border-[#00FFFF]/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 + i * 0.2 }}
             >
-               <div className="mt-1.5 flex-shrink-0">
-                 <div className="w-2.5 h-2.5 rounded-full bg-[#00FFFF] shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
-               </div>
-               <div>
-                 <p className="text-[#D1D5DB] text-sm md:text-base leading-relaxed font-light text-left">
-                   <strong className="text-white font-bold">{bullet.title}</strong>{bullet.desc}
-                 </p>
-               </div>
+              <div className="mt-1.5 flex-shrink-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#00FFFF] shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
+              </div>
+              <div>
+                <p className="text-[#D1D5DB] text-sm md:text-base leading-relaxed font-light text-left">
+                  <strong className="text-white font-bold">{bullet.title}</strong>{bullet.desc}
+                </p>
+              </div>
             </motion.div>
           ))}
         </div>
 
         {/* Action Button */}
         <motion.button
-          onClick={onStartAR}
+          onClick={() => window.location.href = '/ar.html'}
           className="group relative flex items-center justify-center gap-3 px-8 py-4 bg-white/[0.03] backdrop-blur-md border border-[#00FFFF]/50 rounded-lg overflow-hidden transition-all duration-300 hover:border-[#00FFFF] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:bg-[#00FFFF]/10 pointer-events-auto"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
