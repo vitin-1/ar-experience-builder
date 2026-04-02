@@ -15,7 +15,6 @@
       overflow: hidden;
     }
 
-    /* Tela bonita que esconde o carregamento e pede o clique */
     #ra-ui-container {
       position: absolute;
       top: 0;
@@ -61,7 +60,7 @@
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <video id="meuVideo" src="/video.mp4" loop playsinline crossorigin="anonymous" muted></video>
+      <video id="meuVideo" src="/video.mp4" loop playsinline muted preload="auto"></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -79,28 +78,44 @@
       const btnIniciar = document.querySelector('#btn-iniciar');
       const alvo = document.querySelector('#alvo-logo');
 
+      let logoEncontrada = false; // Variável para rastrear se a câmera já está vendo a logo
+
+      // Quando a câmera ver a logo...
+      alvo.addEventListener("targetFound", () => {
+        logoEncontrada = true;
+        video.play();
+      });
+
+      // Quando perder a logo...
+      alvo.addEventListener("targetLost", () => {
+        logoEncontrada = false;
+        video.pause();
+      });
+
       // Quando o usuário clicar no botão azul...
       btnIniciar.addEventListener('click', () => {
         // 1. Esconde a tela de espera
         uiContainer.style.opacity = '0';
         setTimeout(() => { uiContainer.style.display = 'none'; }, 500);
 
-        // 2. Tira o mudo do vídeo! (O iPhone agora deixa porque teve um clique)
+        // 2. Tira o mudo do vídeo
         video.muted = false;
 
-        // 3. Dá um play rápido e pausa, só pro navegador carregar o som.
-        video.play();
-        setTimeout(() => { video.pause(); }, 150);
-      });
+        // 3. O "Pulo do Gato": Espera o navegador dizer "Ok, consegui dar o play" antes de pausar
+        let playPromise = video.play();
 
-      // Quando a câmera ver a logo...
-      alvo.addEventListener("targetFound", () => {
-        video.play(); // Toca valendo com som
-      });
-
-      // Quando perder a logo...
-      alvo.addEventListener("targetLost", () => {
-        video.pause();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            // SUCESSO! O vídeo destravou.
+            // Agora, ele só vai pausar se a câmera AINDA NÃO tiver achado a logo.
+            if (!logoEncontrada) {
+              video.pause();
+              video.currentTime = 0; // Volta a fita para o segundo zero
+            }
+          }).catch(error => {
+            console.log("Erro no autoplay do iOS: ", error);
+          });
+        }
       });
     });
   </script>
