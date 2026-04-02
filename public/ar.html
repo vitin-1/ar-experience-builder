@@ -15,7 +15,6 @@
       --bg: #0B0F19;
     }
 
-    /* O Body agora é transparente para a câmera poder aparecer no fundo! */
     body,
     html {
       margin: 0;
@@ -27,7 +26,6 @@
       font-family: 'Segoe UI', Roboto, sans-serif;
     }
 
-    /* A cor sólida agora fica AQUI, e nós vamos apagá-la no clique */
     #ui-layer {
       position: absolute;
       top: 0;
@@ -150,7 +148,7 @@
       box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
       margin-top: 20px;
       opacity: 0.5;
-      /* Começa meio apagado para mostrar que tá carregando */
+      transition: opacity 0.3s;
     }
 
     @keyframes scan {
@@ -198,7 +196,7 @@
     mindar-image="imageTargetSrc: /targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
-    <a-assets>
+    <a-assets timeout="10000">
       <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
     </a-assets>
 
@@ -219,39 +217,43 @@
       const uiLayer = document.querySelector('#ui-layer');
       const alvo = document.querySelector('#alvo-logo');
 
-      // IGNIÇÃO SEGURA: Só libera o botão quando o A-Frame terminar de carregar
-      sceneEl.addEventListener('loaded', () => {
+      // FUNÇÃO DE DESTRAVAMENTO
+      const destravaBotao = () => {
         btn.innerHTML = "ATIVAR EXPERIÊNCIA";
         btn.style.opacity = "1";
-        btn.disabled = false; // Destrava o botão
+        btn.disabled = false;
         statusText.innerHTML = "Sistema pronto. Autorize a câmera.";
-      });
+      };
+
+      // CORREÇÃO: Verifica se o A-Frame já carregou. Se sim, destrava na hora. Se não, espera.
+      if (sceneEl.hasLoaded) {
+        destravaBotao();
+      } else {
+        sceneEl.addEventListener('loaded', destravaBotao);
+      }
+
+      // Failsafe: Se tudo falhar e o A-Frame demorar muito, destrava o botão à força em 3 segundos.
+      setTimeout(destravaBotao, 3000);
 
       btn.addEventListener('click', () => {
         try {
-          // 1. Muda os textos imediatamente para dar feedback visual
           statusText.innerHTML = "LIGANDO CÂMERA...";
           btn.style.display = 'none';
-
-          // 2. Remove o fundo escuro para a câmera aparecer
           uiLayer.style.backgroundColor = "transparent";
 
-          // 3. Dá a partida no motor AR
           const mindarSystem = sceneEl.systems['mindar-image-system'];
           mindarSystem.start();
 
-          // 4. Prepara o áudio
           video.muted = false;
           video.play().then(() => video.pause()).catch(() => { });
 
           statusText.innerHTML = "BUSCANDO LOGO...";
         } catch (erro) {
-          statusText.innerHTML = "ERRO: O sistema AR não carregou corretamente.";
+          statusText.innerHTML = "ERRO: O sistema AR não carregou.";
           statusText.style.color = "red";
         }
       });
 
-      // Feedback visual quando encontra a logo
       alvo.addEventListener("targetFound", () => {
         video.play();
         hud.style.borderColor = "#00FFFF";
