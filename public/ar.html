@@ -13,10 +13,9 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #0B0F19;
     }
 
-    /* === TELA DE POLIDEZ (HUD DE BUSCA) === */
+    /* Tela bonita que esconde o carregamento e pede o clique */
     #ra-ui-container {
       position: absolute;
       top: 0;
@@ -27,106 +26,42 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: rgba(11, 15, 25, 0.95);
-      /* Fundo "dark tech" / HUD de AR */
-      z-index: 998;
-      /* Fica acima da cena, mas abaixo do aviso de toque */
+      background: #0B0F19;
+      z-index: 1000;
       transition: opacity 0.5s ease;
     }
 
-    /* Logo da Hunters flutuante e brilhante (simplificado para o Hudson) */
-    #hud-logo {
-      width: 100px;
-      height: 100px;
-      margin-bottom: 20px;
-      background-image: url('/logo.png');
-      /* Usa a sua logo PNG flutuante */
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      border-radius: 50%;
-      /* Faz a logo ficar redonda */
-      box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-      /* Efeito neon ciano */
-      animation: flutuar 3s ease-in-out infinite, brilhar 2s linear infinite;
-    }
-
-    #hud-text {
-      color: white;
+    #btn-iniciar {
+      background: #00FFFF;
+      color: #0B0F19;
+      padding: 18px 40px;
+      border-radius: 50px;
       font-family: sans-serif;
-      font-size: 20px;
-      text-align: center;
-      max-width: 80%;
-    }
-
-    /* === AVISO DE TOQUE (BOTÃO DESMUTADOR) === */
-    #aviso-play {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 15px 30px;
-      border-radius: 10px;
-      font-family: sans-serif;
-      z-index: 999;
-      text-align: center;
       font-size: 18px;
+      font-weight: bold;
       cursor: pointer;
-      border: 2px solid transparent;
-      transition: all 0.3s ease;
-    }
-
-    #aviso-play:hover {
-      border-color: #00FFFF;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-    }
-
-    @keyframes flutuar {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
-    @keyframes brilhar {
-
-      0%,
-      100% {
-        box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-      }
-
-      50% {
-        box-shadow: 0 0 40px rgba(0, 255, 255, 0.7);
-      }
+      border: none;
+      letter-spacing: 1px;
     }
   </style>
 </head>
 
 <body>
-
   <div id="ra-ui-container">
-    <div id="hud-logo"></div>
-    <div id="hud-text">
-      Aponte a câmera para a logo da Hunters Manpower<br>
-      <span style="font-size: 16px; color: #D1D5DB;">para iniciar a Realidade Aumentada</span>
+    <div style="color: white; font-family: sans-serif; text-align: center; margin-bottom: 30px;">
+      <h2 style="color: #00FFFF; margin-bottom: 10px;">HUNTERS AR</h2>
+      <p style="opacity: 0.8;">Toque abaixo para ativar a câmera e o áudio</p>
     </div>
+    <button id="btn-iniciar">INICIAR CÂMERA</button>
   </div>
-
-  <div id="aviso-play">Toque na tela para habilitar o som e iniciar a AR</div>
 
   <a-scene mindar-image="imageTargetSrc: /targets.mind; autoStart: true;" color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <video id="meuVideo" src="/video.mp4" muted controls="false" loop playsinline crossorigin="anonymous"></video>
+      <video id="meuVideo" src="/video.mp4" loop playsinline crossorigin="anonymous" muted></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -141,43 +76,34 @@
     document.addEventListener("DOMContentLoaded", function () {
       const video = document.querySelector('#meuVideo');
       const uiContainer = document.querySelector('#ra-ui-container');
-      const aviso = document.querySelector('#aviso-play');
+      const btnIniciar = document.querySelector('#btn-iniciar');
       const alvo = document.querySelector('#alvo-logo');
 
-      // FUNÇÃO DE POLIDEZ FINAL: Desmuta e esconde a interface de carregamento
-      const destravarAR = function () {
-        video.muted = false; // Tira o mudo!
-        video.play(); // Começa a tocar off-screen (muted ainda)
-        uiContainer.style.opacity = '0'; // Começa a sumir com a HUD de carregamento
-        aviso.style.display = 'none'; // Esconde a mensagem de aviso
+      // Quando o usuário clicar no botão azul...
+      btnIniciar.addEventListener('click', () => {
+        // 1. Esconde a tela de espera
+        uiContainer.style.opacity = '0';
+        setTimeout(() => { uiContainer.style.display = 'none'; }, 500);
 
-        // Espera a animação de opacidade terminar e esconde de verdade
-        setTimeout(() => {
-          uiContainer.style.display = 'none';
-        }, 500);
+        // 2. Tira o mudo do vídeo! (O iPhone agora deixa porque teve um clique)
+        video.muted = false;
 
-        // Remove os ouvintes de toque para não repetir a função
-        window.removeEventListener('click', destravarAR);
-        window.removeEventListener('touchstart', destravarAR);
-      };
-
-      // Escuta o toque na tela
-      window.addEventListener('click', destravarAR);
-      window.addEventListener('touchstart', destravarAR);
-
-      // Quando a câmera finalmente achar a logo da Hunters...
-      alvo.addEventListener("targetFound", event => {
-        // O vídeo já estará "desmutado" e tocando, só garantimos que ele está dando play
+        // 3. Dá um play rápido e pausa, só pro navegador carregar o som.
         video.play();
+        setTimeout(() => { video.pause(); }, 150);
       });
 
-      // Quando o celular parar de olhar pra logo, o vídeo pausa 
-      alvo.addEventListener("targetLost", event => {
+      // Quando a câmera ver a logo...
+      alvo.addEventListener("targetFound", () => {
+        video.play(); // Toca valendo com som
+      });
+
+      // Quando perder a logo...
+      alvo.addEventListener("targetLost", () => {
         video.pause();
       });
     });
   </script>
-
 </body>
 
 </html>
