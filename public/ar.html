@@ -1,275 +1,149 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <title>Hunters AR Experience</title>
+    
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
+    <style>
+      :root { --primary: #00FFFF; --bg: #0B0F19; }
+      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent; font-family: sans-serif; }
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <title>Hunters AR Experience</title>
-
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-    :root {
-      --primary: #00FFFF;
-      --bg: #0B0F19;
-    }
-
-    body,
-    html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: transparent;
-      font-family: 'Segoe UI', Roboto, sans-serif;
-    }
-
-    #ui-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: var(--bg);
-      transition: background-color 0.8s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 100;
-      pointer-events: none;
-    }
-
-    .back-btn {
-      pointer-events: auto;
-      align-self: flex-start;
-      margin: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      font-size: 14px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .scan-container {
-      width: 250px;
-      height: 250px;
-      border: 2px solid rgba(0, 255, 255, 0.3);
-      position: relative;
-      border-radius: 20px;
-      margin-top: -50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .scan-line {
-      position: absolute;
-      width: 100%;
-      height: 2px;
-      background: var(--primary);
-      box-shadow: 0 0 15px var(--primary);
-      top: 0;
-      animation: scan 3s ease-in-out infinite;
-    }
-
-    .corner {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border: 3px solid var(--primary);
-    }
-
-    .tl {
-      top: -5px;
-      left: -5px;
-      border-right: 0;
-      border-bottom: 0;
-    }
-
-    .tr {
-      top: -5px;
-      right: -5px;
-      border-left: 0;
-      border-bottom: 0;
-    }
-
-    .bl {
-      bottom: -5px;
-      left: -5px;
-      border-right: 0;
-      border-top: 0;
-    }
-
-    .br {
-      bottom: -5px;
-      right: -5px;
-      border-left: 0;
-      border-top: 0;
-    }
-
-    .footer-info {
-      text-align: center;
-      color: white;
-      margin-bottom: 40px;
-      padding: 0 20px;
-    }
-
-    .footer-info h1 {
-      font-size: 18px;
-      letter-spacing: 2px;
-      margin-bottom: 5px;
-      color: var(--primary);
-    }
-
-    .footer-info p {
-      font-size: 14px;
-      opacity: 0.7;
-      margin: 0;
-      transition: color 0.3s;
-    }
-
-    #btn-unlock {
-      pointer-events: auto;
-      background: var(--primary);
-      color: var(--bg);
-      border: none;
-      padding: 16px 40px;
-      border-radius: 50px;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
-      margin-top: 20px;
-      opacity: 0.5;
-      transition: opacity 0.3s;
-    }
-
-    @keyframes scan {
-
-      0%,
-      100% {
-        top: 0%;
-        opacity: 0;
+      #ui-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: var(--bg); transition: background-color 0.8s ease;
+        display: flex; flex-direction: column; justify-content: space-between;
+        align-items: center; z-index: 100; pointer-events: none;
       }
 
-      50% {
-        top: 100%;
-        opacity: 1;
+      .back-btn {
+        pointer-events: auto; align-self: flex-start; margin: 20px;
+        background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white; padding: 10px 20px; border-radius: 12px;
+        backdrop-filter: blur(10px); font-size: 14px; cursor: pointer; text-decoration: none;
       }
-    }
 
-    .mindar-ui-overlay {
-      display: none !important;
-    }
-  </style>
-</head>
+      .scan-container {
+        width: 250px; height: 250px; border: 2px solid rgba(0, 255, 255, 0.3);
+        position: relative; border-radius: 20px; margin-top: -50px;
+        display: flex; justify-content: center; align-items: center;
+      }
+      .scan-line {
+        position: absolute; width: 100%; height: 2px; background: var(--primary);
+        box-shadow: 0 0 15px var(--primary); top: 0; animation: scan 3s ease-in-out infinite;
+      }
+      .corner { position: absolute; width: 20px; height: 20px; border: 3px solid var(--primary); }
+      .tl { top: -5px; left: -5px; border-right: 0; border-bottom: 0; }
+      .tr { top: -5px; right: -5px; border-left: 0; border-bottom: 0; }
+      .bl { bottom: -5px; left: -5px; border-right: 0; border-top: 0; }
+      .br { bottom: -5px; right: -5px; border-left: 0; border-top: 0; }
 
-<body>
-  <div id="ui-layer">
-    <a href="/" class="back-btn">← Voltar</a>
+      .footer-info { text-align: center; color: white; margin-bottom: 40px; padding: 0 20px; }
+      .footer-info h1 { font-size: 18px; letter-spacing: 2px; margin-bottom: 5px; color: var(--primary); }
+      .footer-info p { font-size: 14px; opacity: 0.7; margin: 0; transition: color 0.3s; }
 
-    <div class="scan-container" id="hud-frame">
-      <div class="scan-line"></div>
-      <div class="corner tl"></div>
-      <div class="corner tr"></div>
-      <div class="corner bl"></div>
-      <div class="corner br"></div>
-      <span id="scan-text" style="color: white; font-size: 12px; opacity: 0.5; text-transform: uppercase;">Ajuste a
-        Logo</span>
+      #btn-unlock {
+        pointer-events: auto; background: var(--primary); color: var(--bg);
+        border: none; padding: 16px 40px; border-radius: 50px;
+        font-weight: bold; font-size: 16px; cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4); margin-top: 20px;
+        opacity: 0.5; transition: opacity 0.3s;
+      }
+
+      @keyframes scan { 0%, 100% { top: 0%; opacity: 0; } 50% { top: 100%; opacity: 1; } }
+      .mindar-ui-overlay { display: none !important; }
+    </style>
+  </head>
+  
+  <body>
+    <div id="ui-layer">
+      <a href="/" class="back-btn">← Voltar</a>
+
+      <div class="scan-container" id="hud-frame">
+        <div class="scan-line"></div>
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <span style="color: white; font-size: 12px; opacity: 0.5; text-transform: uppercase;">Ajuste a Logo</span>
+      </div>
+
+      <div class="footer-info">
+        <h1>HUNTERS MANPOWER</h1>
+        <p id="status-text">Carregando motor 3D...</p>
+        <button id="btn-unlock" disabled>AGUARDE...</button>
+      </div>
     </div>
 
-    <div class="footer-info">
-      <h1>HUNTERS MANPOWER</h1>
-      <p id="status-text">Carregando motor 3D...</p>
-      <button id="btn-unlock" disabled>AGUARDE...</button>
-    </div>
-  </div>
+    <a-scene 
+      id="main-scene"
+      mindar-image="imageTargetSrc: /targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets timeout="10000">
+        <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+      </a-assets>
 
-  <a-scene id="main-scene"
-    mindar-image="imageTargetSrc: /targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
-    <a-assets timeout="10000">
-      <video id="meuVideo" src="/video.mp4.mp4" loop muted playsinline webkit-playsinline
-        crossorigin="anonymous"></video>
-    </a-assets>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
+        <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625"></a-video>
+      </a-entity>
+    </a-scene>
 
-    <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
-      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625"></a-video>
-    </a-entity>
-  </a-scene>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const sceneEl = document.querySelector('#main-scene');
+        const video = document.querySelector('#meuVideo');
+        const btn = document.querySelector('#btn-unlock');
+        const statusText = document.querySelector('#status-text');
+        const hud = document.querySelector('#hud-frame');
+        const uiLayer = document.querySelector('#ui-layer');
+        const alvo = document.querySelector('#alvo-logo');
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const sceneEl = document.querySelector('#main-scene');
-      const video = document.querySelector('#meuVideo');
-      const btn = document.querySelector('#btn-unlock');
-      const statusText = document.querySelector('#status-text');
-      const hud = document.querySelector('#hud-frame');
-      const uiLayer = document.querySelector('#ui-layer');
-      const alvo = document.querySelector('#alvo-logo');
+        const destravaBotao = () => {
+          btn.innerHTML = "ATIVAR EXPERIÊNCIA";
+          btn.style.opacity = "1";
+          btn.disabled = false;
+          statusText.innerHTML = "Sistema pronto. Autorize a câmera.";
+        };
 
-      // FUNÇÃO DE DESTRAVAMENTO
-      const destravaBotao = () => {
-        btn.innerHTML = "ATIVAR EXPERIÊNCIA";
-        btn.style.opacity = "1";
-        btn.disabled = false;
-        statusText.innerHTML = "Sistema pronto. Autorize a câmera.";
-      };
+        if (sceneEl.hasLoaded) { destravaBotao(); } else { sceneEl.addEventListener('loaded', destravaBotao); }
+        setTimeout(destravaBotao, 3000); // Failsafe
 
-      // CORREÇÃO: Verifica se o A-Frame já carregou. Se sim, destrava na hora. Se não, espera.
-      if (sceneEl.hasLoaded) {
-        destravaBotao();
-      } else {
-        sceneEl.addEventListener('loaded', destravaBotao);
-      }
+        btn.addEventListener('click', () => {
+          try {
+            statusText.innerHTML = "LIGANDO CÂMERA...";
+            btn.style.display = 'none';
+            uiLayer.style.backgroundColor = "transparent";
+            
+            const mindarSystem = sceneEl.systems['mindar-image-system'];
+            mindarSystem.start(); 
 
-      // Failsafe: Se tudo falhar e o A-Frame demorar muito, destrava o botão à força em 3 segundos.
-      setTimeout(destravaBotao, 3000);
+            video.muted = false;
+            video.play().then(() => video.pause()).catch(() => {});
+            
+            statusText.innerHTML = "BUSCANDO LOGO...";
+          } catch (erro) {
+            statusText.innerHTML = "ERRO: O sistema AR não carregou.";
+            statusText.style.color = "red";
+          }
+        });
 
-      btn.addEventListener('click', () => {
-        try {
-          statusText.innerHTML = "LIGANDO CÂMERA...";
-          btn.style.display = 'none';
-          uiLayer.style.backgroundColor = "transparent";
+        alvo.addEventListener("targetFound", () => {
+          video.play();
+          statusText.innerHTML = "SISTEMA ONLINE • REPRODUZINDO";
+        });
 
-          const mindarSystem = sceneEl.systems['mindar-image-system'];
-          mindarSystem.start();
-
-          video.muted = false;
-          video.play().then(() => video.pause()).catch(() => { });
-
-          statusText.innerHTML = "BUSCANDO LOGO...";
-        } catch (erro) {
-          statusText.innerHTML = "ERRO: O sistema AR não carregou.";
-          statusText.style.color = "red";
-        }
+        alvo.addEventListener("targetLost", () => {
+          video.pause();
+          statusText.innerHTML = "SINAL PERDIDO: Busque a logo";
+        });
       });
-
-      alvo.addEventListener("targetFound", () => {
-        video.play();
-        hud.style.borderColor = "#00FFFF";
-        statusText.innerHTML = "SISTEMA ONLINE • REPRODUZINDO";
-        statusText.style.color = "#00FFFF";
-      });
-
-      alvo.addEventListener("targetLost", () => {
-        video.pause();
-        hud.style.borderColor = "rgba(0, 255, 255, 0.3)";
-        statusText.innerHTML = "SINAL PERDIDO: Busque a logo";
-        statusText.style.color = "white";
-      });
-    });
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>

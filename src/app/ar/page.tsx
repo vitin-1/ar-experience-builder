@@ -1,157 +1,143 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Camera } from 'lucide-react';
+import { motion } from "framer-motion";
+import huntersLogo from "@/assets/hunters-logo.png";
+import { Video } from "lucide-react";
 
 export default function ARViewer() {
-  const [arStarted, setArStarted] = useState(false);
-  const [scriptsLoaded, setScriptsLoaded] = useState(false);
+  // O logo pode vir como objeto do next/image em projetos Next.js ou string base64, usando any garante o fallback
+  const logoSrc = (huntersLogo as any).src || huntersLogo;
 
-  useEffect(() => {
-    // Garante que isso só rode no navegador (Client-Side)
-    if (typeof window === 'undefined') return;
-
-    // Função para forçar o carregamento dos scripts na ordem certa
-    const loadARScripts = async () => {
-      try {
-        // 1. Injeta o A-Frame primeiro e espera carregar
-        await new Promise((resolve, reject) => {
-          if ((window as any).AFRAME) return resolve(true);
-          const script = document.createElement('script');
-          script.src = "https://aframe.io/releases/1.3.0/aframe.min.js";
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-
-        // 2. Injeta o MindAR logo em seguida
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js";
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-
-        // 3. Registra o nosso componente de vídeo da Hunters
-        if ((window as any).AFRAME && !(window as any).AFRAME.components['video-handler']) {
-          (window as any).AFRAME.registerComponent('video-handler', {
-            init: function () {
-              const video = document.querySelector('#ar-video') as HTMLVideoElement;
-
-              this.el.addEventListener('targetFound', () => {
-                if (video) {
-                  video.muted = false;
-                  video.play().catch(e => console.error("Erro Play:", e));
-                }
-              });
-
-              this.el.addEventListener('targetLost', () => {
-                if (video) video.pause();
-              });
-            }
-          });
-        }
-
-        // 4. Tudo pronto! Libera a tela inicial.
-        setScriptsLoaded(true);
-      } catch (error) {
-        console.error("Erro ao carregar o motor AR:", error);
-      }
-    };
-
-    loadARScripts();
-  }, []);
-
-  const handleStartCamera = async () => {
-    try {
-      // O truque mestre para o iOS: pede permissão real antes de renderizar o AR
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      stream.getTracks().forEach(track => track.stop());
-      setArStarted(true);
-    } catch (error) {
-      console.error("Erro câmera:", error);
-      alert("Precisamos de acesso à câmera para a RA.");
-    }
-  };
-
-  // TELA DE CARREGAMENTO (Enquanto injetamos os scripts)
-  if (!scriptsLoaded) {
-    return (
-      <div className="w-screen h-screen bg-[#0B0F19] flex items-center justify-center">
-        <div className="animate-pulse text-[#00FFFF] font-bold tracking-widest">
-          INICIANDO MOTOR AR...
-        </div>
-      </div>
-    );
-  }
-
-  // TELA DE BLOQUEIO INICIAL (Aguardando o clique)
-  if (!arStarted) {
-    return (
-      <div className="w-screen h-screen overflow-hidden bg-[#0B0F19] flex flex-col items-center justify-center relative">
-        <div className="flex flex-col items-center z-10 text-white space-y-8 p-6 text-center">
-          <div className="w-32 h-32 mb-4 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 shadow-[0_0_50px_rgba(255,255,255,0.1)]">
-            <span className="text-3xl font-extrabold tracking-tighter text-[#00FFFF]">HUNTERS</span>
-          </div>
-
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Experiência AR</h1>
-            <p className="text-sm text-gray-400 max-w-[280px]">
-              Autorize o uso da câmera para iniciar o rastreio offshore.
-            </p>
-          </div>
-
-          <button
-            onClick={handleStartCamera}
-            className="group relative flex items-center justify-center gap-3 w-full max-w-[300px] h-14 rounded-full bg-[#00FFFF] text-[#0B0F19] font-bold transition-all shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)]"
-          >
-            <Camera className="w-5 h-5" />
-            INICIAR CÂMERA
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // CENA AR RENDERIZADA APÓS PERMISSÃO
   return (
-    <div className="w-screen h-screen overflow-hidden bg-black absolute inset-0 z-50">
-      <button
-        onClick={() => window.location.href = '/'}
-        className="absolute top-6 left-6 z-[9999] px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white font-bold shadow-lg transition-all active:scale-95"
-      >
-        Voltar
-      </button>
+    <motion.div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0F19] overflow-hidden pointer-events-auto h-[100dvh] w-screen font-sans"
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.6, ease: "easeInOut" }}
+    >
+      {/* Background and HUD Atmosphere */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#00FFFF]/5 blur-[120px]" />
+        <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-[#B026FF]/5 blur-[100px]" />
 
-      <div dangerouslySetInnerHTML={{
-        __html: `
-        <a-scene
-          mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no;" 
-          color-space="sRGB" 
-          renderer="colorManagement: true; physicallyCorrectLights: true" 
-          vr-mode-ui="enabled: false" 
-          device-orientation-permission-ui="enabled: false"
+        {/* Subtle grid and lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
+
+        {/* Particle and Data Elements */}
+        <div className="absolute top-[10%] left-[5%] flex flex-col gap-2 text-cyan-500/30 text-xs font-mono">
+          <motion.div animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 3, repeat: Infinity }}>SYS_V: 88.98</motion.div>
+          <div className="h-1 w-24 bg-cyan-900/30 rounded overflow-hidden mt-1">
+            <motion.div className="h-full bg-cyan-500/40" animate={{ width: ["10%", "90%", "30%"] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-10 w-full flex flex-col items-center justify-center max-w-6xl px-6 py-4">
+        {/* Logo */}
+        <motion.div
+          className="relative mb-4 mt-2"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.2, type: "spring" }}
         >
-          <a-assets>
-            <video 
-              id="ar-video" 
-              src="/video.mp4" 
-              playsinline 
-              webkit-playsinline="true"
-              loop 
-              muted 
-              crossorigin="anonymous"
-            ></video>
-          </a-assets>
+          {/* Holographic Glow behind Logo */}
+          <motion.div
+            className="absolute inset-0 rounded-full blur-xl opacity-40"
+            style={{ background: 'radial-gradient(circle, #00FFFF 0%, #B026FF 100%)' }}
+            animate={{ opacity: [0.2, 0.5, 0.2], scale: [0.9, 1.1, 0.9] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <img
+            src={logoSrc}
+            alt="Hunters Logo"
+            className="relative w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]"
+          />
+        </motion.div>
 
-          <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        {/* Titles */}
+        <motion.div
+          className="text-center mb-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+        >
+          <h1 className="text-4xl md:text-6xl font-bold text-white tracking-widest leading-none mb-1 font-sans">
+            HUNTERS
+          </h1>
+          <p className="text-base md:text-xl text-gray-300 tracking-[0.4em] uppercase font-light">
+            MANPOWER
+          </p>
+        </motion.div>
 
-          <a-entity mindar-image-target="targetIndex: 0" video-handler>
-            <a-video src="#ar-video" width="1" height="0.5625" position="0 0 0" rotation="0 0 0"></a-video>
-          </a-entity>
-        </a-scene>
-      `}} />
-    </div>
+        {/* Subtitle */}
+        <motion.h2
+          className="text-sm md:text-base font-bold tracking-[0.4em] text-[#00FFFF] mb-4 uppercase drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          QUEM SOMOS
+        </motion.h2>
+
+        {/* Description */}
+        <motion.p
+          className="text-[#D1D5DB] text-center text-sm md:text-base max-w-3xl leading-relaxed mb-6 font-light"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          A Hunters ManPower atua como parceira estratégica em operações que exigem precisão, segurança e alta performance, selecionando profissionais preparados.
+        </motion.p>
+
+        {/* Highlights Grid (3 Columns) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-5xl mb-8">
+          {[
+            {
+              title: "Precisão",
+              desc: " - Foco na qualificação para entregar resultados concisos."
+            },
+            {
+              title: "Safety",
+              desc: " - Atuação profissional estratégico."
+            },
+            {
+              title: "High Performance",
+              desc: " para enfrentar os desafios mais complexos do ambiente offshore."
+            }
+          ].map((bullet, i) => (
+            <motion.div
+              key={bullet.title}
+              className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-sm hover:border-[#00FFFF]/30 transition-colors"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1 + i * 0.2 }}
+            >
+              <div className="mt-1.5 flex-shrink-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#00FFFF] shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
+              </div>
+              <div>
+                <p className="text-[#D1D5DB] text-sm md:text-base leading-relaxed font-light text-left">
+                  <strong className="text-white font-bold">{bullet.title}</strong>{bullet.desc}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Action Button */}
+        <motion.button
+          onClick={() => window.location.href = '/ar.html'}
+          className="group relative flex items-center justify-center gap-3 px-8 py-4 bg-white/[0.03] backdrop-blur-md border border-[#00FFFF]/50 rounded-lg overflow-hidden transition-all duration-300 hover:border-[#00FFFF] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:bg-[#00FFFF]/10 pointer-events-auto"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.6, type: "spring" }}
+        >
+          <Video className="w-5 h-5 text-[#00FFFF] group-hover:scale-110 transition-transform" />
+          <span className="text-[#00FFFF] font-bold tracking-wider text-sm whitespace-nowrap">
+            ABRIR CÂMERA E INICIAR RA
+          </span>
+        </motion.button>
+      </div>
+    </motion.div>
   );
 }
