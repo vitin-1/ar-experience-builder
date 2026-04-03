@@ -127,6 +127,38 @@
 
     .ar-btn svg { width: 16px; height: 16px; fill: currentColor; }
     .ar-btn.outline svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* 8. Modal de Erro de Câmera */
+    #error-modal {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(11, 15, 25, 0.95); z-index: 200;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 30px; box-sizing: border-box; text-align: center;
+      opacity: 0; visibility: hidden; transition: opacity 0.5s ease;
+      backdrop-filter: blur(10px);
+    }
+    #error-modal.show { opacity: 1; visibility: visible; }
+
+    .error-box {
+      background: rgba(255, 50, 50, 0.05); border: 1px solid rgba(255, 50, 50, 0.3);
+      padding: 30px; border-radius: 16px; max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .error-box h2 {
+      color: #ff4a4a; margin-top: 0; font-family: sans-serif; font-size: 18px; margin-bottom: 15px;
+    }
+    .error-box p {
+      color: #e2e8f0; font-size: 14px; line-height: 1.6; font-family: sans-serif; margin-bottom: 25px;
+    }
+
+    .btn-reload {
+      background: linear-gradient(90deg, #ff4a4a, #d40000);
+      color: white; border: none; padding: 12px 24px; border-radius: 8px;
+      font-weight: bold; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(255, 74, 74, 0.3);
+    }
+    .btn-reload:active { transform: scale(0.95); }
   </style>
 </head>
 
@@ -135,6 +167,14 @@
   <div id="loading-screen">
     <div class="radar-spinner"></div>
     <div class="loading-text">Ligando Óptica Tática...</div>
+  </div>
+
+  <div id="error-modal">
+    <div class="error-box">
+      <h2>Acesso Bloqueado</h2>
+      <p>Precisamos de acesso à sua câmera para a experiência de Realidade Aumentada funcionar. Por favor, libere a permissão no seu navegador e recarregue a página.</p>
+      <button class="btn-reload" onclick="location.reload()">Recarregar Página</button>
+    </div>
   </div>
 
   <div class="hud-corners">
@@ -193,7 +233,9 @@
         };
       } catch (err) {
         console.error("Erro ao acessar a câmera manualmente:", err);
-        alert("Por favor, permita o acesso à câmera traseira.");
+        // Oculta a tela de loading indefinida e mostra o erro
+        document.getElementById('loading-screen').classList.add('hidden');
+        document.getElementById('error-modal').classList.add('show');
       }
     };
 
