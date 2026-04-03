@@ -66,12 +66,98 @@
       height: 100vh;
       z-index: 5;
     }
+
+    /* 5. Tela de Carregamento */
+    #loading-screen {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #0b0f19; z-index: 100;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: opacity 0.6s ease, visibility 0.6s;
+    }
+    #loading-screen.hidden { opacity: 0; visibility: hidden; }
+
+    .radar-spinner {
+      width: 50px; height: 50px; border: 3px solid rgba(0, 255, 255, 0.1);
+      border-top-color: #00FFFF; border-radius: 50%;
+      animation: spin 1s linear infinite; margin-bottom: 20px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    .loading-text {
+      color: #00FFFF; font-family: monospace; font-size: 13px; letter-spacing: 2px;
+      text-transform: uppercase; animation: blink 1.5s infinite; text-align: center;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* 6. HUD Bordas Táticas (Scanner) */
+    .hud-corners {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 2;
+    }
+    .corn {
+      position: absolute; width: 40px; height: 40px; border: 2px solid rgba(0, 255, 255, 0.7);
+      filter: drop-shadow(0 0 5px rgba(0,255,255,0.5));
+    }
+    .corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
+    .corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
+    .corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
+    .corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
+
+    /* 7. Controles Comerciais AR */
+    #ar-controls {
+      position: absolute; bottom: 30px; width: 100%;
+      display: flex; justify-content: center; gap: 15px;
+      z-index: 10; pointer-events: auto; padding: 0 15px; box-sizing: border-box;
+    }
+    
+    .ar-btn {
+      background: rgba(0, 255, 255, 0.1);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      color: white; padding: 12px 16px; border-radius: 12px;
+      text-decoration: none; font-size: 11px; font-weight: bold; font-family: sans-serif;
+      backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.05);
+      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+    }
+    
+    .ar-btn:active {
+      transform: scale(0.95);
+      background: rgba(0, 255, 255, 0.2);
+    }
+
+    .ar-btn svg { width: 16px; height: 16px; fill: currentColor; }
+    .ar-btn.outline svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   </style>
 </head>
 
 <body>
 
+  <div id="loading-screen">
+    <div class="radar-spinner"></div>
+    <div class="loading-text">Ligando Óptica Tática...</div>
+  </div>
+
+  <div class="hud-corners">
+    <div class="corn tl"></div>
+    <div class="corn tr"></div>
+    <div class="corn bl"></div>
+    <div class="corn br"></div>
+  </div>
+
   <a href="index.html" class="btn-voltar">⬅ Voltar</a>
+
+  <div id="ar-controls">
+    <a href="#" class="ar-btn">
+      <!-- Ícone WhatsApp genérico SVG puro -->
+      <svg viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.224.581 4.39 1.688 6.294L.436 23.5l5.297-1.39A11.968 11.968 0 0012.031 24c6.646 0 12.031-5.385 12.031-12.031S18.677 0 12.031 0zm3.504 17.15c-.147.416-.838.816-1.155.845-.318.03-1.026-.067-3.003-1.025-2.585-1.258-4.223-3.904-4.354-4.08-.13-.175-1.037-1.383-1.037-2.64 0-1.257.65-1.879.882-2.128.232-.249.664-.325.882-.325.218 0 .436.004.629.013.208.01.488-.078.762.586.273.664.931 2.277 1.011 2.443.08.166.164.444.026.721-.138.277-.249.36-.436.561-.186.201-.397.382-.562.582-.187.232-.387.493-.162.882.226.39 1.002 1.656 2.152 2.684.862.771 1.708 1.077 2.123 1.253.308.13.784.09 1.05-.208.266-.298 1.134-1.326 1.442-1.78.307-.453.614-.376 1.03-.22 415.156 1.487 2.766 1.642 2.87.103.104-.447.665-.705 1.127-.999.462-.294 1.411-1.085 1.503z"/></svg>
+      Falar no WhatsApp
+    </a>
+    <a href="#" class="ar-btn outline">
+      <!-- Ícone Serviços SVG -->
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      Ver Serviços
+    </a>
+  </div>
 
   <!-- Fallback/Raw Video solicitado -->
   <video id="camera-view" autoplay playsinline></video>
@@ -100,6 +186,11 @@
         });
         const videoElement = document.getElementById("camera-view");
         videoElement.srcObject = stream;
+        
+        // Esconde a tela de loading quando a câmera inicializar fisicamente e o video começar a tocar
+        videoElement.onloadedmetadata = () => {
+          document.getElementById('loading-screen').classList.add('hidden');
+        };
       } catch (err) {
         console.error("Erro ao acessar a câmera manualmente:", err);
         alert("Por favor, permita o acesso à câmera traseira.");
