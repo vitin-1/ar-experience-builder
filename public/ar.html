@@ -3,8 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Visualização AR</title>
+
+  <!-- Bibliotecas AR movidas APENAS para este arquivo -->
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     /* 1. Zera as margens e esconde as barras de rolagem */
@@ -47,7 +51,16 @@
       font-family: sans-serif;
       border-radius: 8px;
       backdrop-filter: blur(4px);
-      /* Efeito de vidro moderno */
+    }
+
+    /* 4. Overlay da interface AR para garantir transparência correta */
+    .mindar-ui-overlay { display: none !important; }
+    
+    #main-scene {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 5;
     }
   </style>
 </head>
@@ -56,8 +69,63 @@
 
   <a href="index.html" class="btn-voltar">⬅ Voltar</a>
 
+  <!-- Fallback/Raw Video solicitado -->
   <video id="camera-view" autoplay playsinline></video>
 
-</body>
+  <!-- Motor de Realidade Aumentada rodando isolado sobreposto à câmera -->
+  <a-scene 
+    id="main-scene"
+    mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no;" 
+    color-space="sRGB" 
+    renderer="colorManagement: true, physicallyCorrectLights" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false"
+  >
+    <a-assets timeout="10000">
+      <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    </a-assets>
 
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
+      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625"></a-video>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // 1. Script Raiz (solicitado) de permissão de câmera e injeção na tag <video>
+    const startRawCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
+        const videoElement = document.getElementById("camera-view");
+        videoElement.srcObject = stream;
+      } catch (err) {
+        console.error("Erro ao acessar a câmera manualmente:", err);
+        alert("Por favor, permita o acesso à câmera traseira.");
+      }
+    };
+    
+    // Inicia a câmera raw
+    startRawCamera();
+
+    // 2. Integração do Vídeo 3D sobre o Alvo (MindAR)
+    document.addEventListener("DOMContentLoaded", function() {
+      const alvo = document.querySelector('#alvo-logo');
+      const videoAsset = document.querySelector('#meuVideo');
+
+      alvo.addEventListener("targetFound", () => {
+        videoAsset.muted = false; // Necessário interagir antes se o navegador bloquear áudio automático
+        videoAsset.play().catch(() => {});
+        console.log("Alvo AR Encontrado - Reproduzindo o Holograma");
+      });
+
+      alvo.addEventListener("targetLost", () => {
+        videoAsset.pause();
+        console.log("Alvo AR Perdido - Pausando");
+      });
+    });
+  </script>
+</body>
 </html>

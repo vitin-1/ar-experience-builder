@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <title>Hunters AR Experience</title>
     
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <title>Hunters AR Experience</title>
     
     <style>
       @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -162,11 +161,11 @@
 
       #btn-unlock {
         pointer-events: auto; background: linear-gradient(90deg, #0088ff, var(--cyan));
-        color: #000; border: none; padding: 14px 28px; border-radius: 8px;
+        color: #000; text-decoration: none; border: none; padding: 14px 28px; border-radius: 8px;
         font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.25em;
         cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2); transition: all 0.3s;
-        opacity: 0.5; max-width: 90vw;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); transition: all 0.3s;
+        opacity: 1; max-width: 90vw;
       }
       #btn-unlock:active { transform: scale(0.97); }
 
@@ -267,92 +266,18 @@
           </div>
         </div>
 
-        <button id="btn-unlock" disabled>
+        <a href="ar.html" id="btn-unlock">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          <span id="btn-text">INICIANDO SISTEMA...</span>
-        </button>
+          <span id="btn-text">ABRIR CÂMERA E INICIAR RA</span>
+        </a>
 
         <div class="ar-status">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
-          <span id="status-label">Preparando Ambiente</span>
+          <span id="status-label">SISTEMA PRONTO</span>
           <div class="pulse-dot"></div>
         </div>
       </div>
     </div>
 
-    <a-scene 
-      id="main-scene"
-      mindar-image="imageTargetSrc: /targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false"
-    >
-      <a-assets timeout="10000">
-        <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
-      </a-assets>
-
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-      <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
-        <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625"></a-video>
-      </a-entity>
-    </a-scene>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const sceneEl = document.querySelector('#main-scene');
-        const video = document.querySelector('#meuVideo');
-        const btn = document.querySelector('#btn-unlock');
-        const btnText = document.querySelector('#btn-text');
-        const statusLabel = document.querySelector('#status-label');
-        const uiLayer = document.querySelector('#ui-layer');
-        const gridBg = document.querySelector('#grid-bg');
-        const alvo = document.querySelector('#alvo-logo');
-        const sonarBorder = document.querySelector('#sonar-border');
-        const radarSweep = document.querySelector('#radar-sweep');
-
-        const destravaBotao = () => {
-          btnText.innerHTML = "ABRIR CÂMERA E INICIAR RA";
-          btn.style.opacity = "1";
-          btn.disabled = false;
-          statusLabel.innerHTML = "Realidade Aumentada disponível";
-        };
-
-        if (sceneEl.hasLoaded) { destravaBotao(); } else { sceneEl.addEventListener('loaded', destravaBotao); }
-        setTimeout(destravaBotao, 3000); 
-
-        btn.addEventListener('click', () => {
-          try {
-            uiLayer.classList.add('ar-active');
-            uiLayer.style.background = "transparent";
-            if (gridBg) gridBg.style.opacity = "0.01";
-            statusLabel.innerHTML = "BUSCANDO LOGO NO AMBIENTE...";
-
-            const mindarSystem = sceneEl.systems['mindar-image-system'];
-            mindarSystem.start(); 
-
-            video.muted = false;
-            video.play().then(() => video.pause()).catch(() => {});
-          } catch (erro) {
-            statusLabel.innerHTML = "ERRO NA CÂMERA";
-          }
-        });
-
-        alvo.addEventListener("targetFound", () => {
-          video.play();
-          if (sonarBorder) sonarBorder.style.borderColor = "#00FFFF";
-          radarSweep.style.background = "conic-gradient(from 0deg, transparent 70%, rgba(0, 255, 255, 0.8) 100%)";
-          statusLabel.innerHTML = "CONECTADO: REPRODUZINDO";
-        });
-
-        alvo.addEventListener("targetLost", () => {
-          video.pause();
-          if (sonarBorder) sonarBorder.style.borderColor = "rgba(0, 255, 255, 0.15)";
-          radarSweep.style.background = "conic-gradient(from 0deg, transparent 70%, rgba(0, 255, 255, 0.4) 100%)";
-          statusLabel.innerHTML = "SINAL PERDIDO: AJUSTE A LOGO";
-        });
-      });
-    </script>
   </body>
 </html>
