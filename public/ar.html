@@ -54,12 +54,16 @@
     }
 
     /* 4. Overlay da interface AR para garantir transparência correta */
-    .mindar-ui-overlay { display: none !important; }
-    
+    .mindar-ui-overlay {
+      display: none !important;
+    }
+
     #main-scene {
       position: absolute;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       z-index: 5;
     }
   </style>
@@ -73,16 +77,12 @@
   <video id="camera-view" autoplay playsinline></video>
 
   <!-- Motor de Realidade Aumentada rodando isolado sobreposto à câmera -->
-  <a-scene 
-    id="main-scene"
-    mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no;" 
-    color-space="sRGB" 
-    renderer="colorManagement: true, physicallyCorrectLights" 
-    vr-mode-ui="enabled: false" 
-    device-orientation-permission-ui="enabled: false"
-  >
+  <a-scene id="main-scene" mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no;"
+    color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
     <a-assets timeout="10000">
-      <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+      <video id="meuVideo" src="/video.mp4.mp4" loop muted playsinline webkit-playsinline
+        crossorigin="anonymous"></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -106,18 +106,18 @@
         alert("Por favor, permita o acesso à câmera traseira.");
       }
     };
-    
+
     // Inicia a câmera raw
     startRawCamera();
 
     // 2. Integração do Vídeo 3D sobre o Alvo (MindAR)
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       const alvo = document.querySelector('#alvo-logo');
       const videoAsset = document.querySelector('#meuVideo');
 
       alvo.addEventListener("targetFound", () => {
         videoAsset.muted = false; // Necessário interagir antes se o navegador bloquear áudio automático
-        videoAsset.play().catch(() => {});
+        videoAsset.play().catch(() => { });
         console.log("Alvo AR Encontrado - Reproduzindo o Holograma");
       });
 
@@ -128,4 +128,5 @@
     });
   </script>
 </body>
+
 </html>
