@@ -21,19 +21,14 @@
       /* Camada de UI - Fundo que desaparece ao clicar */
       #ui-layer {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(circle at center, #111827 0%, var(--navy) 100%);
+        background: linear-gradient(135deg, #091325 0%, #03060c 100%);
         transition: background 1s ease;
         display: flex; flex-direction: column; justify-content: space-between;
         align-items: center; z-index: 100; pointer-events: none;
         padding: 24px 20px; box-sizing: border-box;
       }
 
-      /* Grid Translúcido */
-      .grid-overlay {
-        position: absolute; inset: 0; opacity: 0.04; transition: opacity 1s ease;
-        background-image: linear-gradient(var(--cyan) 1px, transparent 1px), linear-gradient(90deg, var(--cyan) 1px, transparent 1px);
-        background-size: 60px 60px; pointer-events: none; z-index: -1;
-      }
+      /* Animacoes */
 
       /* Efeito Oceano (Mar batendo) */
       .ocean { 
@@ -55,13 +50,13 @@
 
       /* TOPO: Logo e Título */
       .header-container { text-align: center; pointer-events: auto; }
-      .header-container img { width: 64px; filter: drop-shadow(0 0 10px rgba(0,255,255,0.3)); margin-bottom: 8px; }
+      .header-container img { width: 72px; filter: drop-shadow(0 0 35px rgba(0,255,255,0.9)) drop-shadow(0 0 15px rgba(0,255,255,0.6)); margin-bottom: 12px; }
       .brand-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; color: white; margin: 0; }
       .brand-subtitle { font-size: 14px; letter-spacing: 0.5em; color: var(--cyan); margin: 0; text-transform: uppercase; }
 
       /* CENTRO: O Radar */
       .sonar-wrapper {
-        position: relative; width: 220px; height: 220px;
+        position: relative; width: 260px; height: 260px;
         display: flex; justify-content: center; align-items: center;
       }
       .sonar-frame {
@@ -75,11 +70,11 @@
       .br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 12px; }
       
       .sonar-circle {
-        position: absolute; width: 140px; height: 140px; border-radius: 50%;
+        position: absolute; width: 180px; height: 180px; border-radius: 50%;
         border: 1px dashed rgba(0, 255, 255, 0.3);
       }
       .sonar-sweep {
-        position: absolute; width: 140px; height: 140px; border-radius: 50%;
+        position: absolute; width: 180px; height: 180px; border-radius: 50%;
         background: conic-gradient(from 0deg, transparent 70%, rgba(0, 255, 255, 0.4) 100%);
         animation: spin 2s linear infinite;
       }
@@ -88,8 +83,8 @@
       /* RODAPÉ: Cards e Botão */
       .bottom-section { display: flex; flex-direction: column; align-items: center; width: 100%; transition: opacity 0.5s ease; }
       
-      .about-title { color: var(--cyan); text-transform: uppercase; letter-spacing: 0.4em; font-size: 10px; font-weight: bold; margin-bottom: 4px; }
-      .about-desc { color: var(--text-muted); font-size: 12px; text-align: center; max-width: 320px; margin-top: 0; line-height: 1.5; }
+      .about-title { color: var(--cyan); text-transform: uppercase; letter-spacing: 0.3em; font-size: 14px; font-weight: bold; margin-bottom: 6px; }
+      .about-desc { color: var(--text-muted); font-size: 14px; text-align: center; max-width: 340px; margin-top: 0; line-height: 1.6; }
 
       .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 380px; margin-bottom: 20px; }
       .feature-card {
@@ -126,7 +121,6 @@
   
   <body>
     <div id="ui-layer">
-      <div class="grid-overlay" id="grid-bg"></div>
 
       <div class="ocean">
         <div class="wave"></div>
@@ -224,7 +218,7 @@
           try {
             uiLayer.classList.add('ar-active');
             uiLayer.style.background = "transparent";
-            gridBg.style.opacity = "0.01";
+            if (gridBg) gridBg.style.opacity = "0.01";
             statusLabel.innerHTML = "BUSCANDO LOGO NO AMBIENTE...";
 
             const mindarSystem = sceneEl.systems['mindar-image-system'];
