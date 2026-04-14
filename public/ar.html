@@ -185,6 +185,31 @@
       cursor: pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
     }
     .btn-reload:active { transform: scale(0.95); }
+
+    /* AJUSTES PARA DESKTOP / TELAS MAIORES */
+    @media (min-width: 768px) {
+      .ar-btn {
+        padding: 15px 30px;
+        font-size: 14px;
+        gap: 12px;
+      }
+      .ar-btn svg, .ar-btn img {
+        width: 20px; height: 20px;
+      }
+      .btn-voltar {
+        font-size: 14px;
+        padding: 12px 24px;
+        top: 40px;
+        left: 40px;
+      }
+      .btn-voltar svg { width: 20px; height: 20px; }
+      .corn { width: 60px; height: 60px; border-width: 3px; }
+      .corn.tl { top: 40px; left: 40px; }
+      .corn.tr { top: 40px; right: 40px; }
+      .corn.bl { bottom: 40px; left: 40px; }
+      .corn.br { bottom: 40px; right: 40px; }
+      #ar-controls { bottom: 40px; gap: 25px; }
+    }
   </style>
 </head>
 
