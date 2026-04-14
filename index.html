@@ -14,7 +14,7 @@
         --deep-navy: #03060c;
         --text-muted: #8b9bb4;
         --card-bg: rgba(0, 102, 255, 0.05);
-        --sonar-size: clamp(120px, min(40vw, 22vh), 220px);
+        --sonar-size: clamp(120px, min(45vw, 35vh), 400px);
       }
       
       body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #03060c; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -27,7 +27,16 @@
                     #03060c;
         display: flex; flex-direction: column; justify-content: center;
         align-items: center; z-index: 100; pointer-events: none;
-        padding: clamp(10px, 3vh, 30px) clamp(15px, 5vw, 40px); box-sizing: border-box; overflow-y: auto;
+        padding: clamp(10px, 3vh, 40px) clamp(15px, 5vw, 60px);
+        padding-bottom: env(safe-area-inset-bottom, clamp(20px, 4vh, 40px));
+        box-sizing: border-box; overflow-y: auto;
+      }
+      
+      /* Wrapper Restritor para Desktop (Mantém Background Fluido) */
+      .app-wrapper {
+        width: 100%; max-width: 1200px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        flex-grow: 1; margin: 0 auto;
       }
 
       /* Animacoes */
@@ -93,9 +102,9 @@
       .top-tools { width: 100%; display: flex; justify-content: flex-start; margin-bottom: 5px; }
       .brain-icon { width: 24px; height: 24px; color: white; opacity: 0.8; }
       
-      .header-container { text-align: center; pointer-events: auto; margin-bottom: clamp(15px, 3vh, 30px); position: relative; }
+      .header-container { text-align: center; pointer-events: auto; margin-bottom: clamp(15px, 3vh, 40px); position: relative; }
       .logo-box { 
-        width: clamp(50px, 12vw, 80px); height: clamp(50px, 12vw, 80px); margin: 0 auto 2px; position: relative; 
+        width: clamp(50px, 12vw, 100px); height: clamp(50px, 12vw, 100px); margin: 0 auto 2px; position: relative; 
         filter: drop-shadow(0 0 30px rgba(0, 136, 255, 0.9));
         animation: logo-glow 2s infinite alternate;
       }
@@ -106,14 +115,14 @@
       .logo-box img { width: 100%; height: 100%; object-fit: contain; }
       
       .brand-title { 
-        font-size: clamp(18px, 5vw, 26px); font-weight: 800; letter-spacing: 2px; 
+        font-size: clamp(18px, 4vw, 36px); font-weight: 800; letter-spacing: 2px; 
         background: linear-gradient(90deg, #fff, var(--cyan));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0; line-height: 1.2; 
       }
       .brand-subtitle { 
-        font-size: clamp(10px, 2.5vw, 13px); letter-spacing: 0.4em; 
+        font-size: clamp(10px, 1.5vw, 18px); letter-spacing: 0.4em; 
         background: linear-gradient(90deg, var(--brand-blue), var(--cyan));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -121,11 +130,11 @@
       }
       
       .main-title { 
-        font-size: clamp(15px, 4vw, 24px); font-weight: 700; 
+        font-size: clamp(15px, 3vw, 30px); font-weight: 700; 
         background: linear-gradient(90deg, #fff, var(--cyan));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin: clamp(15px, 3vh, 30px) 0 0; letter-spacing: 1px; text-transform: uppercase; 
+        margin: clamp(15px, 3vh, 35px) 0 0; letter-spacing: 1px; text-transform: uppercase; 
       }
       .main-title span { color: var(--cyan); }
 
@@ -192,20 +201,20 @@
       .bottom-section { display: flex; flex-direction: column; align-items: center; width: 100%; transition: opacity 0.5s ease; }
       
       .about-title { 
-        font-size: clamp(14px, 4vw, 20px); font-weight: 800; 
+        font-size: clamp(14px, 2.5vw, 26px); font-weight: 800; 
         background: linear-gradient(90deg, #fff, var(--cyan));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-transform: uppercase; letter-spacing: 0.3em; margin: 0 0 clamp(5px, 2vh, 15px) 0; font-family: 'JetBrains Mono', monospace; 
+        text-transform: uppercase; letter-spacing: 0.3em; margin: 0 0 clamp(5px, 2vh, 20px) 0; font-family: 'JetBrains Mono', monospace; 
         filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.3));
       }
-      .about-desc { font-size: clamp(11px, 3.5vw, 15px); color: #fff; text-align: center; max-width: 420px; line-height: 1.6; opacity: 0.9; margin: 0 0 clamp(15px, 3vh, 25px); font-weight: 500; }
+      .about-desc { font-size: clamp(11px, 1.5vw, 18px); color: #fff; text-align: center; max-width: min(90vw, 650px); line-height: 1.6; opacity: 0.9; margin: 0 0 clamp(15px, 3vh, 35px); font-weight: 500; }
 
-      .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(8px, 2.5vw, 18px); width: 100%; max-width: 450px; margin: 0 0 clamp(15px, 4vh, 30px); pointer-events: auto; }
+      .features-grid { display: grid; grid-template-columns: 1fr; gap: clamp(8px, 1.5vw, 25px); width: 100%; max-width: min(95vw, 700px); margin: 0 0 clamp(10px, 3vh, 30px); pointer-events: auto; }
       .feature-card {
         background: linear-gradient(135deg, rgba(8, 15, 25, 0.8) 0%, rgba(0, 255, 255, 0.05) 100%);
         border: 2px solid rgba(0, 136, 255, 0.4);
-        backdrop-filter: blur(15px); padding: clamp(10px, 3vw, 18px) clamp(12px, 3vw, 20px); border-radius: 16px;
+        backdrop-filter: blur(15px); padding: clamp(10px, 2vw, 22px) clamp(12px, 2vw, 25px); border-radius: 16px;
         display: flex; align-items: center; text-align: left; gap: 15px;
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 136, 255, 0.2);
@@ -230,32 +239,32 @@
       
       .feature-icon-box { 
         background: rgba(0, 102, 255, 0.1); 
-        width: clamp(34px, 10vw, 48px); height: clamp(34px, 10vw, 48px); min-width: clamp(34px, 10vw, 48px); border-radius: 12px; 
+        width: clamp(34px, 5vw, 60px); height: clamp(34px, 5vw, 60px); min-width: clamp(34px, 5vw, 60px); border-radius: 12px; 
         display: flex; justify-content: center; align-items: center; 
         border: 1px solid rgba(0, 212, 255, 0.2);
         box-shadow: 0 0 15px rgba(0, 102, 255, 0.15);
       }
       .feature-icon-box svg, .feature-icon-box img {
-        width: clamp(16px, 5vw, 24px); height: clamp(16px, 5vw, 24px);
+        width: clamp(16px, 2.5vw, 30px); height: clamp(16px, 2.5vw, 30px);
       }
       
       .card-info { display: flex; flex-direction: column; }
       .feature-card p.card-title { 
-        font-size: clamp(10px, 3vw, 14px); font-weight: 700; margin: 0; letter-spacing: 0.5px; 
+        font-size: clamp(10px, 1.5vw, 18px); font-weight: 700; margin: 0; letter-spacing: 0.5px; 
         background: linear-gradient(90deg, #fff, var(--cyan));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
-      .feature-card p.card-tag { color: var(--cyan); font-size: clamp(7px, 2vw, 9px); font-weight: 800; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; }
+      .feature-card p.card-tag { color: var(--cyan); font-size: clamp(7px, 1vw, 12px); font-weight: 800; margin: clamp(2px, 0.5vh, 6px) 0 0 0; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; }
 
       #btn-unlock {
         pointer-events: auto; background: linear-gradient(90deg, var(--brand-blue), var(--cyan));
-        color: #fff; text-decoration: none; border: none; padding: clamp(14px, 3vh, 20px) 0; border-radius: 12px; width: 100%; max-width: 450px;
-        font-weight: 800; font-size: clamp(11px, 3.5vw, 14px); text-transform: uppercase; letter-spacing: 0.25em;
+        color: #fff; text-decoration: none; border: none; padding: clamp(14px, 3vh, 25px) 0; border-radius: 12px;
+        font-weight: 800; font-size: clamp(11px, 1.5vw, 18px); text-transform: uppercase; letter-spacing: 0.25em;
         cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
         box-shadow: 0 10px 30px rgba(0, 102, 255, 0.4); transition: all 0.3s;
-        width: 100%; max-width: 400px;
-        margin-top: 10px;
+        width: 100%; max-width: min(90vw, 600px);
+        margin-top: auto;
         position: relative; overflow: hidden;
       }
       #btn-unlock::after {
@@ -282,11 +291,18 @@
         .about-desc { display: none; } /* Ocultar para poupar espaço vertical em celulares deitados */
         .features-grid { margin: 5px 0 10px; gap: 5px; }
       }
+
+      /* Desktop / Tablet Otimizado (Retorna 2 colunas e maximiza) */
+      @media (min-width: 768px) {
+        .features-grid { grid-template-columns: repeat(2, 1fr); gap: clamp(15px, 2vw, 30px); }
+        #btn-unlock { margin-top: clamp(15px, 3vh, 40px); }
+      }
     </style>
   </head>
   
   <body>
     <div id="ui-layer">
+      <div class="app-wrapper">
 
       <!-- Efeito de Mar Realista -->
       <div class="ocean">
@@ -394,6 +410,7 @@
           <span id="status-label">SISTEMA PRONTO</span>
           <div class="pulse-dot"></div>
         </div>
+      </div>
       </div>
     </div>
 
