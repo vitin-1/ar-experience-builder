@@ -39,23 +39,29 @@
     /* 3. Um botão de "Voltar" discreto (Opcional, mas recomendado) */
     .btn-voltar {
       position: absolute;
-      top: 20px;
+      top: 30px;
       left: 20px;
-      z-index: 10;
-      padding: 10px 15px;
-      background: rgba(0, 102, 255, 0.1);
-      border: 1px solid rgba(0, 102, 255, 0.3);
-      color: white;
+      z-index: 100;
+      padding: 10px 16px;
+      background: rgba(0, 20, 50, 0.6);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: #00d4ff;
       text-decoration: none;
       font-family: sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
       border-radius: 8px;
-      backdrop-filter: blur(8px);
-      background-image: linear-gradient(90deg, #fff, #00d4ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0, 102, 255, 0.2);
+      transition: all 0.3s ease;
     }
+    .btn-voltar:active { transform: scale(0.95); background: rgba(0, 102, 255, 0.3); }
+    .btn-voltar svg { width: 16px; height: 16px; stroke: #00d4ff; }
 
     /* 4. Overlay da interface AR para garantir transparência correta */
     .mindar-ui-overlay {
@@ -101,14 +107,15 @@
     .hud-corners {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
       pointer-events: none; z-index: 2;
+      transition: opacity 0.5s ease;
     }
+    .hud-corners.hidden { opacity: 0; }
     .corn {
       position: absolute; width: 40px; height: 40px; border: 2px solid #00d4ff;
       filter: drop-shadow(0 0 8px rgba(0, 102, 255, 0.8));
     }
     .corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
     .corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
-    .corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
     .corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
 
     /* 7. Controles Comerciais AR */
@@ -139,7 +146,7 @@
 
     .ar-btn svg { 
       width: 16px; height: 16px; 
-      stroke: #00d4ff; /* Garantindo que os ícones sigam o tema */
+      stroke: #00d4ff; 
     }
     .ar-btn.outline svg { fill: none; stroke: #00d4ff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -190,9 +197,17 @@
 
   <div id="error-modal">
     <div class="error-box">
-      <h2>Acesso Bloqueado</h2>
-      <p>Precisamos de acesso à sua câmera para a experiência de Realidade Aumentada funcionar. Por favor, libere a permissão no seu navegador e recarregue a página.</p>
-      <button class="btn-reload" onclick="location.reload()">Recarregar Página</button>
+      <h2>Câmera Bloqueada</h2>
+      <p style="margin-bottom: 15px;">Infelizmente seu navegador bloqueou o acesso automático à câmera. Precisamos dela para iniciar a mira holográfica.</p>
+      
+      <div style="background: rgba(0, 102, 255, 0.1); border-left: 3px solid #00d4ff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #e2e8f0;">
+        <strong style="color: #00d4ff; display: block; margin-bottom: 8px;">COMO LIBERAR MANUALMENTE:</strong>
+        1. Clique no ícone de <strong>Cadeado 🔒</strong> ou configurações de site na barra de endereços (lá no topo do seu navegador).<br>
+        2. Procure por <strong>Câmera</strong> e mude para <strong>Permitir</strong>.<br>
+        3. Clique no botão abaixo para reiniciar o sistema.
+      </div>
+
+      <button class="btn-reload" onclick="location.reload()">JÁ LIBEREI, REINICIAR SISTEMA</button>
     </div>
   </div>
 
@@ -203,7 +218,10 @@
     <div class="corn br"></div>
   </div>
 
-  <a href="index.html" class="btn-voltar">⬅ Voltar</a>
+  <a href="index.html" class="btn-voltar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    VOLTAR
+  </a>
 
   <div id="ar-controls">
     <a href="#" class="ar-btn">
@@ -212,9 +230,9 @@
       Falar no WhatsApp
     </a>
     <a href="#" class="ar-btn outline">
-      <!-- Ícone Serviços SVG -->
-      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-      Ver Serviços
+      <!-- Ícone Bússola/Site (Acessar Site) -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      Acessar Site
     </a>
   </div>
 
@@ -265,16 +283,19 @@
     document.addEventListener("DOMContentLoaded", function () {
       const alvo = document.querySelector('#alvo-logo');
       const videoAsset = document.querySelector('#meuVideo');
+      const scannerUI = document.querySelector('.hud-corners');
 
       alvo.addEventListener("targetFound", () => {
         videoAsset.muted = false; // Necessário interagir antes se o navegador bloquear áudio automático
         videoAsset.play().catch(() => { });
         console.log("Alvo AR Encontrado - Reproduzindo o Holograma");
+        if (scannerUI) scannerUI.classList.add('hidden'); // Esconde as bordas neon
       });
 
       alvo.addEventListener("targetLost", () => {
         videoAsset.pause();
         console.log("Alvo AR Perdido - Pausando");
+        if (scannerUI) scannerUI.classList.remove('hidden'); // Exibe as bordas neon novamente
       });
     });
   </script>
