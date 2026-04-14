@@ -27,16 +27,7 @@
                     #03060c;
         display: flex; flex-direction: column; justify-content: center;
         align-items: center; z-index: 100; pointer-events: none;
-        padding: clamp(10px, 3vh, 40px) clamp(15px, 5vw, 60px);
-        padding-bottom: env(safe-area-inset-bottom, clamp(20px, 4vh, 40px));
-        box-sizing: border-box; overflow-y: auto;
-      }
-      
-      /* Wrapper Restritor para Desktop (Mantém Background Fluido) */
-      .app-wrapper {
-        width: 100%; max-width: 1200px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        flex-grow: 1; margin: 0 auto;
+        padding: clamp(10px, 3vh, 40px) clamp(15px, 5vw, 60px); box-sizing: border-box; overflow-y: auto;
       }
 
       /* Animacoes */
@@ -210,7 +201,7 @@
       }
       .about-desc { font-size: clamp(11px, 1.5vw, 18px); color: #fff; text-align: center; max-width: min(90vw, 650px); line-height: 1.6; opacity: 0.9; margin: 0 0 clamp(15px, 3vh, 35px); font-weight: 500; }
 
-      .features-grid { display: grid; grid-template-columns: 1fr; gap: clamp(8px, 1.5vw, 25px); width: 100%; max-width: min(95vw, 700px); margin: 0 0 clamp(10px, 3vh, 30px); pointer-events: auto; }
+      .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(8px, 1.5vw, 25px); width: 100%; max-width: min(95vw, 700px); margin: 0 0 clamp(15px, 4vh, 40px); pointer-events: auto; }
       .feature-card {
         background: linear-gradient(135deg, rgba(8, 15, 25, 0.8) 0%, rgba(0, 255, 255, 0.05) 100%);
         border: 2px solid rgba(0, 136, 255, 0.4);
@@ -264,7 +255,7 @@
         cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
         box-shadow: 0 10px 30px rgba(0, 102, 255, 0.4); transition: all 0.3s;
         width: 100%; max-width: min(90vw, 600px);
-        margin-top: auto;
+        margin-top: clamp(10px, 2vh, 20px);
         position: relative; overflow: hidden;
       }
       #btn-unlock::after {
@@ -291,18 +282,11 @@
         .about-desc { display: none; } /* Ocultar para poupar espaço vertical em celulares deitados */
         .features-grid { margin: 5px 0 10px; gap: 5px; }
       }
-
-      /* Desktop / Tablet Otimizado (Retorna 2 colunas e maximiza) */
-      @media (min-width: 768px) {
-        .features-grid { grid-template-columns: repeat(2, 1fr); gap: clamp(15px, 2vw, 30px); }
-        #btn-unlock { margin-top: clamp(15px, 3vh, 40px); }
-      }
     </style>
   </head>
   
   <body>
     <div id="ui-layer">
-      <div class="app-wrapper">
 
       <!-- Efeito de Mar Realista -->
       <div class="ocean">
@@ -410,7 +394,6 @@
           <span id="status-label">SISTEMA PRONTO</span>
           <div class="pulse-dot"></div>
         </div>
-      </div>
       </div>
     </div>
 
