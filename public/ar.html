@@ -446,7 +446,7 @@
   <video id="camera-view" autoplay playsinline></video>
 
   <!-- Motor de Realidade Aumentada rodando isolado sobreposto à câmera -->
-  <a-scene id="main-scene" mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no;"
+  <a-scene id="main-scene" mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
     color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets timeout="10000">
@@ -456,7 +456,7 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
-      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625"></a-video>
+      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
     </a-entity>
   </a-scene>
 
