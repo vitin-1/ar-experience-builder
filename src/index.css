@@ -5,7 +5,8 @@
 /* 1. Trava absoluta do root */
 html, body, :root {
   width: 100vw !important;
-  height: 100vh !important;
+  height: 100vh !important; /* Fallback */
+  height: 100dvh !important; /* Dynamic viewport height — Safari mobile */
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;

@@ -4,7 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Visualização AR</title>
+  <meta name="description" content="Experiência de Realidade Aumentada Hunters ManPower — aponte para a logo e veja o holograma.">
+  <meta name="theme-color" content="#03060c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Visualização AR — Hunters ManPower</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <!-- Bibliotecas AR movidas APENAS para este arquivo -->
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
@@ -17,7 +21,7 @@
       margin: 0;
       padding: 0;
       width: 100%;
-      height: 100%;
+      height: 100dvh;
       overflow: hidden;
       background-color: #000;
       /* Fundo preto elegante antes da câmera abrir */
@@ -26,7 +30,7 @@
     /* 2. Configura a câmera para preencher toda a tela */
     #camera-view {
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       object-fit: cover;
       /* Faz o vídeo preencher a tela sem esticar/distorcer */
       position: absolute;
@@ -73,13 +77,13 @@
       top: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       z-index: 5;
     }
 
     /* 5. Tela de Carregamento */
     #loading-screen {
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
       background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.1) 0%, #03060c 100%); z-index: 100;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
       transition: opacity 0.6s ease, visibility 0.6s;
@@ -105,7 +109,7 @@
 
     /* 6. HUD Bordas Táticas (Scanner) */
     .hud-corners {
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
       pointer-events: none; z-index: 2;
       transition: opacity 0.5s ease;
     }
@@ -116,6 +120,7 @@
     }
     .corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
     .corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
+    .corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
     .corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
 
     /* 7. Controles Comerciais AR */
@@ -152,7 +157,7 @@
 
     /* 8. Modal de Erro de Câmera */
     #error-modal {
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
       background: rgba(11, 15, 25, 0.95); z-index: 200;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
       padding: 30px; box-sizing: border-box; text-align: center;
@@ -243,18 +248,18 @@
     <div class="corn br"></div>
   </div>
 
-  <a href="index.html" class="btn-voltar">
+  <a href="index.html" class="btn-voltar" id="btn-voltar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     VOLTAR
   </a>
 
   <div id="ar-controls">
-    <a href="#" class="ar-btn">
+    <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!" target="_blank" rel="noopener noreferrer" class="ar-btn">
       <!-- Ícone WhatsApp Personalizado -->
       <img src="/whatsapp.png" alt="WhatsApp" style="width: 18px; height: 18px; object-fit: contain;">
       Falar no WhatsApp
     </a>
-    <a href="#" class="ar-btn outline">
+    <a href="https://www.huntersmanpower.com.br" target="_blank" rel="noopener noreferrer" class="ar-btn outline">
       <!-- Ícone Bússola/Site (Acessar Site) -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
       Acessar Site
@@ -304,7 +309,27 @@
     // Inicia a câmera raw
     startRawCamera();
 
-    // 2. Integração do Vídeo 3D sobre o Alvo (MindAR)
+    // 2. Função de cleanup de câmera (evita memory leak)
+    const stopAllCameraStreams = () => {
+      const videoEl = document.getElementById('camera-view');
+      if (videoEl && videoEl.srcObject) {
+        videoEl.srcObject.getTracks().forEach(track => track.stop());
+        videoEl.srcObject = null;
+      }
+    };
+
+    // 3. Botão Voltar com cleanup de câmera
+    document.getElementById('btn-voltar').addEventListener('click', (e) => {
+      e.preventDefault();
+      stopAllCameraStreams();
+      window.location.href = 'index.html';
+    });
+
+    // 4. Cleanup ao fechar/sair da página
+    window.addEventListener('beforeunload', stopAllCameraStreams);
+    window.addEventListener('pagehide', stopAllCameraStreams);
+
+    // 5. Integração do Vídeo 3D sobre o Alvo (MindAR)
     document.addEventListener("DOMContentLoaded", function () {
       const alvo = document.querySelector('#alvo-logo');
       const videoAsset = document.querySelector('#meuVideo');

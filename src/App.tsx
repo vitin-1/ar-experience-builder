@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import ARViewer from "./pages/ARViewer.tsx";
+// ARViewer removido — ar.html é acessado diretamente via link (sem iframe)
 
 const queryClient = new QueryClient();
 
@@ -17,7 +17,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/ar" element={<ARViewer />} />
+          {/* Rota /ar removida — acesso direto via ar.html para melhor compatibilidade mobile */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

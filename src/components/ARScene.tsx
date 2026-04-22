@@ -26,7 +26,7 @@ const ARScene = () => {
             Carregando câmera AR...
           </p>
           <p className="text-muted-foreground text-xs mt-2">
-            Aponte para um marcador "Hiro" para ver o modelo 3D
+            Aponte para a logo Hunters para ativar o holograma
           </p>
         </div>
       )}

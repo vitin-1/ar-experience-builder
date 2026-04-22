@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# AI context (local only)
+.ai/
+
+# SSL certs (local dev only)
+.certs/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
