@@ -126,26 +126,32 @@
       pointer-events: none;
     }
 
-    /* Botão de iniciar experiência (para desbloquear áudio) */
-    #btn-iniciar {
+    /* Mensagem pulsante de tap-to-start */
+    #tap-to-start {
       display: none;
-      background: linear-gradient(90deg, #0066ff, #00d4ff);
-      color: white;
-      border: none;
-      padding: 16px 32px;
-      border-radius: 8px;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      color: #00d4ff;
       font-weight: bold;
       font-size: 14px;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      cursor: pointer;
-      box-shadow: 0 5px 20px rgba(0, 102, 255, 0.5);
-      animation: fade-in 0.5s ease forwards;
+      letter-spacing: 3px;
+      animation: pulse-tap 1.5s infinite alternate;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 0 20px;
     }
-    
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+
+    #tap-to-start svg {
+      width: 40px;
+      height: 40px;
+      filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.8));
+    }
+
+    @keyframes pulse-tap {
+      from { opacity: 0.6; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1.05); }
     }
 
     .radar-spinner {
@@ -388,7 +394,13 @@
   <div id="loading-screen">
     <div class="radar-spinner" id="loading-spinner"></div>
     <div class="loading-text" id="loading-text">Ligando Óptica Tática...</div>
-    <button id="btn-iniciar">INICIAR EXPERIÊNCIA</button>
+    <div id="tap-to-start">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      TOQUE NA TELA PARA CALIBRAR SENSOR
+    </div>
   </div>
 
   <div id="error-modal">
@@ -464,31 +476,34 @@
     const loadingScreen = document.getElementById('loading-screen');
     const loadingSpinner = document.getElementById('loading-spinner');
     const loadingText = document.getElementById('loading-text');
-    const btnIniciar = document.getElementById('btn-iniciar');
+    const tapToStart = document.getElementById('tap-to-start');
     const errorModal = document.getElementById('error-modal');
     const scannerHUD = document.getElementById('scanner-hud');
     const videoAsset = document.querySelector('#meuVideo');
     const alvo = document.querySelector('#alvo-logo');
 
-    // 1. Quando o MindAR estiver pronto, pede interação do usuário para desbloquear som
+    // 1. Quando o MindAR estiver pronto, formata a tela para ser tocada
     scene.addEventListener('arReady', () => {
       console.log('✅ MindAR pronto — câmera ativa');
       loadingSpinner.style.display = 'none';
       loadingText.style.display = 'none';
-      btnIniciar.style.display = 'block'; // Mostra o botão "INICIAR"
+      tapToStart.style.display = 'flex'; // Mostra a mensagem de toque
+      loadingScreen.style.cursor = 'pointer'; // Transforma toda a tela num botão
     });
 
-    // Desbloqueia áudio ao clicar no botão INICIAR
-    btnIniciar.addEventListener('click', () => {
-      // Truque para desbloquear autoplay com som no iOS/Android
-      videoAsset.muted = false;
-      videoAsset.play().then(() => {
-        videoAsset.pause();
-        videoAsset.currentTime = 0;
-        console.log('🔊 Áudio desbloqueado com sucesso');
-      }).catch((e) => console.warn('Erro ao desbloquear áudio', e));
-      
-      loadingScreen.classList.add('hidden'); // Esconde overlay
+    // Desbloqueia áudio ao tocar em qualquer lugar da tela (apenas se a mensagem estiver visível)
+    loadingScreen.addEventListener('click', () => {
+      if(tapToStart.style.display === 'flex') {
+        // Truque para desbloquear autoplay com som no iOS/Android
+        videoAsset.muted = false;
+        videoAsset.play().then(() => {
+          videoAsset.pause();
+          videoAsset.currentTime = 0;
+          console.log('🔊 Áudio desbloqueado com sucesso');
+        }).catch((e) => console.warn('Erro ao desbloquear áudio', e));
+        
+        loadingScreen.classList.add('hidden'); // Esconde overlay do loading e mostra a câmera
+      }
     });
 
     // 2. Se o MindAR falhar
