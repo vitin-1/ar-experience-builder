@@ -64,8 +64,17 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0, 102, 255, 0.2);
       transition: all 0.3s ease;
     }
-    .btn-voltar:active { transform: scale(0.95); background: rgba(0, 102, 255, 0.3); }
-    .btn-voltar svg { width: 16px; height: 16px; stroke: #00d4ff; }
+
+    .btn-voltar:active {
+      transform: scale(0.95);
+      background: rgba(0, 102, 255, 0.3);
+    }
+
+    .btn-voltar svg {
+      width: 16px;
+      height: 16px;
+      stroke: #00d4ff;
+    }
 
     /* 4. Overlay da interface AR para garantir transparência correta */
     .mindar-ui-overlay {
@@ -83,92 +92,245 @@
 
     /* 5. Tela de Carregamento */
     #loading-screen {
+<<<<<<< HEAD
       position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
       background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.1) 0%, #03060c 100%); z-index: 100;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
+=======
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.1) 0%, #03060c 100%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+>>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       transition: opacity 0.6s ease, visibility 0.6s;
     }
-    #loading-screen.hidden { opacity: 0; visibility: hidden; }
+
+    #loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
 
     .radar-spinner {
-      width: 50px; height: 50px; border: 3px solid rgba(0, 102, 255, 0.2);
-      border-top-color: #00d4ff; border-radius: 50%;
-      animation: spin 1s linear infinite; margin-bottom: 20px;
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0, 102, 255, 0.2);
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
       box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
     }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
 
     .loading-text {
       background: linear-gradient(90deg, #fff, #00d4ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      font-family: monospace; font-size: 13px; letter-spacing: 2px;
-      text-transform: uppercase; animation: blink 1.5s infinite; text-align: center;
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: blink 1.5s infinite;
+      text-align: center;
     }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
 
     /* 6. HUD Bordas Táticas (Scanner) */
     .hud-corners {
+<<<<<<< HEAD
       position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
       pointer-events: none; z-index: 2;
+=======
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 2;
+>>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       transition: opacity 0.5s ease;
     }
-    .hud-corners.hidden { opacity: 0; }
+
+    .hud-corners.hidden {
+      opacity: 0;
+    }
+
     .corn {
-      position: absolute; width: 40px; height: 40px; border: 2px solid #00d4ff;
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 2px solid #00d4ff;
       filter: drop-shadow(0 0 8px rgba(0, 102, 255, 0.8));
     }
+<<<<<<< HEAD
     .corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
     .corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
     .corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
     .corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
+=======
+
+    .corn.tl {
+      top: 20px;
+      left: 20px;
+      border-right: 0;
+      border-bottom: 0;
+    }
+
+    .corn.tr {
+      top: 20px;
+      right: 20px;
+      border-left: 0;
+      border-bottom: 0;
+    }
+
+    .corn.br {
+      bottom: 20px;
+      right: 20px;
+      border-left: 0;
+      border-top: 0;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 10%;
+      width: 80%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+      animation: scan-anim 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      z-index: 3;
+      border-radius: 50%;
+    }
+
+    @keyframes scan-anim {
+      0% { top: 20%; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { top: 80%; opacity: 0; }
+    }
+>>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
 
     /* 7. Controles Comerciais AR */
     #ar-controls {
-      position: absolute; bottom: 30px; width: 100%;
-      display: flex; justify-content: center; gap: 15px;
-      z-index: 10; pointer-events: auto; padding: 0 15px; box-sizing: border-box;
+      position: absolute;
+      bottom: 30px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      z-index: 10;
+      pointer-events: auto;
+      padding: 0 15px;
+      box-sizing: border-box;
     }
-    
+
     .ar-btn {
       background: linear-gradient(135deg, rgba(8, 15, 25, 0.8) 0%, rgba(0, 102, 255, 0.1) 100%);
       border: 2px solid rgba(0, 102, 255, 0.4);
-      padding: 12px 20px; border-radius: 12px;
-      text-decoration: none; font-size: 11px; font-weight: bold; font-family: sans-serif;
-      backdrop-filter: blur(8px); display: flex; align-items: center; gap: 8px;
+      padding: 12px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: bold;
+      font-family: sans-serif;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.05);
-      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       background-image: linear-gradient(90deg, #fff, #00d4ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    
+
     .ar-btn:active {
       transform: scale(0.95);
       background: linear-gradient(135deg, rgba(0, 102, 255, 0.3) 0%, rgba(0, 212, 255, 0.2) 100%);
       border-color: #00d4ff;
     }
 
-    .ar-btn svg { 
-      width: 16px; height: 16px; 
-      stroke: #00d4ff; 
+    .ar-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: #00d4ff;
     }
-    .ar-btn.outline svg { fill: none; stroke: #00d4ff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .ar-btn.outline svg {
+      fill: none;
+      stroke: #00d4ff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
     /* 8. Modal de Erro de Câmera */
     #error-modal {
+<<<<<<< HEAD
       position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
       background: rgba(11, 15, 25, 0.95); z-index: 200;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
       padding: 30px; box-sizing: border-box; text-align: center;
       opacity: 0; visibility: hidden; transition: opacity 0.5s ease;
+=======
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 15, 25, 0.95);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      box-sizing: border-box;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease;
+>>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       backdrop-filter: blur(10px);
     }
-    #error-modal.show { opacity: 1; visibility: visible; }
+
+    #error-modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
 
     .error-box {
-      background: rgba(0, 102, 255, 0.05); border: 1px solid rgba(0, 102, 255, 0.3);
-      padding: 30px; border-radius: 16px; max-width: 400px;
+      background: rgba(0, 102, 255, 0.05);
+      border: 1px solid rgba(0, 102, 255, 0.3);
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 400px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
@@ -176,20 +338,40 @@
       background: linear-gradient(90deg, #fff, #00d4ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-top: 0; font-family: sans-serif; font-size: 18px; margin-bottom: 15px;
-      text-transform: uppercase; letter-spacing: 2px;
+      margin-top: 0;
+      font-family: sans-serif;
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
+
     .error-box p {
-      color: #e2e8f0; font-size: 14px; line-height: 1.6; font-family: sans-serif; margin-bottom: 25px;
+      color: #e2e8f0;
+      font-size: 14px;
+      line-height: 1.6;
+      font-family: sans-serif;
+      margin-bottom: 25px;
     }
 
     .btn-reload {
       background: linear-gradient(90deg, #0066ff, #00d4ff);
-      color: white; border: none; padding: 12px 24px; border-radius: 8px;
-      font-weight: bold; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
-      cursor: pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
     }
-    .btn-reload:active { transform: scale(0.95); }
+
+    .btn-reload:active {
+      transform: scale(0.95);
+    }
 
     /* AJUSTES PARA DESKTOP / TELAS MAIORES */
     @media (min-width: 768px) {
@@ -198,22 +380,55 @@
         font-size: 14px;
         gap: 12px;
       }
-      .ar-btn svg, .ar-btn img {
-        width: 20px; height: 20px;
+
+      .ar-btn svg,
+      .ar-btn img {
+        width: 20px;
+        height: 20px;
       }
+
       .btn-voltar {
         font-size: 14px;
         padding: 12px 24px;
         top: 40px;
         left: 40px;
       }
-      .btn-voltar svg { width: 20px; height: 20px; }
-      .corn { width: 60px; height: 60px; border-width: 3px; }
-      .corn.tl { top: 40px; left: 40px; }
-      .corn.tr { top: 40px; right: 40px; }
-      .corn.bl { bottom: 40px; left: 40px; }
-      .corn.br { bottom: 40px; right: 40px; }
-      #ar-controls { bottom: 40px; gap: 25px; }
+
+      .btn-voltar svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .corn {
+        width: 60px;
+        height: 60px;
+        border-width: 3px;
+      }
+
+      .corn.tl {
+        top: 40px;
+        left: 40px;
+      }
+
+      .corn.tr {
+        top: 40px;
+        right: 40px;
+      }
+
+      .corn.bl {
+        bottom: 40px;
+        left: 40px;
+      }
+
+      .corn.br {
+        bottom: 40px;
+        right: 40px;
+      }
+
+      #ar-controls {
+        bottom: 40px;
+        gap: 25px;
+      }
     }
   </style>
 </head>
@@ -228,11 +443,14 @@
   <div id="error-modal">
     <div class="error-box">
       <h2>Câmera Bloqueada</h2>
-      <p style="margin-bottom: 15px;">Infelizmente seu navegador bloqueou o acesso automático à câmera. Precisamos dela para iniciar a mira holográfica.</p>
-      
-      <div style="background: rgba(0, 102, 255, 0.1); border-left: 3px solid #00d4ff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #e2e8f0;">
+      <p style="margin-bottom: 15px;">Infelizmente seu navegador bloqueou o acesso automático à câmera. Precisamos dela
+        para iniciar a mira holográfica.</p>
+
+      <div
+        style="background: rgba(0, 102, 255, 0.1); border-left: 3px solid #00d4ff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #e2e8f0;">
         <strong style="color: #00d4ff; display: block; margin-bottom: 8px;">COMO LIBERAR MANUALMENTE:</strong>
-        1. Clique no ícone de <strong>Cadeado 🔒</strong> ou configurações de site na barra de endereços (lá no topo do seu navegador).<br>
+        1. Clique no ícone de <strong>Cadeado 🔒</strong> ou configurações de site na barra de endereços (lá no topo do
+        seu navegador).<br>
         2. Procure por <strong>Câmera</strong> e mude para <strong>Permitir</strong>.<br>
         3. Clique no botão abaixo para reiniciar o sistema.
       </div>
@@ -246,22 +464,43 @@
     <div class="corn tr"></div>
     <div class="corn bl"></div>
     <div class="corn br"></div>
+    <div class="scan-line"></div>
   </div>
 
+<<<<<<< HEAD
   <a href="index.html" class="btn-voltar" id="btn-voltar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+=======
+  <a href="index.html" class="btn-voltar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+      stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+>>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
     VOLTAR
   </a>
 
   <div id="ar-controls">
+<<<<<<< HEAD
     <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!" target="_blank" rel="noopener noreferrer" class="ar-btn">
+=======
+    <a href="https://wa.me/5521997154499" target="_blank" rel="noopener noreferrer" class="ar-btn">
+>>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       <!-- Ícone WhatsApp Personalizado -->
-      <img src="/whatsapp.png" alt="WhatsApp" style="width: 18px; height: 18px; object-fit: contain;">
+      <img src="/whatsapp.png" alt="WhatsApp" style="width: 20px; height: 20px; object-fit: contain;">
       Falar no WhatsApp
     </a>
+<<<<<<< HEAD
     <a href="https://www.huntersmanpower.com.br" target="_blank" rel="noopener noreferrer" class="ar-btn outline">
+=======
+    <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ar-btn outline">
+>>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       <!-- Ícone Bússola/Site (Acessar Site) -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" style="width: 20px; height: 20px;">
+        <circle cx="12" cy="12" r="10" />
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+      </svg>
       Acessar Site
     </a>
   </div>
@@ -270,7 +509,7 @@
   <video id="camera-view" autoplay playsinline></video>
 
   <!-- Motor de Realidade Aumentada rodando isolado sobreposto à câmera -->
-  <a-scene id="main-scene" mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no;"
+  <a-scene id="main-scene" mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
     color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets timeout="10000">
@@ -280,7 +519,7 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
-      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625"></a-video>
+      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
     </a-entity>
   </a-scene>
 
@@ -293,7 +532,7 @@
         });
         const videoElement = document.getElementById("camera-view");
         videoElement.srcObject = stream;
-        
+
         // Esconde a tela de loading quando a câmera inicializar fisicamente e o video começar a tocar
         videoElement.onloadedmetadata = () => {
           document.getElementById('loading-screen').classList.add('hidden');
