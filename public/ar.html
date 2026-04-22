@@ -21,26 +21,25 @@
       margin: 0;
       padding: 0;
       width: 100%;
+      height: 100vh;
       height: 100dvh;
       overflow: hidden;
       background-color: #000;
-      /* Fundo preto elegante antes da câmera abrir */
     }
 
     /* 2. Configura a câmera para preencher toda a tela */
     #camera-view {
       width: 100vw;
+      height: 100vh;
       height: 100dvh;
       object-fit: cover;
-      /* Faz o vídeo preencher a tela sem esticar/distorcer */
       position: absolute;
       top: 0;
       left: 0;
       z-index: 1;
-      /* Mantém o vídeo na camada mais funda */
     }
 
-    /* 3. Um botão de "Voltar" discreto (Opcional, mas recomendado) */
+    /* 3. Botão de "Voltar" discreto */
     .btn-voltar {
       position: absolute;
       top: 30px;
@@ -86,29 +85,25 @@
       top: 0;
       left: 0;
       width: 100vw;
+      height: 100vh;
       height: 100dvh;
       z-index: 5;
     }
 
     /* 5. Tela de Carregamento */
     #loading-screen {
-<<<<<<< HEAD
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
-      background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.1) 0%, #03060c 100%); z-index: 100;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-=======
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.1) 0%, #03060c 100%);
       z-index: 100;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
->>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       transition: opacity 0.6s ease, visibility 0.6s;
     }
 
@@ -129,9 +124,7 @@
     }
 
     @keyframes spin {
-      100% {
-        transform: rotate(360deg);
-      }
+      100% { transform: rotate(360deg); }
     }
 
     .loading-text {
@@ -147,37 +140,24 @@
     }
 
     @keyframes blink {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.5;
-      }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
 
     /* 6. HUD Bordas Táticas (Scanner) */
     .hud-corners {
-<<<<<<< HEAD
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
-      pointer-events: none; z-index: 2;
-=======
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       pointer-events: none;
       z-index: 2;
->>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       transition: opacity 0.5s ease;
     }
 
-    .hud-corners.hidden {
-      opacity: 0;
-    }
+    .hud-corners.hidden { opacity: 0; }
 
     .corn {
       position: absolute;
@@ -186,34 +166,13 @@
       border: 2px solid #00d4ff;
       filter: drop-shadow(0 0 8px rgba(0, 102, 255, 0.8));
     }
-<<<<<<< HEAD
+
     .corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
     .corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
     .corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
     .corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
-=======
 
-    .corn.tl {
-      top: 20px;
-      left: 20px;
-      border-right: 0;
-      border-bottom: 0;
-    }
-
-    .corn.tr {
-      top: 20px;
-      right: 20px;
-      border-left: 0;
-      border-bottom: 0;
-    }
-
-    .corn.br {
-      bottom: 20px;
-      right: 20px;
-      border-left: 0;
-      border-top: 0;
-    }
-
+    /* Linha de scan animada */
     .scan-line {
       position: absolute;
       left: 10%;
@@ -232,7 +191,6 @@
       85% { opacity: 1; }
       100% { top: 80%; opacity: 0; }
     }
->>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
 
     /* 7. Controles Comerciais AR */
     #ar-controls {
@@ -292,18 +250,12 @@
 
     /* 8. Modal de Erro de Câmera */
     #error-modal {
-<<<<<<< HEAD
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
-      background: rgba(11, 15, 25, 0.95); z-index: 200;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      padding: 30px; box-sizing: border-box; text-align: center;
-      opacity: 0; visibility: hidden; transition: opacity 0.5s ease;
-=======
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       background: rgba(11, 15, 25, 0.95);
       z-index: 200;
       display: flex;
@@ -316,14 +268,10 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.5s ease;
->>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
       backdrop-filter: blur(10px);
     }
 
-    #error-modal.show {
-      opacity: 1;
-      visibility: visible;
-    }
+    #error-modal.show { opacity: 1; visibility: visible; }
 
     .error-box {
       background: rgba(0, 102, 255, 0.05);
@@ -369,9 +317,7 @@
       box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
     }
 
-    .btn-reload:active {
-      transform: scale(0.95);
-    }
+    .btn-reload:active { transform: scale(0.95); }
 
     /* AJUSTES PARA DESKTOP / TELAS MAIORES */
     @media (min-width: 768px) {
@@ -380,55 +326,23 @@
         font-size: 14px;
         gap: 12px;
       }
-
-      .ar-btn svg,
-      .ar-btn img {
+      .ar-btn svg, .ar-btn img {
         width: 20px;
         height: 20px;
       }
-
       .btn-voltar {
         font-size: 14px;
         padding: 12px 24px;
         top: 40px;
         left: 40px;
       }
-
-      .btn-voltar svg {
-        width: 20px;
-        height: 20px;
-      }
-
-      .corn {
-        width: 60px;
-        height: 60px;
-        border-width: 3px;
-      }
-
-      .corn.tl {
-        top: 40px;
-        left: 40px;
-      }
-
-      .corn.tr {
-        top: 40px;
-        right: 40px;
-      }
-
-      .corn.bl {
-        bottom: 40px;
-        left: 40px;
-      }
-
-      .corn.br {
-        bottom: 40px;
-        right: 40px;
-      }
-
-      #ar-controls {
-        bottom: 40px;
-        gap: 25px;
-      }
+      .btn-voltar svg { width: 20px; height: 20px; }
+      .corn { width: 60px; height: 60px; border-width: 3px; }
+      .corn.tl { top: 40px; left: 40px; }
+      .corn.tr { top: 40px; right: 40px; }
+      .corn.bl { bottom: 40px; left: 40px; }
+      .corn.br { bottom: 40px; right: 40px; }
+      #ar-controls { bottom: 40px; gap: 25px; }
     }
   </style>
 </head>
@@ -467,35 +381,21 @@
     <div class="scan-line"></div>
   </div>
 
-<<<<<<< HEAD
   <a href="index.html" class="btn-voltar" id="btn-voltar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-=======
-  <a href="index.html" class="btn-voltar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
       stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6"></polyline>
     </svg>
->>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
     VOLTAR
   </a>
 
   <div id="ar-controls">
-<<<<<<< HEAD
-    <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!" target="_blank" rel="noopener noreferrer" class="ar-btn">
-=======
-    <a href="https://wa.me/5521997154499" target="_blank" rel="noopener noreferrer" class="ar-btn">
->>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
-      <!-- Ícone WhatsApp Personalizado -->
+    <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!"
+      target="_blank" rel="noopener noreferrer" class="ar-btn">
       <img src="/whatsapp.png" alt="WhatsApp" style="width: 20px; height: 20px; object-fit: contain;">
       Falar no WhatsApp
     </a>
-<<<<<<< HEAD
-    <a href="https://www.huntersmanpower.com.br" target="_blank" rel="noopener noreferrer" class="ar-btn outline">
-=======
     <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ar-btn outline">
->>>>>>> 53e28004e2acdb212e2527492883b4400c02956a
-      <!-- Ícone Bússola/Site (Acessar Site) -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
         stroke-linejoin="round" style="width: 20px; height: 20px;">
         <circle cx="12" cy="12" r="10" />
@@ -509,7 +409,8 @@
   <video id="camera-view" autoplay playsinline></video>
 
   <!-- Motor de Realidade Aumentada rodando isolado sobreposto à câmera -->
-  <a-scene id="main-scene" mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
+  <a-scene id="main-scene"
+    mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
     color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets timeout="10000">
@@ -524,7 +425,7 @@
   </a-scene>
 
   <script>
-    // 1. Script Raiz (solicitado) de permissão de câmera e injeção na tag <video>
+    // 1. Script Raiz — permissão de câmera e injeção na tag <video>
     const startRawCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -533,13 +434,12 @@
         const videoElement = document.getElementById("camera-view");
         videoElement.srcObject = stream;
 
-        // Esconde a tela de loading quando a câmera inicializar fisicamente e o video começar a tocar
+        // Esconde a tela de loading quando a câmera inicializar
         videoElement.onloadedmetadata = () => {
           document.getElementById('loading-screen').classList.add('hidden');
         };
       } catch (err) {
         console.error("Erro ao acessar a câmera manualmente:", err);
-        // Oculta a tela de loading indefinida e mostra o erro
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('error-modal').classList.add('show');
       }
@@ -574,17 +474,22 @@
       const videoAsset = document.querySelector('#meuVideo');
       const scannerUI = document.querySelector('.hud-corners');
 
+      if (!alvo || !videoAsset) {
+        console.warn("Elementos AR não encontrados no DOM");
+        return;
+      }
+
       alvo.addEventListener("targetFound", () => {
-        videoAsset.muted = false; // Necessário interagir antes se o navegador bloquear áudio automático
+        videoAsset.muted = false;
         videoAsset.play().catch(() => { });
         console.log("Alvo AR Encontrado - Reproduzindo o Holograma");
-        if (scannerUI) scannerUI.classList.add('hidden'); // Esconde as bordas neon
+        if (scannerUI) scannerUI.classList.add('hidden');
       });
 
       alvo.addEventListener("targetLost", () => {
         videoAsset.pause();
         console.log("Alvo AR Perdido - Pausando");
-        if (scannerUI) scannerUI.classList.remove('hidden'); // Exibe as bordas neon novamente
+        if (scannerUI) scannerUI.classList.remove('hidden');
       });
     });
   </script>
