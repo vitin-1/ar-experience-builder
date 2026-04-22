@@ -69,8 +69,8 @@
       /* uiLoading:no e uiScanning:no no a-scene já desativam a UI padrão */
     }
 
-    /* Garante que o vídeo interno do MindAR preencha a tela */
-    .mindar-ui-overlay video {
+    /* Garante que o vídeo da câmera (inserido dinamicamente) preencha a tela e fique visível */
+    video:not(#meuVideo) {
       position: absolute !important;
       top: 0 !important;
       left: 0 !important;
@@ -78,6 +78,7 @@
       height: 100vh !important;
       height: 100dvh !important;
       object-fit: cover !important;
+      z-index: 0 !important;
     }
 
     /* 4. Força o canvas do A-Frame a preencher a tela por cima da câmera */
