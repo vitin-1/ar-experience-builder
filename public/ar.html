@@ -63,12 +63,24 @@
       stroke: #00d4ff;
     }
 
-    /* 3. Overlay da interface AR para garantir transparência correta */
+    /* 3. Permite que MindAR controle o overlay — apenas esconde loading/scanning UI */
     .mindar-ui-overlay {
-      display: none !important;
+      /* NÃO usar display:none pois pode esconder o container da câmera */
+      /* uiLoading:no e uiScanning:no no a-scene já desativam a UI padrão */
     }
 
-    /* 4. Força o vídeo do MindAR a preencher toda a tela */
+    /* Garante que o vídeo interno do MindAR preencha a tela */
+    .mindar-ui-overlay video {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      object-fit: cover !important;
+    }
+
+    /* 4. Força o canvas do A-Frame a preencher a tela por cima da câmera */
     #main-scene {
       position: absolute;
       top: 0;
@@ -79,7 +91,18 @@
       z-index: 1;
     }
 
-    /* 5. Tela de Carregamento */
+    /* Canvas 3D do A-Frame — transparente para mostrar câmera sob ele */
+    .a-canvas {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      z-index: 2 !important;
+    }
+
+    /* 5. Tela de Carregamento & Overlay Inicial */
     #loading-screen {
       position: absolute;
       top: 0;
@@ -100,6 +123,28 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
+    }
+
+    /* Botão de iniciar experiência (para desbloquear áudio) */
+    #btn-iniciar {
+      display: none;
+      background: linear-gradient(90deg, #0066ff, #00d4ff);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(0, 102, 255, 0.5);
+      animation: fade-in 0.5s ease forwards;
+    }
+    
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .radar-spinner {
@@ -340,8 +385,9 @@
 <body>
 
   <div id="loading-screen">
-    <div class="radar-spinner"></div>
-    <div class="loading-text">Ligando Óptica Tática...</div>
+    <div class="radar-spinner" id="loading-spinner"></div>
+    <div class="loading-text" id="loading-text">Ligando Óptica Tática...</div>
+    <button id="btn-iniciar">INICIAR EXPERIÊNCIA</button>
   </div>
 
   <div id="error-modal">
@@ -398,7 +444,8 @@
   <!-- Motor de Realidade Aumentada — DONO EXCLUSIVO DA CÂMERA -->
   <a-scene id="main-scene"
     mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
-    color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+    color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights, alpha: true"
+    vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets timeout="10000">
       <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
@@ -414,16 +461,36 @@
   <script>
     const scene = document.querySelector('#main-scene');
     const loadingScreen = document.getElementById('loading-screen');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const loadingText = document.getElementById('loading-text');
+    const btnIniciar = document.getElementById('btn-iniciar');
     const errorModal = document.getElementById('error-modal');
     const scannerHUD = document.getElementById('scanner-hud');
+    const videoAsset = document.querySelector('#meuVideo');
+    const alvo = document.querySelector('#alvo-logo');
 
-    // 1. Quando o MindAR estiver pronto (câmera aberta + tracking ativo)
+    // 1. Quando o MindAR estiver pronto, pede interação do usuário para desbloquear som
     scene.addEventListener('arReady', () => {
-      console.log('✅ MindAR pronto — câmera ativa, tracking iniciado');
-      loadingScreen.classList.add('hidden');
+      console.log('✅ MindAR pronto — câmera ativa');
+      loadingSpinner.style.display = 'none';
+      loadingText.style.display = 'none';
+      btnIniciar.style.display = 'block'; // Mostra o botão "INICIAR"
     });
 
-    // 2. Se o MindAR falhar (câmera bloqueada, etc)
+    // Desbloqueia áudio ao clicar no botão INICIAR
+    btnIniciar.addEventListener('click', () => {
+      // Truque para desbloquear autoplay com som no iOS/Android
+      videoAsset.muted = false;
+      videoAsset.play().then(() => {
+        videoAsset.pause();
+        videoAsset.currentTime = 0;
+        console.log('🔊 Áudio desbloqueado com sucesso');
+      }).catch((e) => console.warn('Erro ao desbloquear áudio', e));
+      
+      loadingScreen.classList.add('hidden'); // Esconde overlay
+    });
+
+    // 2. Se o MindAR falhar
     scene.addEventListener('arError', (e) => {
       console.error('❌ Erro no MindAR:', e);
       loadingScreen.classList.add('hidden');
@@ -431,15 +498,12 @@
     });
 
     // 3. Integração do Vídeo AR sobre o Alvo
-    const alvo = document.querySelector('#alvo-logo');
-    const videoAsset = document.querySelector('#meuVideo');
-
     if (alvo && videoAsset) {
       alvo.addEventListener('targetFound', () => {
         console.log('🎯 Alvo Encontrado — reproduzindo holograma');
         videoAsset.muted = false;
-        videoAsset.play().catch((err) => {
-          console.warn('Autoplay bloqueado, tentando muted:', err);
+        videoAsset.play().catch(() => {
+          console.warn('Falha no autoplay — forçando tocado mudo');
           videoAsset.muted = true;
           videoAsset.play().catch(() => {});
         });
@@ -456,23 +520,18 @@
     // 4. Botão Voltar com cleanup
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
       e.preventDefault();
-      // Para o MindAR e libera a câmera
       const mindAR = scene.systems['mindar-image-system'];
-      if (mindAR) {
-        mindAR.stop();
-      }
+      if (mindAR) mindAR.stop();
       window.location.href = 'index.html';
     });
 
     // 5. Cleanup ao sair da página
     window.addEventListener('pagehide', () => {
       const mindAR = scene.systems['mindar-image-system'];
-      if (mindAR) {
-        mindAR.stop();
-      }
+      if (mindAR) mindAR.stop();
     });
 
-    // 6. Fallback: se nada acontecer em 15s, esconde loading (previne tela preta infinita)
+    // 6. Fallback: timeout de 15s previne tela preta infinita
     setTimeout(() => {
       if (!loadingScreen.classList.contains('hidden')) {
         console.warn('⏱ Timeout de 15s — escondendo loading');
