@@ -27,19 +27,7 @@
       background-color: #000;
     }
 
-    /* 2. Configura a câmera para preencher toda a tela */
-    #camera-view {
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      object-fit: cover;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-
-    /* 3. Botão de "Voltar" discreto */
+    /* 2. Botão de "Voltar" discreto */
     .btn-voltar {
       position: absolute;
       top: 30px;
@@ -75,11 +63,12 @@
       stroke: #00d4ff;
     }
 
-    /* 4. Overlay da interface AR para garantir transparência correta */
+    /* 3. Overlay da interface AR para garantir transparência correta */
     .mindar-ui-overlay {
       display: none !important;
     }
 
+    /* 4. Força o vídeo do MindAR a preencher toda a tela */
     #main-scene {
       position: absolute;
       top: 0;
@@ -87,7 +76,7 @@
       width: 100vw;
       height: 100vh;
       height: 100dvh;
-      z-index: 5;
+      z-index: 1;
     }
 
     /* 5. Tela de Carregamento */
@@ -110,6 +99,7 @@
     #loading-screen.hidden {
       opacity: 0;
       visibility: hidden;
+      pointer-events: none;
     }
 
     .radar-spinner {
@@ -153,7 +143,7 @@
       height: 100vh;
       height: 100dvh;
       pointer-events: none;
-      z-index: 2;
+      z-index: 50;
       transition: opacity 0.5s ease;
     }
 
@@ -200,7 +190,7 @@
       display: flex;
       justify-content: center;
       gap: 15px;
-      z-index: 10;
+      z-index: 60;
       pointer-events: auto;
       padding: 0 15px;
       box-sizing: border-box;
@@ -373,7 +363,7 @@
     </div>
   </div>
 
-  <div class="hud-corners">
+  <div class="hud-corners" id="scanner-hud">
     <div class="corn tl"></div>
     <div class="corn tr"></div>
     <div class="corn bl"></div>
@@ -405,10 +395,7 @@
     </a>
   </div>
 
-  <!-- Fallback/Raw Video solicitado -->
-  <video id="camera-view" autoplay playsinline></video>
-
-  <!-- Motor de Realidade Aumentada rodando isolado sobreposto à câmera -->
+  <!-- Motor de Realidade Aumentada — DONO EXCLUSIVO DA CÂMERA -->
   <a-scene id="main-scene"
     mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
     color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
@@ -425,73 +412,73 @@
   </a-scene>
 
   <script>
-    // 1. Script Raiz — permissão de câmera e injeção na tag <video>
-    const startRawCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" }
+    const scene = document.querySelector('#main-scene');
+    const loadingScreen = document.getElementById('loading-screen');
+    const errorModal = document.getElementById('error-modal');
+    const scannerHUD = document.getElementById('scanner-hud');
+
+    // 1. Quando o MindAR estiver pronto (câmera aberta + tracking ativo)
+    scene.addEventListener('arReady', () => {
+      console.log('✅ MindAR pronto — câmera ativa, tracking iniciado');
+      loadingScreen.classList.add('hidden');
+    });
+
+    // 2. Se o MindAR falhar (câmera bloqueada, etc)
+    scene.addEventListener('arError', (e) => {
+      console.error('❌ Erro no MindAR:', e);
+      loadingScreen.classList.add('hidden');
+      errorModal.classList.add('show');
+    });
+
+    // 3. Integração do Vídeo AR sobre o Alvo
+    const alvo = document.querySelector('#alvo-logo');
+    const videoAsset = document.querySelector('#meuVideo');
+
+    if (alvo && videoAsset) {
+      alvo.addEventListener('targetFound', () => {
+        console.log('🎯 Alvo Encontrado — reproduzindo holograma');
+        videoAsset.muted = false;
+        videoAsset.play().catch((err) => {
+          console.warn('Autoplay bloqueado, tentando muted:', err);
+          videoAsset.muted = true;
+          videoAsset.play().catch(() => {});
         });
-        const videoElement = document.getElementById("camera-view");
-        videoElement.srcObject = stream;
+        if (scannerHUD) scannerHUD.classList.add('hidden');
+      });
 
-        // Esconde a tela de loading quando a câmera inicializar
-        videoElement.onloadedmetadata = () => {
-          document.getElementById('loading-screen').classList.add('hidden');
-        };
-      } catch (err) {
-        console.error("Erro ao acessar a câmera manualmente:", err);
-        document.getElementById('loading-screen').classList.add('hidden');
-        document.getElementById('error-modal').classList.add('show');
-      }
-    };
+      alvo.addEventListener('targetLost', () => {
+        console.log('📡 Alvo Perdido — pausando');
+        videoAsset.pause();
+        if (scannerHUD) scannerHUD.classList.remove('hidden');
+      });
+    }
 
-    // Inicia a câmera raw
-    startRawCamera();
-
-    // 2. Função de cleanup de câmera (evita memory leak)
-    const stopAllCameraStreams = () => {
-      const videoEl = document.getElementById('camera-view');
-      if (videoEl && videoEl.srcObject) {
-        videoEl.srcObject.getTracks().forEach(track => track.stop());
-        videoEl.srcObject = null;
-      }
-    };
-
-    // 3. Botão Voltar com cleanup de câmera
+    // 4. Botão Voltar com cleanup
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
       e.preventDefault();
-      stopAllCameraStreams();
+      // Para o MindAR e libera a câmera
+      const mindAR = scene.systems['mindar-image-system'];
+      if (mindAR) {
+        mindAR.stop();
+      }
       window.location.href = 'index.html';
     });
 
-    // 4. Cleanup ao fechar/sair da página
-    window.addEventListener('beforeunload', stopAllCameraStreams);
-    window.addEventListener('pagehide', stopAllCameraStreams);
-
-    // 5. Integração do Vídeo 3D sobre o Alvo (MindAR)
-    document.addEventListener("DOMContentLoaded", function () {
-      const alvo = document.querySelector('#alvo-logo');
-      const videoAsset = document.querySelector('#meuVideo');
-      const scannerUI = document.querySelector('.hud-corners');
-
-      if (!alvo || !videoAsset) {
-        console.warn("Elementos AR não encontrados no DOM");
-        return;
+    // 5. Cleanup ao sair da página
+    window.addEventListener('pagehide', () => {
+      const mindAR = scene.systems['mindar-image-system'];
+      if (mindAR) {
+        mindAR.stop();
       }
-
-      alvo.addEventListener("targetFound", () => {
-        videoAsset.muted = false;
-        videoAsset.play().catch(() => { });
-        console.log("Alvo AR Encontrado - Reproduzindo o Holograma");
-        if (scannerUI) scannerUI.classList.add('hidden');
-      });
-
-      alvo.addEventListener("targetLost", () => {
-        videoAsset.pause();
-        console.log("Alvo AR Perdido - Pausando");
-        if (scannerUI) scannerUI.classList.remove('hidden');
-      });
     });
+
+    // 6. Fallback: se nada acontecer em 15s, esconde loading (previne tela preta infinita)
+    setTimeout(() => {
+      if (!loadingScreen.classList.contains('hidden')) {
+        console.warn('⏱ Timeout de 15s — escondendo loading');
+        loadingScreen.classList.add('hidden');
+      }
+    }, 15000);
   </script>
 </body>
 
