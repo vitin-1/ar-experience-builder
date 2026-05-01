@@ -460,7 +460,28 @@
     </a-entity>
   </a-scene>
 
+  <!-- DEBUG: Console flutuante visível no celular -->
+  <div id="debug-log" style="
+    position: fixed; bottom: 80px; left: 10px; right: 10px;
+    max-height: 150px; overflow-y: auto;
+    background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
+    font-size: 10px; padding: 8px; border-radius: 8px;
+    z-index: 9999; border: 1px solid #0f0;
+    pointer-events: auto;
+  "></div>
+
   <script>
+    // Debug logger visível no celular
+    const debugEl = document.getElementById('debug-log');
+    const _log = (msg, color = '#0f0') => {
+      const line = document.createElement('div');
+      line.style.color = color;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      debugEl.appendChild(line);
+      debugEl.scrollTop = debugEl.scrollHeight;
+      console.log(msg);
+    };
+
     const scene = document.querySelector('#main-scene');
     const loadingScreen = document.getElementById('loading-screen');
     const loadingSpinner = document.getElementById('loading-spinner');
@@ -473,36 +494,57 @@
     const videoAsset2 = document.querySelector('#meuVideo2');
     const alvo2 = document.querySelector('#alvo-logo2');
 
-    // 1. Quando o MindAR estiver pronto, pede interação do usuário para desbloquear som
+    // Log de diagnóstico inicial
+    _log('🔧 Elementos carregados:', '#ff0');
+    _log(`  alvo-logo (idx 0): ${alvo ? 'OK' : 'NULL'}`, alvo ? '#0f0' : '#f00');
+    _log(`  alvo-logo2 (idx 1): ${alvo2 ? 'OK' : 'NULL'}`, alvo2 ? '#0f0' : '#f00');
+    _log(`  video.mp4: ${videoAsset ? 'OK' : 'NULL'}`, videoAsset ? '#0f0' : '#f00');
+    _log(`  video-corporativo.mp4: ${videoAsset2 ? 'OK' : 'NULL'}`, videoAsset2 ? '#0f0' : '#f00');
+
+    // 1. Quando o MindAR estiver pronto
     scene.addEventListener('arReady', () => {
-      console.log('✅ MindAR pronto — câmera ativa');
+      _log('✅ MindAR pronto — câmera ativa', '#0ff');
+      
+      // Verifica quantos alvos o MindAR carregou
+      const mindAR = scene.systems['mindar-image-system'];
+      if (mindAR) {
+        _log(`📊 MindAR system encontrado`, '#ff0');
+        try {
+          const controller = mindAR.controller;
+          if (controller && controller.interestedTargetIndex !== undefined) {
+            _log(`🎯 Alvos registrados: ${JSON.stringify(controller.interestedTargetIndex)}`, '#ff0');
+          }
+        } catch(e) {
+          _log(`⚠ Não conseguiu ler alvos internos: ${e.message}`, '#f90');
+        }
+      }
+
       loadingSpinner.style.display = 'none';
       loadingText.style.display = 'none';
-      btnIniciar.style.display = 'block'; // Mostra o botão "INICIAR"
+      btnIniciar.style.display = 'block';
     });
 
     // Desbloqueia áudio ao clicar no botão INICIAR
     btnIniciar.addEventListener('click', () => {
-      // Truque para desbloquear autoplay com som no iOS/Android
-      const unlockVideo = (v) => {
+      const unlockVideo = (v, name) => {
         if (!v) return;
         v.muted = false;
         v.play().then(() => {
           v.pause();
           v.currentTime = 0;
-        }).catch((e) => console.warn('Erro ao desbloquear áudio', e));
+          _log(`🔊 ${name} desbloqueado`, '#0f0');
+        }).catch((e) => _log(`⚠ Erro desbloqueio ${name}: ${e.message}`, '#f00'));
       };
 
-      unlockVideo(videoAsset);
-      unlockVideo(videoAsset2);
-      console.log('🔊 Áudio desbloqueado com sucesso para os vídeos');
+      unlockVideo(videoAsset, 'video.mp4');
+      unlockVideo(videoAsset2, 'video-corporativo.mp4');
       
-      loadingScreen.classList.add('hidden'); // Esconde overlay
+      loadingScreen.classList.add('hidden');
     });
 
     // 2. Se o MindAR falhar
     scene.addEventListener('arError', (e) => {
-      console.error('❌ Erro no MindAR:', e);
+      _log(`❌ Erro no MindAR: ${e.detail || e}`, '#f00');
       loadingScreen.classList.add('hidden');
       errorModal.classList.add('show');
     });
@@ -511,10 +553,14 @@
     let activeTargets = 0;
 
     const setupTarget = (targetEl, videoEl, targetName) => {
-      if (!targetEl || !videoEl) return;
+      if (!targetEl || !videoEl) {
+        _log(`⛔ setupTarget FALHOU para ${targetName} — target:${!!targetEl} video:${!!videoEl}`, '#f00');
+        return;
+      }
+      _log(`✔ setupTarget OK: ${targetName}`, '#0f0');
       
       targetEl.addEventListener('targetFound', () => {
-        console.log(`🎯 ${targetName} Encontrado — reproduzindo holograma`);
+        _log(`🎯 ${targetName} ENCONTRADO`, '#0ff');
         activeTargets++;
         
         // Pausa todos os outros vídeos para evitar áudio duplo
@@ -523,7 +569,7 @@
 
         videoEl.muted = false;
         videoEl.play().catch(() => {
-          console.warn(`Falha no autoplay para ${targetName} — forçando mudo`);
+          _log(`⚠ Autoplay falhou ${targetName} — forçando mudo`, '#f90');
           videoEl.muted = true;
           videoEl.play().catch(() => {});
         });
@@ -531,19 +577,18 @@
       });
 
       targetEl.addEventListener('targetLost', () => {
-        console.log(`📡 ${targetName} Perdido — pausando`);
+        _log(`📡 ${targetName} PERDIDO`, '#f90');
         activeTargets = Math.max(0, activeTargets - 1);
         videoEl.pause();
         
-        // Só mostra o HUD se nenhum alvo estiver visível
         if (activeTargets === 0 && scannerHUD) {
           scannerHUD.classList.remove('hidden');
         }
       });
     };
 
-    setupTarget(alvo, videoAsset, 'Alvo 1');
-    setupTarget(alvo2, videoAsset2, 'Alvo 2');
+    setupTarget(alvo, videoAsset, 'Alvo 1 (Hunters)');
+    setupTarget(alvo2, videoAsset2, 'Alvo 2 (Navegue)');
 
     // 4. Botão Voltar com cleanup
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
@@ -562,7 +607,7 @@
     // 6. Fallback: timeout de 15s previne tela preta infinita
     setTimeout(() => {
       if (!loadingScreen.classList.contains('hidden')) {
-        console.warn('⏱ Timeout de 15s — escondendo loading');
+        _log('⏱ Timeout de 15s — escondendo loading', '#f90');
         loadingScreen.classList.add('hidden');
       }
     }, 15000);
