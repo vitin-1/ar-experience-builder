@@ -440,18 +440,23 @@
 
   <!-- Motor de Realidade Aumentada — DONO EXCLUSIVO DA CÂMERA -->
   <a-scene id="main-scene"
-    mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
+    mindar-image="imageTargetSrc: /Target.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
     color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights, alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets timeout="10000">
       <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+      <video id="meuVideo2" src="/video-corporativo.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
       <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 1" id="alvo-logo2">
+      <a-video src="#meuVideo2" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
     </a-entity>
   </a-scene>
 
@@ -465,6 +470,8 @@
     const scannerHUD = document.getElementById('scanner-hud');
     const videoAsset = document.querySelector('#meuVideo');
     const alvo = document.querySelector('#alvo-logo');
+    const videoAsset2 = document.querySelector('#meuVideo2');
+    const alvo2 = document.querySelector('#alvo-logo2');
 
     // 1. Quando o MindAR estiver pronto, pede interação do usuário para desbloquear som
     scene.addEventListener('arReady', () => {
@@ -477,12 +484,18 @@
     // Desbloqueia áudio ao clicar no botão INICIAR
     btnIniciar.addEventListener('click', () => {
       // Truque para desbloquear autoplay com som no iOS/Android
-      videoAsset.muted = false;
-      videoAsset.play().then(() => {
-        videoAsset.pause();
-        videoAsset.currentTime = 0;
-        console.log('🔊 Áudio desbloqueado com sucesso');
-      }).catch((e) => console.warn('Erro ao desbloquear áudio', e));
+      const unlockVideo = (v) => {
+        if (!v) return;
+        v.muted = false;
+        v.play().then(() => {
+          v.pause();
+          v.currentTime = 0;
+        }).catch((e) => console.warn('Erro ao desbloquear áudio', e));
+      };
+
+      unlockVideo(videoAsset);
+      unlockVideo(videoAsset2);
+      console.log('🔊 Áudio desbloqueado com sucesso para os vídeos');
       
       loadingScreen.classList.add('hidden'); // Esconde overlay
     });
@@ -494,25 +507,43 @@
       errorModal.classList.add('show');
     });
 
-    // 3. Integração do Vídeo AR sobre o Alvo
-    if (alvo && videoAsset) {
-      alvo.addEventListener('targetFound', () => {
-        console.log('🎯 Alvo Encontrado — reproduzindo holograma');
-        videoAsset.muted = false;
-        videoAsset.play().catch(() => {
-          console.warn('Falha no autoplay — forçando tocado mudo');
-          videoAsset.muted = true;
-          videoAsset.play().catch(() => {});
+    // 3. Integração do Vídeo AR sobre os Alvos
+    let activeTargets = 0;
+
+    const setupTarget = (targetEl, videoEl, targetName) => {
+      if (!targetEl || !videoEl) return;
+      
+      targetEl.addEventListener('targetFound', () => {
+        console.log(`🎯 ${targetName} Encontrado — reproduzindo holograma`);
+        activeTargets++;
+        
+        // Pausa todos os outros vídeos para evitar áudio duplo
+        if (videoEl !== videoAsset) videoAsset.pause();
+        if (videoEl !== videoAsset2) videoAsset2.pause();
+
+        videoEl.muted = false;
+        videoEl.play().catch(() => {
+          console.warn(`Falha no autoplay para ${targetName} — forçando mudo`);
+          videoEl.muted = true;
+          videoEl.play().catch(() => {});
         });
         if (scannerHUD) scannerHUD.classList.add('hidden');
       });
 
-      alvo.addEventListener('targetLost', () => {
-        console.log('📡 Alvo Perdido — pausando');
-        videoAsset.pause();
-        if (scannerHUD) scannerHUD.classList.remove('hidden');
+      targetEl.addEventListener('targetLost', () => {
+        console.log(`📡 ${targetName} Perdido — pausando`);
+        activeTargets = Math.max(0, activeTargets - 1);
+        videoEl.pause();
+        
+        // Só mostra o HUD se nenhum alvo estiver visível
+        if (activeTargets === 0 && scannerHUD) {
+          scannerHUD.classList.remove('hidden');
+        }
       });
-    }
+    };
+
+    setupTarget(alvo, videoAsset, 'Alvo 1');
+    setupTarget(alvo2, videoAsset2, 'Alvo 2');
 
     // 4. Botão Voltar com cleanup
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
