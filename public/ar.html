@@ -251,19 +251,32 @@
   <!-- Canvas para câmera do 8th Wall -->
   <canvas id="camerafeed"></canvas>
 
+  <!-- TOAST BANNER — aparece gigante na tela -->
+  <div id="toast-banner" style="
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 25px 20px; text-align: center;
+    font-family: sans-serif; font-size: 22px; font-weight: bold;
+    z-index: 99999; transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  "></div>
+
   <!-- DEBUG Console -->
   <div id="debug-log" style="
     position: fixed; bottom: 80px; left: 10px; right: 10px;
-    max-height: 150px; overflow-y: auto;
-    background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
-    font-size: 10px; padding: 8px; border-radius: 8px;
-    z-index: 9999; border: 1px solid #0f0;
+    max-height: 200px; overflow-y: auto;
+    background: rgba(0,0,0,0.95); color: #0f0; font-family: monospace;
+    font-size: 13px; padding: 10px; border-radius: 8px;
+    z-index: 9999; border: 2px solid #0f0;
     pointer-events: auto;
   "></div>
 
   <script>
     // === DEBUG ===
     const debugEl = document.getElementById('debug-log');
+    const toastEl = document.getElementById('toast-banner');
+    let toastTimer = null;
+
     const _log = (msg, color = '#0f0') => {
       const line = document.createElement('div');
       line.style.color = color;
@@ -271,6 +284,18 @@
       debugEl.appendChild(line);
       debugEl.scrollTop = debugEl.scrollHeight;
       console.log(msg);
+    };
+
+    const showToast = (msg, bgColor = '#00cc00') => {
+      toastEl.textContent = msg;
+      toastEl.style.background = bgColor;
+      toastEl.style.color = '#fff';
+      toastEl.style.transform = 'translateY(0)';
+      toastEl.style.textShadow = '0 2px 8px rgba(0,0,0,0.5)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.style.transform = 'translateY(-100%)';
+      }, 4000);
     };
 
     // === ELEMENTS ===
@@ -348,6 +373,7 @@
           process: (event) => {
             const name = event.detail ? event.detail.name : 'unknown';
             _log('🎯 FOUND: ' + name + ' | keys: ' + Object.keys(event.detail || {}).join(','), '#0ff');
+            showToast('✅ TARGET DETECTADO: ' + name.toUpperCase(), '#00aa00');
             showVideo(name);
           }
         },
@@ -362,6 +388,7 @@
           process: (event) => {
             const name = event.detail ? event.detail.name : 'unknown';
             _log('📡 LOST: ' + name, '#f90');
+            showToast('❌ TARGET PERDIDO: ' + name.toUpperCase(), '#cc0000');
             hideVideo(name);
           }
         }
