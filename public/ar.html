@@ -438,9 +438,9 @@
     </a>
   </div>
 
-  <!-- Motor de Realidade Aumentada — DONO EXCLUSIVO DA CÂMERA -->
+  <!-- Motor AR — Sistema Dual Target (alternância automática de .mind files) -->
   <a-scene id="main-scene"
-    mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.00001; filterBeta: 0.0005; missTolerance: 10; maxTrack: 2;"
+    mindar-image="imageTargetSrc: /hunters.mind; autoStart: false; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5; maxTrack: 1;"
     color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights, alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
@@ -451,21 +451,15 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- targetIndex 0 = Hunters (1ª imagem compilada) -->
-    <a-entity mindar-image-target="targetIndex: 0" id="alvo-hunters">
-      <a-video src="#videoHunters" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
-    </a-entity>
-
-    <!-- targetIndex 1 = Navegue Seguro (2ª imagem compilada) -->
-    <a-entity mindar-image-target="targetIndex: 1" id="alvo-navegue">
-      <a-video src="#videoNavegue" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
+    <a-entity mindar-image-target="targetIndex: 0" id="alvo-ar">
+      <a-video id="ar-video-plane" src="#videoHunters" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
     </a-entity>
   </a-scene>
 
   <!-- DEBUG: Console flutuante visível no celular -->
   <div id="debug-log" style="
     position: fixed; bottom: 80px; left: 10px; right: 10px;
-    max-height: 150px; overflow-y: auto;
+    max-height: 120px; overflow-y: auto;
     background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
     font-size: 10px; padding: 8px; border-radius: 8px;
     z-index: 9999; border: 1px solid #0f0;
@@ -473,7 +467,6 @@
   "></div>
 
   <script>
-    // Debug logger visível no celular
     const debugEl = document.getElementById('debug-log');
     const _log = (msg, color = '#0f0') => {
       const line = document.createElement('div');
@@ -491,128 +484,155 @@
     const btnIniciar = document.getElementById('btn-iniciar');
     const errorModal = document.getElementById('error-modal');
     const scannerHUD = document.getElementById('scanner-hud');
-    const videoNavegue = document.querySelector('#videoNavegue');
     const videoHunters = document.querySelector('#videoHunters');
-    const alvoNavegue = document.querySelector('#alvo-navegue');
-    const alvoHunters = document.querySelector('#alvo-hunters');
-    const allVideos = [videoNavegue, videoHunters];
+    const videoNavegue = document.querySelector('#videoNavegue');
+    const alvo = document.querySelector('#alvo-ar');
+    const videoPlane = document.querySelector('#ar-video-plane');
 
-    // Log de diagnóstico inicial
-    _log('🔧 Elementos carregados:', '#ff0');
-    _log(`  alvo-navegue (idx 0): ${alvoNavegue ? 'OK' : 'NULL'}`, alvoNavegue ? '#0f0' : '#f00');
-    _log(`  alvo-hunters (idx 1): ${alvoHunters ? 'OK' : 'NULL'}`, alvoHunters ? '#0f0' : '#f00');
-    _log(`  videoNavegue: ${videoNavegue ? 'OK' : 'NULL'}`, videoNavegue ? '#0f0' : '#f00');
-    _log(`  videoHunters: ${videoHunters ? 'OK' : 'NULL'}`, videoHunters ? '#0f0' : '#f00');
+    // ====== SISTEMA DUAL TARGET ======
+    // Cada target tem seu próprio .mind file (1 target cada, sempre index 0)
+    // O sistema alterna entre eles automaticamente a cada 4s
+    const targets = [
+      { name: 'Hunters', mind: '/hunters.mind', video: videoHunters, videoSrc: '#videoHunters' },
+      { name: 'Navegue', mind: '/navegue.mind', video: videoNavegue, videoSrc: '#videoNavegue' }
+    ];
 
-    // 1. Quando o MindAR estiver pronto
-    scene.addEventListener('arReady', () => {
-      _log('✅ MindAR pronto — câmera ativa', '#0ff');
-      
-      // Verifica quantos alvos o MindAR carregou
+    let currentIdx = 0;
+    let isTracking = false;
+    let switchTimer = null;
+    let arStarted = false;
+    const SWITCH_INTERVAL = 4000; // 4 segundos
+
+    function current() { return targets[currentIdx]; }
+
+    // Para o MindAR, troca o .mind file, e reinicia
+    async function switchTarget() {
+      if (isTracking) return;
       const mindAR = scene.systems['mindar-image-system'];
-      if (mindAR) {
-        _log(`📊 MindAR system encontrado`, '#ff0');
-        try {
-          const controller = mindAR.controller;
-          if (controller && controller.interestedTargetIndex !== undefined) {
-            _log(`🎯 Alvos registrados: ${JSON.stringify(controller.interestedTargetIndex)}`, '#ff0');
-          }
-        } catch(e) {
-          _log(`⚠ Não conseguiu ler alvos internos: ${e.message}`, '#f90');
-        }
-      }
+      if (!mindAR) return;
 
-      loadingSpinner.style.display = 'none';
-      loadingText.style.display = 'none';
-      btnIniciar.style.display = 'block';
+      try { mindAR.stop(); } catch(e) {}
+
+      currentIdx = (currentIdx + 1) % targets.length;
+      const t = current();
+      _log('🔄 Alternando → ' + t.name, '#ff0');
+
+      // Atualiza o vídeo no plano 3D
+      videoPlane.setAttribute('src', t.videoSrc);
+
+      // Atualiza o arquivo .mind
+      scene.setAttribute('mindar-image', 'imageTargetSrc', t.mind);
+
+      try {
+        await mindAR.start();
+        _log('▶ Escaneando: ' + t.name, '#0ff');
+      } catch(e) {
+        _log('⚠ Erro: ' + e.message, '#f00');
+      }
+      scheduleSwitchTimer();
+    }
+
+    function scheduleSwitchTimer() {
+      clearTimeout(switchTimer);
+      switchTimer = setTimeout(() => {
+        if (!isTracking) switchTarget();
+      }, SWITCH_INTERVAL);
+    }
+
+    // MindAR pronto
+    scene.addEventListener('arReady', () => {
+      _log('✅ MindAR pronto', '#0ff');
+      if (!arStarted) {
+        arStarted = true;
+        loadingSpinner.style.display = 'none';
+        loadingText.style.display = 'none';
+        btnIniciar.style.display = 'block';
+      }
     });
 
-    // Desbloqueia áudio ao clicar no botão INICIAR
+    // Desbloqueia áudio e inicia escaneamento
     btnIniciar.addEventListener('click', () => {
-      const unlockVideo = (v, name) => {
+      const unlock = (v, n) => {
         if (!v) return;
         v.muted = false;
-        v.play().then(() => {
-          v.pause();
-          v.currentTime = 0;
-          _log(`🔊 ${name} desbloqueado`, '#0f0');
-        }).catch((e) => _log(`⚠ Erro desbloqueio ${name}: ${e.message}`, '#f00'));
+        v.play().then(() => { v.pause(); v.currentTime = 0; _log('🔊 ' + n + ' OK', '#0f0'); })
+        .catch(e => _log('⚠ ' + n + ': ' + e.message, '#f90'));
       };
-
-      unlockVideo(videoNavegue, 'video-corporativo.mp4');
-      unlockVideo(videoHunters, 'video.mp4');
-      
+      unlock(videoHunters, 'Hunters');
+      unlock(videoNavegue, 'Navegue');
       loadingScreen.classList.add('hidden');
+
+      // Inicia o MindAR com o primeiro target
+      const mindAR = scene.systems['mindar-image-system'];
+      if (mindAR) {
+        mindAR.start().then(() => {
+          _log('▶ Escaneando: ' + current().name, '#0ff');
+          scheduleSwitchTimer();
+        });
+      }
     });
 
-    // 2. Se o MindAR falhar
+    // Erro do MindAR
     scene.addEventListener('arError', (e) => {
-      _log(`❌ Erro no MindAR: ${e.detail || e}`, '#f00');
+      _log('❌ Erro: ' + (e.detail || e), '#f00');
       loadingScreen.classList.add('hidden');
       errorModal.classList.add('show');
     });
 
-    // 3. Integração do Vídeo AR sobre os Alvos
-    let activeTargets = 0;
+    // Target encontrado — para de alternar e dá play no vídeo
+    alvo.addEventListener('targetFound', () => {
+      const t = current();
+      _log('🎯 ' + t.name + ' ENCONTRADO', '#0ff');
+      isTracking = true;
+      clearTimeout(switchTimer);
 
-    const setupTarget = (targetEl, videoEl, targetName) => {
-      if (!targetEl || !videoEl) {
-        _log(`⛔ setupTarget FALHOU para ${targetName} — target:${!!targetEl} video:${!!videoEl}`, '#f00');
-        return;
-      }
-      _log(`✔ setupTarget OK: ${targetName}`, '#0f0');
-      
-      targetEl.addEventListener('targetFound', () => {
-        _log(`🎯 ${targetName} ENCONTRADO`, '#0ff');
-        activeTargets++;
-        
-        // Pausa todos os outros vídeos para evitar áudio duplo
-        allVideos.forEach(v => { if (v && v !== videoEl) v.pause(); });
+      // Pausa o outro vídeo
+      targets.forEach(tgt => { if (tgt !== t && tgt.video) tgt.video.pause(); });
 
-        videoEl.muted = false;
-        videoEl.play().catch(() => {
-          _log(`⚠ Autoplay falhou ${targetName} — forçando mudo`, '#f90');
-          videoEl.muted = true;
-          videoEl.play().catch(() => {});
-        });
-        if (scannerHUD) scannerHUD.classList.add('hidden');
+      t.video.muted = false;
+      t.video.play().catch(() => {
+        t.video.muted = true;
+        t.video.play().catch(() => {});
       });
+      if (scannerHUD) scannerHUD.classList.add('hidden');
+    });
 
-      targetEl.addEventListener('targetLost', () => {
-        _log(`📡 ${targetName} PERDIDO`, '#f90');
-        activeTargets = Math.max(0, activeTargets - 1);
-        videoEl.pause();
-        
-        if (activeTargets === 0 && scannerHUD) {
-          scannerHUD.classList.remove('hidden');
-        }
-      });
-    };
+    // Target perdido — retoma alternância
+    alvo.addEventListener('targetLost', () => {
+      const t = current();
+      _log('📡 ' + t.name + ' PERDIDO', '#f90');
+      isTracking = false;
+      t.video.pause();
+      if (scannerHUD) scannerHUD.classList.remove('hidden');
+      scheduleSwitchTimer();
+    });
 
-    setupTarget(alvoHunters, videoHunters, 'Hunters');
-    setupTarget(alvoNavegue, videoNavegue, 'Navegue Seguro');
-
-    // 4. Botão Voltar com cleanup
+    // Botão Voltar
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
       e.preventDefault();
+      clearTimeout(switchTimer);
       const mindAR = scene.systems['mindar-image-system'];
       if (mindAR) mindAR.stop();
       window.location.href = 'index.html';
     });
 
-    // 5. Cleanup ao sair da página
+    // Cleanup ao sair
     window.addEventListener('pagehide', () => {
+      clearTimeout(switchTimer);
       const mindAR = scene.systems['mindar-image-system'];
       if (mindAR) mindAR.stop();
     });
 
-    // 6. Fallback: timeout de 15s previne tela preta infinita
+    // Fallback timeout
     setTimeout(() => {
       if (!loadingScreen.classList.contains('hidden')) {
-        _log('⏱ Timeout de 15s — escondendo loading', '#f90');
+        _log('⏱ Timeout 15s', '#f90');
         loadingScreen.classList.add('hidden');
       }
     }, 15000);
+
+    _log('🔧 Sistema dual-target inicializado', '#ff0');
+    _log('📋 ' + targets.map(t => t.name).join(' ↔ '), '#ff0');
   </script>
 </body>
 
