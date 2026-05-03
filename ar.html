@@ -10,45 +10,205 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Visualização AR — Hunters ManPower</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <!-- Bibliotecas AR movidas APENAS para este arquivo -->
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <link rel="stylesheet" href="/src/css/ar.css">
+
+  <!-- 8th Wall XR Engine (SLAM for Image Targets) -->
+  <script async src="/xr/xr.js" data-preload-chunks="slam"></script>
+
+  <style>
+    body, html {
+      margin: 0; padding: 0; width: 100%; height: 100vh; height: 100dvh;
+      overflow: hidden; background-color: #000;
+    }
+
+    /* Canvas da câmera — tela cheia */
+    #camerafeed {
+      position: absolute; top: 0; left: 0;
+      width: 100vw; height: 100vh; height: 100dvh;
+      z-index: 1;
+    }
+
+    /* Overlay de vídeo AR */
+    .video-overlay {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh; height: 100dvh;
+      display: none; z-index: 10;
+      justify-content: center; align-items: center;
+      pointer-events: none;
+    }
+    .video-overlay.active { display: flex; }
+    .video-overlay video {
+      max-width: 80vw; max-height: 60vh;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+    }
+
+    /* Botão Voltar */
+    .btn-voltar {
+      position: fixed; top: 30px; left: 20px; z-index: 100;
+      padding: 10px 16px; background: rgba(0, 20, 50, 0.9);
+      border: 1px solid rgba(0, 212, 255, 0.3); color: #00d4ff;
+      text-decoration: none; font-family: sans-serif; font-size: 11px;
+      font-weight: bold; border-radius: 8px; display: flex; align-items: center;
+      gap: 6px; text-transform: uppercase; letter-spacing: 2px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,102,255,0.2);
+      transition: all 0.3s ease;
+    }
+    .btn-voltar:active { transform: scale(0.95); background: rgba(0,102,255,0.3); }
+    .btn-voltar svg { width: 16px; height: 16px; stroke: #00d4ff; }
+
+    /* Loading */
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100vw;
+      height: 100vh; height: 100dvh;
+      background: radial-gradient(circle at 50% 50%, rgba(0,102,255,0.1) 0%, #03060c 100%);
+      z-index: 200; display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      transition: opacity 0.6s ease, visibility 0.6s;
+    }
+    #loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    #btn-iniciar {
+      display: none; background: linear-gradient(90deg, #0066ff, #00d4ff);
+      color: white; border: none; padding: 16px 32px; border-radius: 8px;
+      font-weight: bold; font-size: 14px; text-transform: uppercase;
+      letter-spacing: 2px; cursor: pointer;
+      box-shadow: 0 5px 20px rgba(0,102,255,0.5);
+      animation: fade-in 0.5s ease forwards;
+    }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .radar-spinner {
+      width: 50px; height: 50px; border: 3px solid rgba(0,102,255,0.2);
+      border-top-color: #00d4ff; border-radius: 50%;
+      animation: spin 1s linear infinite; margin-bottom: 20px;
+      box-shadow: 0 0 15px rgba(0,102,255,0.3);
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .loading-text {
+      background: linear-gradient(90deg, #fff, #00d4ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: monospace; font-size: 13px; letter-spacing: 2px;
+      text-transform: uppercase; animation: blink 1.5s infinite; text-align: center;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* HUD Scanner */
+    .hud-corners {
+      position: fixed; top: 0; left: 0; width: 100vw;
+      height: 100vh; height: 100dvh; pointer-events: none;
+      z-index: 50; transition: opacity 0.5s ease;
+    }
+    .hud-corners.hidden { opacity: 0; }
+    .corn {
+      position: absolute; width: 40px; height: 40px;
+      border: 2px solid #00d4ff;
+      filter: drop-shadow(0 0 8px rgba(0,102,255,0.8));
+    }
+    .corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
+    .corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
+    .corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
+    .corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
+    .scan-line {
+      position: absolute; left: 10%; width: 80%; height: 3px;
+      background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+      box-shadow: 0 0 15px rgba(0,212,255,0.8);
+      animation: scan-anim 2s cubic-bezier(0.4,0,0.2,1) infinite;
+      z-index: 3; border-radius: 50%;
+    }
+    @keyframes scan-anim {
+      0% { top: 20%; opacity: 0; } 15% { opacity: 1; }
+      85% { opacity: 1; } 100% { top: 80%; opacity: 0; }
+    }
+
+    /* Controles AR */
+    #ar-controls {
+      position: fixed; bottom: 30px; width: 100%; display: flex;
+      justify-content: center; gap: 15px; z-index: 60;
+      pointer-events: auto; padding: 0 15px; box-sizing: border-box;
+    }
+    .ar-btn {
+      background: linear-gradient(135deg, rgba(8,15,25,0.98) 0%, rgba(0,102,255,0.2) 100%);
+      border: 2px solid rgba(0,102,255,0.4); padding: 12px 20px; border-radius: 12px;
+      text-decoration: none; font-size: 11px; font-weight: bold; font-family: sans-serif;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,255,255,0.05);
+      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+      background-image: linear-gradient(90deg, #fff, #00d4ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ar-btn:active {
+      transform: scale(0.95);
+      background: linear-gradient(135deg, rgba(0,102,255,0.3) 0%, rgba(0,212,255,0.2) 100%);
+      border-color: #00d4ff;
+    }
+    .ar-btn svg { width: 20px; height: 20px; stroke: #00d4ff; }
+    .ar-btn.outline svg { fill: none; stroke: #00d4ff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Error Modal */
+    #error-modal {
+      position: fixed; top: 0; left: 0; width: 100vw;
+      height: 100vh; height: 100dvh; background: rgba(11,15,25,0.98);
+      z-index: 300; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; padding: 30px;
+      box-sizing: border-box; text-align: center;
+      opacity: 0; visibility: hidden; transition: opacity 0.5s ease;
+    }
+    #error-modal.show { opacity: 1; visibility: visible; }
+    .error-box {
+      background: rgba(0,102,255,0.05); border: 1px solid rgba(0,102,255,0.3);
+      padding: 30px; border-radius: 16px; max-width: 400px;
+    }
+    .error-box h2 {
+      background: linear-gradient(90deg, #fff, #00d4ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-top: 0; font-family: sans-serif; font-size: 18px;
+      margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px;
+    }
+    .error-box p { color: #e2e8f0; font-size: 14px; line-height: 1.6; font-family: sans-serif; margin-bottom: 25px; }
+    .btn-reload {
+      background: linear-gradient(90deg, #0066ff, #00d4ff); color: white;
+      border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;
+      font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer; box-shadow: 0 5px 15px rgba(0,102,255,0.4);
+    }
+
+    @media (min-width: 768px) {
+      .ar-btn { padding: 15px 30px; font-size: 14px; gap: 12px; }
+      .btn-voltar { font-size: 14px; padding: 12px 24px; top: 40px; left: 40px; }
+      .corn { width: 60px; height: 60px; border-width: 3px; }
+      .corn.tl { top: 40px; left: 40px; } .corn.tr { top: 40px; right: 40px; }
+      .corn.bl { bottom: 40px; left: 40px; } .corn.br { bottom: 40px; right: 40px; }
+      #ar-controls { bottom: 40px; gap: 25px; }
+    }
+  </style>
 </head>
 
 <body>
-
+  <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="radar-spinner" id="loading-spinner"></div>
     <div class="loading-text" id="loading-text">Ligando Óptica Tática...</div>
-    <div id="tap-to-start">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <circle cx="12" cy="12" r="3"></circle>
-      </svg>
-      TOQUE NA TELA PARA CALIBRAR SENSOR
-    </div>
+    <button id="btn-iniciar">INICIAR EXPERIÊNCIA</button>
   </div>
 
+  <!-- Error Modal -->
   <div id="error-modal">
     <div class="error-box">
       <h2>Câmera Bloqueada</h2>
-      <p style="margin-bottom: 15px;">Infelizmente seu navegador bloqueou o acesso automático à câmera. Precisamos dela
-        para iniciar a mira holográfica.</p>
-
-      <div
-        style="background: rgba(0, 102, 255, 0.1); border-left: 3px solid #00d4ff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #e2e8f0;">
-        <strong style="color: #00d4ff; display: block; margin-bottom: 8px;">COMO LIBERAR MANUALMENTE:</strong>
-        1. Clique no ícone de <strong>Cadeado 🔒</strong> ou configurações de site na barra de endereços (lá no topo do
-        seu navegador).<br>
-        2. Procure por <strong>Câmera</strong> e mude para <strong>Permitir</strong>.<br>
-        3. Clique no botão abaixo para reiniciar o sistema.
+      <p>Precisamos da câmera para iniciar a experiência AR.</p>
+      <div style="background: rgba(0,102,255,0.1); border-left: 3px solid #00d4ff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #e2e8f0;">
+        <strong style="color: #00d4ff; display: block; margin-bottom: 8px;">COMO LIBERAR:</strong>
+        1. Clique no <strong>Cadeado 🔒</strong> na barra de endereços.<br>
+        2. Mude <strong>Câmera</strong> para <strong>Permitir</strong>.<br>
+        3. Clique abaixo para reiniciar.
       </div>
-
-      <button class="btn-reload" onclick="location.reload()">JÁ LIBEREI, REINICIAR SISTEMA</button>
+      <button class="btn-reload" onclick="location.reload()">REINICIAR</button>
     </div>
   </div>
 
+  <!-- HUD Scanner -->
   <div class="hud-corners" id="scanner-hud">
     <div class="corn tl"></div>
     <div class="corn tr"></div>
@@ -57,23 +217,22 @@
     <div class="scan-line"></div>
   </div>
 
+  <!-- Botão Voltar -->
   <a href="index.html" class="btn-voltar" id="btn-voltar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-      stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6"></polyline>
     </svg>
     VOLTAR
   </a>
 
+  <!-- Controles -->
   <div id="ar-controls">
-    <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!"
-      target="_blank" rel="noopener noreferrer" class="ar-btn">
+    <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!" target="_blank" rel="noopener noreferrer" class="ar-btn">
       <img src="/whatsapp.png" alt="WhatsApp" style="width: 20px; height: 20px; object-fit: contain;">
       Falar no WhatsApp
     </a>
     <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ar-btn outline">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round" style="width: 20px; height: 20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
         <circle cx="12" cy="12" r="10" />
         <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
       </svg>
@@ -81,24 +240,242 @@
     </a>
   </div>
 
-  <!-- Motor de Realidade Aumentada — DONO EXCLUSIVO DA CÂMERA -->
-  <a-scene id="main-scene"
-    mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;"
-    color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights, alpha: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
-    <a-assets timeout="10000">
-      <video id="meuVideo" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
-    </a-assets>
+  <!-- Overlays de Vídeo -->
+  <div class="video-overlay" id="overlay-hunters">
+    <video id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+  </div>
+  <div class="video-overlay" id="overlay-navegue">
+    <video id="videoNavegue" src="/video-corporativo.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+  </div>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <!-- Canvas para câmera do 8th Wall -->
+  <canvas id="camerafeed"></canvas>
 
-    <a-entity mindar-image-target="targetIndex: 0" id="alvo-logo">
-      <a-video src="#meuVideo" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
-    </a-entity>
-  </a-scene>
+  <!-- TOAST BANNER — aparece gigante na tela -->
+  <div id="toast-banner" style="
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 25px 20px; text-align: center;
+    font-family: sans-serif; font-size: 22px; font-weight: bold;
+    z-index: 99999; transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  "></div>
 
-  <script src="/src/js/arLogic.js" type="module"></script>
+  <!-- DEBUG Console -->
+  <div id="debug-log" style="
+    position: fixed; bottom: 80px; left: 10px; right: 10px;
+    max-height: 200px; overflow-y: auto;
+    background: rgba(0,0,0,0.95); color: #0f0; font-family: monospace;
+    font-size: 13px; padding: 10px; border-radius: 8px;
+    z-index: 9999; border: 2px solid #0f0;
+    pointer-events: auto;
+  "></div>
+
+  <script>
+    // === DEBUG ===
+    const debugEl = document.getElementById('debug-log');
+    const toastEl = document.getElementById('toast-banner');
+    let toastTimer = null;
+
+    const _log = (msg, color = '#0f0') => {
+      const line = document.createElement('div');
+      line.style.color = color;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      debugEl.appendChild(line);
+      debugEl.scrollTop = debugEl.scrollHeight;
+      console.log(msg);
+    };
+
+    const showToast = (msg, bgColor = '#00cc00') => {
+      toastEl.textContent = msg;
+      toastEl.style.background = bgColor;
+      toastEl.style.color = '#fff';
+      toastEl.style.transform = 'translateY(0)';
+      toastEl.style.textShadow = '0 2px 8px rgba(0,0,0,0.5)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.style.transform = 'translateY(-100%)';
+      }, 4000);
+    };
+
+    // === ELEMENTS ===
+    const loadingScreen = document.getElementById('loading-screen');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const loadingText = document.getElementById('loading-text');
+    const btnIniciar = document.getElementById('btn-iniciar');
+    const errorModal = document.getElementById('error-modal');
+    const scannerHUD = document.getElementById('scanner-hud');
+    const videoHunters = document.getElementById('videoHunters');
+    const videoNavegue = document.getElementById('videoNavegue');
+    const overlayHunters = document.getElementById('overlay-hunters');
+    const overlayNavegue = document.getElementById('overlay-navegue');
+
+    // === IMAGE TARGET DATA ===
+    const huntersTarget = {
+      imagePath: './targets/hunters.png',
+      metadata: {},
+      name: 'hunters',
+      type: 'PLANAR',
+      properties: {
+        left: 0, top: 0, width: 480, height: 640,
+        originalWidth: 480, originalHeight: 640, isRotated: false
+      }
+    };
+
+    const navegueTarget = {
+      imagePath: './targets/navegue.png',
+      metadata: {},
+      name: 'navegue',
+      type: 'PLANAR',
+      properties: {
+        left: 0, top: 0, width: 480, height: 640,
+        originalWidth: 480, originalHeight: 640, isRotated: false
+      }
+    };
+
+    // === VIDEO MANAGEMENT ===
+    const targetVideos = {
+      hunters: { video: videoHunters, overlay: overlayHunters },
+      navegue: { video: videoNavegue, overlay: overlayNavegue }
+    };
+
+    function showVideo(name) {
+      const t = targetVideos[name];
+      if (!t) return;
+      t.overlay.classList.add('active');
+      t.video.play().catch(() => {
+        t.video.muted = true;
+        t.video.play().catch(() => {});
+      });
+      if (scannerHUD) scannerHUD.classList.add('hidden');
+    }
+
+    function hideVideo(name) {
+      const t = targetVideos[name];
+      if (!t) return;
+      t.video.pause();
+      t.overlay.classList.remove('active');
+      // Check if any overlay is still active
+      const anyActive = Object.values(targetVideos).some(v => v.overlay.classList.contains('active'));
+      if (!anyActive && scannerHUD) scannerHUD.classList.remove('hidden');
+    }
+
+    function hideAllVideos() {
+      Object.keys(targetVideos).forEach(hideVideo);
+    }
+
+    // === 8TH WALL PIPELINE ===
+    const imageTargetPipeline = {
+      name: 'hunters-ar',
+      listeners: [
+        {
+          event: 'reality.imagefound',
+          process: (event) => {
+            const name = event.detail ? event.detail.name : 'unknown';
+            _log('🎯 FOUND: ' + name + ' | keys: ' + Object.keys(event.detail || {}).join(','), '#0ff');
+            showToast('✅ TARGET DETECTADO: ' + name.toUpperCase(), '#00aa00');
+            showVideo(name);
+          }
+        },
+        {
+          event: 'reality.imageupdated',
+          process: (event) => {
+            // silently track
+          }
+        },
+        {
+          event: 'reality.imagelost',
+          process: (event) => {
+            const name = event.detail ? event.detail.name : 'unknown';
+            _log('📡 LOST: ' + name, '#f90');
+            showToast('❌ TARGET PERDIDO: ' + name.toUpperCase(), '#cc0000');
+            hideVideo(name);
+          }
+        }
+      ],
+      onStart: () => {
+        _log('🚀 Pipeline started!', '#0ff');
+      },
+      onException: (error) => {
+        _log('💥 Pipeline error: ' + JSON.stringify(error), '#f00');
+      }
+    };
+
+    // === INIT XR ===
+    const onxrloaded = () => {
+      _log('✅ XR8 Engine carregado', '#0ff');
+
+      // Configure image targets — NAVEGUE PRIMEIRO para testar
+      XR8.XrController.configure({
+        imageTargetData: [navegueTarget, huntersTarget]
+      });
+      _log('📋 Targets configurados: navegue(1st), hunters(2nd)', '#ff0');
+
+      // Add pipeline modules
+      XR8.addCameraPipelineModules([
+        XR8.GlTextureRenderer.pipelineModule(),
+        XR8.XrController.pipelineModule(),
+        imageTargetPipeline
+      ]);
+
+      loadingSpinner.style.display = 'none';
+      loadingText.style.display = 'none';
+      btnIniciar.style.display = 'block';
+    };
+
+    // Wait for XR8 to load
+    window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+
+    // === BUTTON: INICIAR ===
+    btnIniciar.addEventListener('click', () => {
+      // Unlock audio
+      [videoHunters, videoNavegue].forEach(v => {
+        v.muted = false;
+        v.play().then(() => { v.pause(); v.currentTime = 0; }).catch(() => {});
+      });
+      _log('🔊 Áudio desbloqueado', '#0f0');
+
+      loadingScreen.classList.add('hidden');
+
+      // Start XR
+      try {
+        const canvas = document.getElementById('camerafeed');
+        XR8.run({
+          canvas,
+          allowedDevices: XR8.XrConfig.device().ANY
+        });
+        _log('▶ Câmera AR iniciada — escaneando...', '#0ff');
+      } catch (e) {
+        _log('❌ Erro ao iniciar: ' + e.message, '#f00');
+        errorModal.classList.add('show');
+      }
+    });
+
+    // === BUTTON: VOLTAR ===
+    document.getElementById('btn-voltar').addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAllVideos();
+      try { XR8.stop(); } catch(e) {}
+      window.location.href = 'index.html';
+    });
+
+    // === CLEANUP ===
+    window.addEventListener('pagehide', () => {
+      hideAllVideos();
+      try { XR8.stop(); } catch(e) {}
+    });
+
+    // === TIMEOUT ===
+    setTimeout(() => {
+      if (!loadingScreen.classList.contains('hidden')) {
+        _log('⏱ Timeout 20s — XR8 não carregou', '#f90');
+        loadingScreen.classList.add('hidden');
+        errorModal.classList.add('show');
+      }
+    }, 20000);
+
+    _log('🔧 8th Wall AR inicializando...', '#ff0');
+    _log('📋 Targets: Hunters ↔ Navegue Seguro', '#ff0');
+  </script>
 </body>
-
 </html>
