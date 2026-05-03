@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compilador de Targets MindAR</title>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
@@ -132,7 +132,8 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { Compiler } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
     const img0Input = document.getElementById('img0');
     const img1Input = document.getElementById('img1');
     const previewDiv = document.getElementById('preview');
@@ -201,7 +202,7 @@
       log(`  Target 1: ${images[1].width}x${images[1].height}`);
       
       try {
-        const compiler = new MINDAR.IMAGE.Compiler();
+        const compiler = new Compiler();
         
         log('📊 Extraindo feature points...');
         await compiler.compileImageTargets(images, (progress) => {
