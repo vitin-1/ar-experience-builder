@@ -1,0 +1,15 @@
+{
+  "imagePath": "./targets/navegue.png",
+  "metadata": {},
+  "name": "navegue",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 109,
+    "width": 480,
+    "height": 422,
+    "originalWidth": 480,
+    "originalHeight": 640,
+    "isRotated": false
+  }
+}
