@@ -345,35 +345,44 @@
       listeners: [
         {
           event: 'reality.imagefound',
-          process: ({ detail }) => {
-            _log('🎯 ' + detail.name + ' ENCONTRADO', '#0ff');
-            showVideo(detail.name);
+          process: (event) => {
+            const name = event.detail ? event.detail.name : 'unknown';
+            _log('🎯 FOUND: ' + name + ' | keys: ' + Object.keys(event.detail || {}).join(','), '#0ff');
+            showVideo(name);
           }
         },
         {
           event: 'reality.imageupdated',
-          process: ({ detail }) => {
-            // Target still being tracked — keep video playing
+          process: (event) => {
+            // silently track
           }
         },
         {
           event: 'reality.imagelost',
-          process: ({ detail }) => {
-            _log('📡 ' + detail.name + ' PERDIDO', '#f90');
-            hideVideo(detail.name);
+          process: (event) => {
+            const name = event.detail ? event.detail.name : 'unknown';
+            _log('📡 LOST: ' + name, '#f90');
+            hideVideo(name);
           }
         }
-      ]
+      ],
+      onStart: () => {
+        _log('🚀 Pipeline started!', '#0ff');
+      },
+      onException: (error) => {
+        _log('💥 Pipeline error: ' + JSON.stringify(error), '#f00');
+      }
     };
 
     // === INIT XR ===
     const onxrloaded = () => {
       _log('✅ XR8 Engine carregado', '#0ff');
 
-      // Configure image targets
+      // Configure image targets — NAVEGUE PRIMEIRO para testar
       XR8.XrController.configure({
-        imageTargetData: [huntersTarget, navegueTarget]
+        imageTargetData: [navegueTarget, huntersTarget]
       });
+      _log('📋 Targets configurados: navegue(1st), hunters(2nd)', '#ff0');
 
       // Add pipeline modules
       XR8.addCameraPipelineModules([
