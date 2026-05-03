@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compilador de Targets MindAR</title>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, sans-serif; 
+      background: #0a0f1a; 
+      color: #e2e8f0; 
+      min-height: 100vh; 
+      padding: 30px; 
+    }
+    h1 { 
+      text-align: center; 
+      background: linear-gradient(90deg, #fff, #00d4ff);
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 30px;
+      font-size: 22px;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    .step { 
+      background: rgba(0,102,255,0.05); 
+      border: 1px solid rgba(0,102,255,0.2);
+      border-radius: 12px; 
+      padding: 20px; 
+      margin-bottom: 20px; 
+    }
+    .step h2 { color: #00d4ff; font-size: 16px; margin-bottom: 12px; }
+    .step p { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+    input[type="file"] { 
+      display: block; 
+      margin: 10px 0; 
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      border: 1px dashed rgba(0,212,255,0.3);
+      border-radius: 8px;
+      color: #e2e8f0;
+      width: 100%;
+      cursor: pointer;
+    }
+    .preview { 
+      display: flex; 
+      gap: 10px; 
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .preview img { 
+      width: 120px; 
+      height: 120px; 
+      object-fit: contain;
+      border: 1px solid rgba(0,212,255,0.3); 
+      border-radius: 8px;
+      background: rgba(0,0,0,0.5);
+    }
+    .preview .label { 
+      font-size: 11px; 
+      color: #00d4ff; 
+      text-align: center; 
+      margin-top: 4px; 
+    }
+    button { 
+      background: linear-gradient(90deg, #0066ff, #00d4ff); 
+      color: white; 
+      border: none;
+      padding: 14px 28px; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      font-size: 14px;
+      cursor: pointer; 
+      width: 100%; 
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 15px;
+      transition: all 0.3s;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:hover:not(:disabled) { transform: scale(1.02); }
+    #log { 
+      background: rgba(0,0,0,0.6); 
+      border: 1px solid #0f0;
+      border-radius: 8px; 
+      padding: 12px; 
+      font-family: monospace;
+      font-size: 11px; 
+      color: #0f0;
+      max-height: 200px; 
+      overflow-y: auto;
+      margin-top: 15px;
+      white-space: pre-wrap;
+    }
+    #download-link {
+      display: none;
+      background: linear-gradient(90deg, #00cc44, #00ff88);
+      color: #000;
+      text-align: center;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 14px;
+      text-decoration: none;
+      margin-top: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 Compilador de Targets MindAR</h1>
+    
+    <div class="step">
+      <h2>1. Selecione as Imagens (na ordem correta)</h2>
+      <p>A <strong>primeira imagem</strong> será targetIndex 0, a <strong>segunda</strong> será targetIndex 1.</p>
+      <p><strong>Imagem 1 (idx 0) → Navegue Seguro</strong></p>
+      <input type="file" id="img0" accept="image/*">
+      <p><strong>Imagem 2 (idx 1) → Hunters</strong></p>
+      <input type="file" id="img1" accept="image/*">
+      <div class="preview" id="preview"></div>
+    </div>
+
+    <div class="step">
+      <h2>2. Compilar</h2>
+      <p>O compilador vai gerar o arquivo <code>targets.mind</code> com mais níveis de tracking para garantir detecção estável.</p>
+      <button id="btn-compile" disabled>COMPILAR TARGETS</button>
+      <a id="download-link" href="#">⬇️ BAIXAR targets.mind</a>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script>
+    const img0Input = document.getElementById('img0');
+    const img1Input = document.getElementById('img1');
+    const previewDiv = document.getElementById('preview');
+    const btnCompile = document.getElementById('btn-compile');
+    const logDiv = document.getElementById('log');
+    const downloadLink = document.getElementById('download-link');
+
+    const images = [null, null];
+
+    function log(msg) {
+      logDiv.textContent += msg + '\n';
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(msg);
+    }
+
+    function checkReady() {
+      btnCompile.disabled = !(images[0] && images[1]);
+    }
+
+    function handleFile(input, index) {
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            images[index] = img;
+            log(`✅ Imagem ${index} carregada: ${img.width}x${img.height} — ${file.name}`);
+            
+            // Preview
+            const existing = document.getElementById(`prev-${index}`);
+            if (existing) existing.remove();
+            
+            const wrapper = document.createElement('div');
+            wrapper.id = `prev-${index}`;
+            const preview = document.createElement('img');
+            preview.src = ev.target.result;
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.textContent = `Target ${index}: ${file.name}`;
+            wrapper.appendChild(preview);
+            wrapper.appendChild(label);
+            previewDiv.appendChild(wrapper);
+            
+            checkReady();
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    handleFile(img0Input, 0);
+    handleFile(img1Input, 1);
+
+    btnCompile.addEventListener('click', async () => {
+      btnCompile.disabled = true;
+      btnCompile.textContent = 'COMPILANDO...';
+      logDiv.textContent = '';
+      downloadLink.style.display = 'none';
+      
+      log('🔧 Iniciando compilação com MindAR...');
+      log(`  Target 0: ${images[0].width}x${images[0].height}`);
+      log(`  Target 1: ${images[1].width}x${images[1].height}`);
+      
+      try {
+        const compiler = new MINDAR.IMAGE.Compiler();
+        
+        log('📊 Extraindo feature points...');
+        await compiler.compileImageTargets(images, (progress) => {
+          log(`  Progresso: ${Math.round(progress * 100)}%`);
+        });
+        
+        log('📦 Exportando arquivo .mind...');
+        const exportedBuffer = await compiler.exportData();
+        
+        const blob = new Blob([exportedBuffer]);
+        const url = URL.createObjectURL(blob);
+        
+        log(`✅ Compilação concluída! Tamanho: ${(blob.size / 1024).toFixed(0)} KB`);
+        log('');
+        log('⬇️ Clique no botão verde abaixo para baixar.');
+        log('📁 Salve como "targets.mind" na pasta public/');
+        
+        downloadLink.href = url;
+        downloadLink.download = 'targets.mind';
+        downloadLink.style.display = 'block';
+        
+      } catch (err) {
+        log(`❌ Erro na compilação: ${err.message}`);
+        console.error(err);
+      }
+      
+      btnCompile.disabled = false;
+      btnCompile.textContent = 'COMPILAR TARGETS';
+    });
+  </script>
+</body>
+</html>
