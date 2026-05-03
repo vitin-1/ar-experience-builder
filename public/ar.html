@@ -445,20 +445,20 @@
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     <a-assets timeout="10000">
-      <video id="videoHunters" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
       <video id="videoNavegue" src="/video-corporativo.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+      <video id="videoHunters" src="/video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- targetIndex 0 = Hunters (1ª imagem compilada) -->
-    <a-entity mindar-image-target="targetIndex: 0" id="alvo-hunters">
-      <a-video src="#videoHunters" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
+    <!-- targetIndex 0 = Navegue Seguro (1ª imagem compilada) -->
+    <a-entity mindar-image-target="targetIndex: 0" id="alvo-navegue">
+      <a-video src="#videoNavegue" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
     </a-entity>
 
-    <!-- targetIndex 1 = Navegue Seguro (2ª imagem compilada) -->
-    <a-entity mindar-image-target="targetIndex: 1" id="alvo-navegue">
-      <a-video src="#videoNavegue" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
+    <!-- targetIndex 1 = Hunters (2ª imagem compilada) -->
+    <a-entity mindar-image-target="targetIndex: 1" id="alvo-hunters">
+      <a-video src="#videoHunters" position="0 0 0" width="1" height="0.5625" scale="1.5 1.5 1.5"></a-video>
     </a-entity>
   </a-scene>
 
@@ -589,8 +589,8 @@
       });
     };
 
-    setupTarget(alvoHunters, videoHunters, 'Hunters');
     setupTarget(alvoNavegue, videoNavegue, 'Navegue Seguro');
+    setupTarget(alvoHunters, videoHunters, 'Hunters');
 
     // 4. Botão Voltar com cleanup
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
