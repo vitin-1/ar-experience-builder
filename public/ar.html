@@ -14,8 +14,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- 8th Wall XR Engine (SLAM for Image Targets) -->
+  <!-- 8th Wall XR Engine -->
   <script async src="/xr/xr.js" data-preload-chunks="slam"></script>
+  <!-- Three.js for 3D AR rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,32 +47,8 @@
       z-index: 1;
     }
 
-    /* === VIDEO OVERLAY === */
-    .video-overlay {
-      position: fixed; top: 0; left: 0;
-      width: 100vw; height: 100vh; height: 100dvh;
-      display: none; z-index: 10;
-      justify-content: center; align-items: center;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%);
-    }
-    .video-overlay.active {
-      display: flex;
-      animation: overlayIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .video-overlay video {
-      max-width: 85vw; max-height: 55vh;
-      border-radius: 12px;
-      box-shadow:
-        0 0 0 1px rgba(0,212,255,0.2),
-        0 8px 32px rgba(0,0,0,0.6),
-        0 0 60px rgba(0,102,255,0.15);
-      backdrop-filter: blur(2px);
-    }
-    @keyframes overlayIn {
-      from { opacity: 0; transform: scale(0.92); }
-      to { opacity: 1; transform: scale(1); }
-    }
+    /* === VIDEO OVERLAY — hidden, used as texture source === */
+    .video-src { display: none; }
 
     /* === BACK BUTTON === */
     .btn-voltar {
@@ -380,13 +358,9 @@
     </a>
   </div>
 
-  <!-- Video Overlays -->
-  <div class="video-overlay" id="overlay-hunters">
-    <video id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
-  </div>
-  <div class="video-overlay" id="overlay-navegue">
-    <video id="videoNavegue" src="/video-corporativo.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
-  </div>
+  <!-- Video sources (hidden, used as Three.js textures) -->
+  <video class="video-src" id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+  <video class="video-src" id="videoNavegue" src="/video-corporativo.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
 
   <!-- Camera Canvas -->
   <canvas id="camerafeed"></canvas>
@@ -406,8 +380,6 @@
     const statusText = document.getElementById('status-text');
     const videoHunters = document.getElementById('videoHunters');
     const videoNavegue = document.getElementById('videoNavegue');
-    const overlayHunters = document.getElementById('overlay-hunters');
-    const overlayNavegue = document.getElementById('overlay-navegue');
 
     // === STATUS PILL ===
     let pillTimer = null;
@@ -415,155 +387,126 @@
       statusPill.className = 'status-pill show ' + type;
       statusText.textContent = msg;
       clearTimeout(pillTimer);
-      pillTimer = setTimeout(() => {
-        statusPill.classList.remove('show');
-      }, type === 'found' ? 8000 : 3000);
+      pillTimer = setTimeout(() => { statusPill.classList.remove('show'); },
+        type === 'found' ? 8000 : 3000);
     }
 
-    // === IMAGE TARGET DATA ===
+    // === IMAGE TARGETS ===
     const huntersTarget = {
-      imagePath: '/targets/hunters.png',
-      metadata: {},
-      name: 'hunters',
-      type: 'PLANAR',
-      properties: {
-        left: 0, top: 167, width: 480, height: 305,
-        originalWidth: 480, originalHeight: 640, isRotated: false
-      }
+      imagePath: '/targets/hunters.png', metadata: {}, name: 'hunters', type: 'PLANAR',
+      properties: { left: 0, top: 167, width: 480, height: 305, originalWidth: 480, originalHeight: 640, isRotated: false }
     };
-
     const navegueTarget = {
-      imagePath: '/targets/navegue.png',
-      metadata: {},
-      name: 'navegue',
-      type: 'PLANAR',
-      properties: {
-        left: 0, top: 26, width: 479, height: 588,
-        originalWidth: 480, originalHeight: 640, isRotated: false
-      }
+      imagePath: '/targets/navegue.png', metadata: {}, name: 'navegue', type: 'PLANAR',
+      properties: { left: 0, top: 26, width: 479, height: 588, originalWidth: 480, originalHeight: 640, isRotated: false }
     };
 
-    // === VIDEO MANAGEMENT ===
+    // === THREE.JS AR SCENE ===
     const targetLabels = { hunters: 'Hunters', navegue: 'Navegue Seguro' };
-    const targetVideos = {
-      hunters: { video: videoHunters, overlay: overlayHunters },
-      navegue: { video: videoNavegue, overlay: overlayNavegue }
-    };
+    const meshes = {}; // name -> { mesh, video, texture }
 
-    function showVideo(name) {
-      const t = targetVideos[name];
+    function initXrScene({ scene, camera }) {
+      // Hunters video plane (16:9 aspect)
+      const hTex = new THREE.VideoTexture(videoHunters);
+      hTex.minFilter = THREE.LinearFilter;
+      const hMat = new THREE.MeshBasicMaterial({ map: hTex, side: THREE.DoubleSide });
+      const hMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.5625), hMat);
+      hMesh.visible = false;
+      scene.add(hMesh);
+      meshes.hunters = { mesh: hMesh, video: videoHunters, texture: hTex };
+
+      // Navegue video plane
+      const nTex = new THREE.VideoTexture(videoNavegue);
+      nTex.minFilter = THREE.LinearFilter;
+      const nMat = new THREE.MeshBasicMaterial({ map: nTex, side: THREE.DoubleSide });
+      const nMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.5625), nMat);
+      nMesh.visible = false;
+      scene.add(nMesh);
+      meshes.navegue = { mesh: nMesh, video: videoNavegue, texture: nTex };
+    }
+
+    function showTarget(detail) {
+      const { name, position, rotation, scale } = detail;
+      const t = meshes[name];
       if (!t) return;
-      t.overlay.classList.add('active');
-      t.video.play().catch(() => {
-        t.video.muted = true;
-        t.video.play().catch(() => {});
-      });
+      t.mesh.position.copy(position);
+      t.mesh.quaternion.copy(rotation);
+      t.mesh.scale.set(scale, scale, scale);
+      t.mesh.visible = true;
+      t.video.play().catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
       scannerHUD.classList.add('hidden');
       scanHint.classList.add('hidden');
       showStatus(targetLabels[name] || name, 'found');
     }
 
-    function hideVideo(name) {
-      const t = targetVideos[name];
+    function hideTarget(name) {
+      const t = meshes[name];
       if (!t) return;
+      t.mesh.visible = false;
       t.video.pause();
-      t.overlay.classList.remove('active');
-      const anyActive = Object.values(targetVideos).some(v => v.overlay.classList.contains('active'));
-      if (!anyActive) {
+      const anyVisible = Object.values(meshes).some(m => m.mesh.visible);
+      if (!anyVisible) {
         scannerHUD.classList.remove('hidden');
         scanHint.classList.remove('hidden');
       }
       showStatus('Escaneando...', 'lost');
     }
 
-    function hideAllVideos() {
-      Object.keys(targetVideos).forEach(hideVideo);
-    }
-
-    // === 8TH WALL PIPELINE ===
-    const imageTargetPipeline = {
+    // === PIPELINE ===
+    const arPipeline = {
       name: 'hunters-ar',
+      onStart: () => { initXrScene(XR8.Threejs.xrScene()); },
       listeners: [
-        {
-          event: 'reality.imagefound',
-          process: (event) => {
-            const name = event.detail ? event.detail.name : 'unknown';
-            showVideo(name);
-          }
-        },
-        {
-          event: 'reality.imageupdated',
-          process: () => {}
-        },
-        {
-          event: 'reality.imagelost',
-          process: (event) => {
-            const name = event.detail ? event.detail.name : 'unknown';
-            hideVideo(name);
-          }
-        }
+        { event: 'reality.imagefound', process: (e) => showTarget(e.detail) },
+        { event: 'reality.imageupdated', process: (e) => showTarget(e.detail) },
+        { event: 'reality.imagelost', process: (e) => hideTarget(e.detail.name) }
       ]
     };
 
     // === INIT XR ===
     const onxrloaded = () => {
-      XR8.XrController.configure({
-        imageTargetData: [navegueTarget, huntersTarget]
-      });
-
+      XR8.XrController.configure({ imageTargetData: [navegueTarget, huntersTarget] });
       XR8.addCameraPipelineModules([
         XR8.GlTextureRenderer.pipelineModule(),
+        XR8.Threejs.pipelineModule(),
         XR8.XrController.pipelineModule(),
-        imageTargetPipeline
+        arPipeline
       ]);
-
-      // Switch from loader to tap prompt
       loadingSpinner.style.display = 'none';
       loadingText.style.display = 'none';
       tapIcon.style.display = 'flex';
       tapText.style.display = 'block';
       tapSub.style.display = 'block';
     };
-
     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
 
     // === TAP TO START ===
     tapOverlay.addEventListener('click', () => {
-      // Silent unlock — muted play+pause, never visible
       [videoHunters, videoNavegue].forEach(v => {
         v.muted = true;
         const p = v.play();
         if (p) p.then(() => { v.pause(); v.currentTime = 0; v.muted = false; }).catch(() => {});
       });
-
       tapOverlay.classList.add('hidden');
-
       try {
         const canvas = document.getElementById('camerafeed');
-        // Match canvas buffer to viewport so camera isn't stretched
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-
-        XR8.run({
-          canvas,
-          allowedDevices: XR8.XrConfig.device().ANY
-        });
-      } catch (e) {
-        errorModal.classList.add('show');
-      }
+        XR8.run({ canvas, allowedDevices: XR8.XrConfig.device().ANY });
+      } catch (e) { errorModal.classList.add('show'); }
     });
 
     // === BACK ===
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
       e.preventDefault();
-      hideAllVideos();
+      Object.values(meshes).forEach(t => { t.mesh.visible = false; t.video.pause(); });
       try { XR8.stop(); } catch(err) {}
       window.location.href = 'index.html';
     });
 
     // === CLEANUP ===
     window.addEventListener('pagehide', () => {
-      hideAllVideos();
+      Object.values(meshes).forEach(t => { t.mesh.visible = false; t.video.pause(); });
       try { XR8.stop(); } catch(err) {}
     });
 
