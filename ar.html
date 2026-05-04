@@ -539,8 +539,13 @@
       tapOverlay.classList.add('hidden');
 
       try {
+        const canvas = document.getElementById('camerafeed');
+        // Match canvas buffer to viewport so camera isn't stretched
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
         XR8.run({
-          canvas: document.getElementById('camerafeed'),
+          canvas,
           allowedDevices: XR8.XrConfig.device().ANY
         });
       } catch (e) {
