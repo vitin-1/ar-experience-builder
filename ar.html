@@ -10,177 +10,289 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Visualização AR — Hunters ManPower</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- 8th Wall XR Engine (SLAM for Image Targets) -->
   <script async src="/xr/xr.js" data-preload-chunks="slam"></script>
 
   <style>
-    body, html {
-      margin: 0; padding: 0; width: 100%; height: 100vh; height: 100dvh;
-      overflow: hidden; background-color: #000;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #0066ff;
+      --accent: #00d4ff;
+      --glow: rgba(0, 212, 255, 0.5);
+      --bg-dark: #03060c;
+      --glass: rgba(5, 15, 35, 0.85);
+      --glass-border: rgba(0, 212, 255, 0.15);
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
     }
 
-    /* Canvas da câmera — tela cheia */
+    body, html {
+      width: 100%; height: 100vh; height: 100dvh;
+      overflow: hidden; background: var(--bg-dark);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* === CAMERA CANVAS === */
     #camerafeed {
       position: absolute; top: 0; left: 0;
       width: 100vw; height: 100vh; height: 100dvh;
       z-index: 1;
     }
 
-    /* Overlay de vídeo AR */
+    /* === VIDEO OVERLAY === */
     .video-overlay {
       position: fixed; top: 0; left: 0;
       width: 100vw; height: 100vh; height: 100dvh;
       display: none; z-index: 10;
       justify-content: center; align-items: center;
       pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%);
     }
-    .video-overlay.active { display: flex; }
+    .video-overlay.active {
+      display: flex;
+      animation: overlayIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
     .video-overlay video {
-      max-width: 80vw; max-height: 60vh;
-      border-radius: 8px;
-      box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+      max-width: 85vw; max-height: 55vh;
+      border-radius: 12px;
+      box-shadow:
+        0 0 0 1px rgba(0,212,255,0.2),
+        0 8px 32px rgba(0,0,0,0.6),
+        0 0 60px rgba(0,102,255,0.15);
+      backdrop-filter: blur(2px);
+    }
+    @keyframes overlayIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
     }
 
-    /* Botão Voltar */
+    /* === BACK BUTTON === */
     .btn-voltar {
-      position: fixed; top: 30px; left: 20px; z-index: 100;
-      padding: 10px 16px; background: rgba(0, 20, 50, 0.9);
-      border: 1px solid rgba(0, 212, 255, 0.3); color: #00d4ff;
-      text-decoration: none; font-family: sans-serif; font-size: 11px;
-      font-weight: bold; border-radius: 8px; display: flex; align-items: center;
-      gap: 6px; text-transform: uppercase; letter-spacing: 2px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,102,255,0.2);
-      transition: all 0.3s ease;
+      position: fixed; top: env(safe-area-inset-top, 20px); left: 16px;
+      margin-top: 16px; z-index: 100;
+      padding: 10px 18px; background: var(--glass);
+      border: 1px solid var(--glass-border); color: var(--accent);
+      text-decoration: none; font-family: var(--font); font-size: 11px;
+      font-weight: 700; border-radius: 50px; display: flex; align-items: center;
+      gap: 6px; text-transform: uppercase; letter-spacing: 1.5px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      transition: all 0.25s ease;
     }
-    .btn-voltar:active { transform: scale(0.95); background: rgba(0,102,255,0.3); }
-    .btn-voltar svg { width: 16px; height: 16px; stroke: #00d4ff; }
+    .btn-voltar:active { transform: scale(0.93); background: rgba(0,102,255,0.25); }
+    .btn-voltar svg { width: 14px; height: 14px; }
 
-    /* Loading */
+    /* === LOADING === */
     #loading-screen {
-      position: fixed; top: 0; left: 0; width: 100vw;
-      height: 100vh; height: 100dvh;
-      background: radial-gradient(circle at 50% 50%, rgba(0,102,255,0.1) 0%, #03060c 100%);
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, rgba(0,102,255,0.08) 0%, var(--bg-dark) 70%);
       z-index: 200; display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      transition: opacity 0.6s ease, visibility 0.6s;
+      justify-content: center; align-items: center; gap: 28px;
+      transition: opacity 0.8s ease, visibility 0.8s;
     }
     #loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-    #btn-iniciar {
-      display: none; background: linear-gradient(90deg, #0066ff, #00d4ff);
-      color: white; border: none; padding: 16px 32px; border-radius: 8px;
-      font-weight: bold; font-size: 14px; text-transform: uppercase;
-      letter-spacing: 2px; cursor: pointer;
-      box-shadow: 0 5px 20px rgba(0,102,255,0.5);
-      animation: fade-in 0.5s ease forwards;
+    .loader-ring {
+      width: 56px; height: 56px; position: relative;
     }
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .loader-ring::before, .loader-ring::after {
+      content: ''; position: absolute; inset: 0;
+      border-radius: 50%; border: 2px solid transparent;
     }
-    .radar-spinner {
-      width: 50px; height: 50px; border: 3px solid rgba(0,102,255,0.2);
-      border-top-color: #00d4ff; border-radius: 50%;
-      animation: spin 1s linear infinite; margin-bottom: 20px;
-      box-shadow: 0 0 15px rgba(0,102,255,0.3);
+    .loader-ring::before {
+      border-top-color: var(--accent); border-right-color: var(--accent);
+      animation: ringA 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      filter: drop-shadow(0 0 8px var(--glow));
     }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    .loading-text {
-      background: linear-gradient(90deg, #fff, #00d4ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      font-family: monospace; font-size: 13px; letter-spacing: 2px;
-      text-transform: uppercase; animation: blink 1.5s infinite; text-align: center;
+    .loader-ring::after {
+      border-bottom-color: var(--primary); border-left-color: var(--primary);
+      animation: ringB 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      opacity: 0.6;
     }
-    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes ringA { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+    @keyframes ringB { 0% { transform: rotate(120deg); } 100% { transform: rotate(480deg); } }
 
-    /* HUD Scanner */
+    .loading-label {
+      font-family: var(--mono); font-size: 11px; font-weight: 500;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+    #btn-iniciar {
+      display: none;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white; border: none; padding: 16px 40px; border-radius: 50px;
+      font-family: var(--font); font-weight: 700; font-size: 13px;
+      text-transform: uppercase; letter-spacing: 2.5px; cursor: pointer;
+      box-shadow: 0 6px 28px rgba(0,102,255,0.45), 0 0 0 1px rgba(0,212,255,0.2);
+      animation: btnEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #btn-iniciar:active {
+      transform: scale(0.95);
+      box-shadow: 0 3px 16px rgba(0,102,255,0.6);
+    }
+    @keyframes btnEnter {
+      from { opacity: 0; transform: translateY(24px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* === HUD SCANNER === */
     .hud-corners {
-      position: fixed; top: 0; left: 0; width: 100vw;
-      height: 100vh; height: 100dvh; pointer-events: none;
-      z-index: 50; transition: opacity 0.5s ease;
+      position: fixed; inset: 0; pointer-events: none;
+      z-index: 50; transition: opacity 0.6s ease;
     }
     .hud-corners.hidden { opacity: 0; }
+
     .corn {
-      position: absolute; width: 40px; height: 40px;
-      border: 2px solid #00d4ff;
-      filter: drop-shadow(0 0 8px rgba(0,102,255,0.8));
+      position: absolute; width: 32px; height: 32px;
+      border: 2px solid var(--accent);
+      opacity: 0.7;
+      filter: drop-shadow(0 0 6px var(--glow));
+      transition: opacity 0.3s;
     }
-    .corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
-    .corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
-    .corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
-    .corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
+    .corn.tl { top: 24px; left: 16px; border-right: 0; border-bottom: 0; border-radius: 4px 0 0 0; }
+    .corn.tr { top: 24px; right: 16px; border-left: 0; border-bottom: 0; border-radius: 0 4px 0 0; }
+    .corn.bl { bottom: 24px; left: 16px; border-right: 0; border-top: 0; border-radius: 0 0 0 4px; }
+    .corn.br { bottom: 24px; right: 16px; border-left: 0; border-top: 0; border-radius: 0 0 4px 0; }
+
     .scan-line {
-      position: absolute; left: 10%; width: 80%; height: 3px;
-      background: linear-gradient(90deg, transparent, #00d4ff, transparent);
-      box-shadow: 0 0 15px rgba(0,212,255,0.8);
-      animation: scan-anim 2s cubic-bezier(0.4,0,0.2,1) infinite;
-      z-index: 3; border-radius: 50%;
+      position: absolute; left: 8%; width: 84%; height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent) 70%, transparent 100%);
+      box-shadow: 0 0 20px var(--glow), 0 0 60px rgba(0,102,255,0.15);
+      animation: scanMove 2.8s cubic-bezier(0.4,0,0.2,1) infinite;
+      border-radius: 2px; opacity: 0.8;
     }
-    @keyframes scan-anim {
-      0% { top: 20%; opacity: 0; } 15% { opacity: 1; }
-      85% { opacity: 1; } 100% { top: 80%; opacity: 0; }
+    @keyframes scanMove {
+      0% { top: 15%; opacity: 0; } 10% { opacity: 0.8; }
+      90% { opacity: 0.8; } 100% { top: 85%; opacity: 0; }
     }
 
-    /* Controles AR */
+    .scan-hint {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      font-family: var(--mono); font-size: 10px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,0.4); z-index: 55;
+      text-align: center; pointer-events: none;
+      animation: pulse 3s ease-in-out infinite;
+      transition: opacity 0.5s;
+    }
+    .scan-hint.hidden { opacity: 0; }
+
+    /* === STATUS PILL === */
+    .status-pill {
+      position: fixed; top: env(safe-area-inset-top, 20px); right: 16px;
+      margin-top: 16px; z-index: 100;
+      padding: 8px 16px; border-radius: 50px;
+      font-family: var(--mono); font-size: 10px; font-weight: 500;
+      letter-spacing: 1px; text-transform: uppercase;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      display: flex; align-items: center; gap: 6px;
+      transform: translateY(-60px); opacity: 0;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .status-pill.show {
+      transform: translateY(0); opacity: 1;
+    }
+    .status-pill.found {
+      background: rgba(0, 180, 80, 0.25); border: 1px solid rgba(0, 220, 100, 0.3);
+      color: #4ade80;
+    }
+    .status-pill.lost {
+      background: rgba(200, 80, 0, 0.2); border: 1px solid rgba(255, 150, 50, 0.3);
+      color: #fb923c;
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      animation: dotPulse 1.5s ease-in-out infinite;
+    }
+    .status-pill.found .status-dot { background: #4ade80; }
+    .status-pill.lost .status-dot { background: #fb923c; }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* === BOTTOM CONTROLS === */
     #ar-controls {
-      position: fixed; bottom: 30px; width: 100%; display: flex;
-      justify-content: center; gap: 15px; z-index: 60;
-      pointer-events: auto; padding: 0 15px; box-sizing: border-box;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      padding: 16px 16px calc(env(safe-area-inset-bottom, 8px) + 16px);
+      display: flex; justify-content: center; gap: 10px;
+      z-index: 60; pointer-events: auto;
+      background: linear-gradient(to top, rgba(3,6,12,0.9) 0%, transparent 100%);
     }
     .ar-btn {
-      background: linear-gradient(135deg, rgba(8,15,25,0.98) 0%, rgba(0,102,255,0.2) 100%);
-      border: 2px solid rgba(0,102,255,0.4); padding: 12px 20px; border-radius: 12px;
-      text-decoration: none; font-size: 11px; font-weight: bold; font-family: sans-serif;
-      display: flex; align-items: center; gap: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,255,255,0.05);
-      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
-      background-image: linear-gradient(90deg, #fff, #00d4ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      flex: 1; max-width: 180px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      padding: 14px 16px; border-radius: 14px;
+      text-decoration: none; font-size: 10px; font-weight: 700;
+      font-family: var(--font);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: all 0.25s ease;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: rgba(255,255,255,0.85);
     }
     .ar-btn:active {
       transform: scale(0.95);
-      background: linear-gradient(135deg, rgba(0,102,255,0.3) 0%, rgba(0,212,255,0.2) 100%);
-      border-color: #00d4ff;
+      background: rgba(0,102,255,0.2);
+      border-color: var(--accent);
     }
-    .ar-btn svg { width: 20px; height: 20px; stroke: #00d4ff; }
-    .ar-btn.outline svg { fill: none; stroke: #00d4ff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ar-btn img, .ar-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .ar-btn svg { stroke: var(--accent); fill: none; }
 
-    /* Error Modal */
+    /* === ERROR MODAL === */
     #error-modal {
-      position: fixed; top: 0; left: 0; width: 100vw;
-      height: 100vh; height: 100dvh; background: rgba(11,15,25,0.98);
-      z-index: 300; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; padding: 30px;
-      box-sizing: border-box; text-align: center;
-      opacity: 0; visibility: hidden; transition: opacity 0.5s ease;
+      position: fixed; inset: 0;
+      background: rgba(3,6,12,0.97); z-index: 300;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 32px; text-align: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.5s ease;
     }
     #error-modal.show { opacity: 1; visibility: visible; }
     .error-box {
-      background: rgba(0,102,255,0.05); border: 1px solid rgba(0,102,255,0.3);
-      padding: 30px; border-radius: 16px; max-width: 400px;
+      background: rgba(0,102,255,0.04); border: 1px solid rgba(0,102,255,0.2);
+      padding: 32px; border-radius: 20px; max-width: 380px;
+      backdrop-filter: blur(20px);
     }
     .error-box h2 {
-      background: linear-gradient(90deg, #fff, #00d4ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      margin-top: 0; font-family: sans-serif; font-size: 18px;
-      margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--accent); margin-bottom: 12px;
+      font-size: 16px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 2px;
     }
-    .error-box p { color: #e2e8f0; font-size: 14px; line-height: 1.6; font-family: sans-serif; margin-bottom: 25px; }
+    .error-box p {
+      color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.7; margin-bottom: 24px;
+    }
+    .error-steps {
+      background: rgba(0,102,255,0.06); border-left: 2px solid var(--accent);
+      padding: 16px; text-align: left; margin-bottom: 28px;
+      border-radius: 0 12px 12px 0; font-size: 12px;
+      line-height: 1.8; color: rgba(255,255,255,0.7);
+    }
+    .error-steps strong { color: var(--accent); }
     .btn-reload {
-      background: linear-gradient(90deg, #0066ff, #00d4ff); color: white;
-      border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;
-      font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
-      cursor: pointer; box-shadow: 0 5px 15px rgba(0,102,255,0.4);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white; border: none; padding: 14px 28px; border-radius: 50px;
+      font-family: var(--font); font-weight: 700; font-size: 12px;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      cursor: pointer; box-shadow: 0 6px 24px rgba(0,102,255,0.35);
     }
 
     @media (min-width: 768px) {
-      .ar-btn { padding: 15px 30px; font-size: 14px; gap: 12px; }
-      .btn-voltar { font-size: 14px; padding: 12px 24px; top: 40px; left: 40px; }
-      .corn { width: 60px; height: 60px; border-width: 3px; }
-      .corn.tl { top: 40px; left: 40px; } .corn.tr { top: 40px; right: 40px; }
-      .corn.bl { bottom: 40px; left: 40px; } .corn.br { bottom: 40px; right: 40px; }
-      #ar-controls { bottom: 40px; gap: 25px; }
+      .ar-btn { max-width: 220px; padding: 16px 24px; font-size: 12px; }
+      .btn-voltar { font-size: 12px; padding: 12px 22px; }
+      .corn { width: 48px; height: 48px; }
     }
   </style>
 </head>
@@ -188,23 +300,23 @@
 <body>
   <!-- Loading Screen -->
   <div id="loading-screen">
-    <div class="radar-spinner" id="loading-spinner"></div>
-    <div class="loading-text" id="loading-text">Ligando Óptica Tática...</div>
-    <button id="btn-iniciar">INICIAR EXPERIÊNCIA</button>
+    <div class="loader-ring"></div>
+    <div class="loading-label" id="loading-text">Inicializando câmera...</div>
+    <button id="btn-iniciar">Iniciar Experiência</button>
   </div>
 
   <!-- Error Modal -->
   <div id="error-modal">
     <div class="error-box">
       <h2>Câmera Bloqueada</h2>
-      <p>Precisamos da câmera para iniciar a experiência AR.</p>
-      <div style="background: rgba(0,102,255,0.1); border-left: 3px solid #00d4ff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #e2e8f0;">
-        <strong style="color: #00d4ff; display: block; margin-bottom: 8px;">COMO LIBERAR:</strong>
-        1. Clique no <strong>Cadeado 🔒</strong> na barra de endereços.<br>
-        2. Mude <strong>Câmera</strong> para <strong>Permitir</strong>.<br>
-        3. Clique abaixo para reiniciar.
+      <p>Precisamos da câmera para a experiência AR.</p>
+      <div class="error-steps">
+        <strong>Como liberar:</strong><br>
+        1. Toque no <strong>cadeado 🔒</strong> na barra de endereços<br>
+        2. Mude <strong>Câmera</strong> → <strong>Permitir</strong><br>
+        3. Toque abaixo para reiniciar
       </div>
-      <button class="btn-reload" onclick="location.reload()">REINICIAR</button>
+      <button class="btn-reload" onclick="location.reload()">Reiniciar</button>
     </div>
   </div>
 
@@ -217,30 +329,39 @@
     <div class="scan-line"></div>
   </div>
 
-  <!-- Botão Voltar -->
+  <!-- Scan Hint -->
+  <div class="scan-hint" id="scan-hint">Aponte para uma logo</div>
+
+  <!-- Status Pill -->
+  <div class="status-pill" id="status-pill">
+    <span class="status-dot"></span>
+    <span id="status-text"></span>
+  </div>
+
+  <!-- Back Button -->
   <a href="index.html" class="btn-voltar" id="btn-voltar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6"></polyline>
     </svg>
-    VOLTAR
+    Voltar
   </a>
 
-  <!-- Controles -->
+  <!-- Bottom Controls -->
   <div id="ar-controls">
     <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!" target="_blank" rel="noopener noreferrer" class="ar-btn">
-      <img src="/whatsapp.png" alt="WhatsApp" style="width: 20px; height: 20px; object-fit: contain;">
-      Falar no WhatsApp
+      <img src="/whatsapp.png" alt="" style="object-fit: contain;">
+      WhatsApp
     </a>
-    <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ar-btn outline">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+    <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ar-btn">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" />
         <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
       </svg>
-      Acessar Site
+      Site
     </a>
   </div>
 
-  <!-- Overlays de Vídeo -->
+  <!-- Video Overlays -->
   <div class="video-overlay" id="overlay-hunters">
     <video id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
   </div>
@@ -248,67 +369,34 @@
     <video id="videoNavegue" src="/video-corporativo.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
   </div>
 
-  <!-- Canvas para câmera do 8th Wall -->
+  <!-- Camera Canvas -->
   <canvas id="camerafeed"></canvas>
 
-  <!-- TOAST BANNER — aparece gigante na tela -->
-  <div id="toast-banner" style="
-    position: fixed; top: 0; left: 0; right: 0;
-    padding: 25px 20px; text-align: center;
-    font-family: sans-serif; font-size: 22px; font-weight: bold;
-    z-index: 99999; transform: translateY(-100%);
-    transition: transform 0.3s ease;
-    pointer-events: none;
-  "></div>
-
-  <!-- DEBUG Console -->
-  <div id="debug-log" style="
-    position: fixed; bottom: 80px; left: 10px; right: 10px;
-    max-height: 200px; overflow-y: auto;
-    background: rgba(0,0,0,0.95); color: #0f0; font-family: monospace;
-    font-size: 13px; padding: 10px; border-radius: 8px;
-    z-index: 9999; border: 2px solid #0f0;
-    pointer-events: auto;
-  "></div>
-
   <script>
-    // === DEBUG ===
-    const debugEl = document.getElementById('debug-log');
-    const toastEl = document.getElementById('toast-banner');
-    let toastTimer = null;
-
-    const _log = (msg, color = '#0f0') => {
-      const line = document.createElement('div');
-      line.style.color = color;
-      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-      debugEl.appendChild(line);
-      debugEl.scrollTop = debugEl.scrollHeight;
-      console.log(msg);
-    };
-
-    const showToast = (msg, bgColor = '#00cc00') => {
-      toastEl.textContent = msg;
-      toastEl.style.background = bgColor;
-      toastEl.style.color = '#fff';
-      toastEl.style.transform = 'translateY(0)';
-      toastEl.style.textShadow = '0 2px 8px rgba(0,0,0,0.5)';
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toastEl.style.transform = 'translateY(-100%)';
-      }, 4000);
-    };
-
     // === ELEMENTS ===
     const loadingScreen = document.getElementById('loading-screen');
-    const loadingSpinner = document.getElementById('loading-spinner');
     const loadingText = document.getElementById('loading-text');
     const btnIniciar = document.getElementById('btn-iniciar');
     const errorModal = document.getElementById('error-modal');
     const scannerHUD = document.getElementById('scanner-hud');
+    const scanHint = document.getElementById('scan-hint');
+    const statusPill = document.getElementById('status-pill');
+    const statusText = document.getElementById('status-text');
     const videoHunters = document.getElementById('videoHunters');
     const videoNavegue = document.getElementById('videoNavegue');
     const overlayHunters = document.getElementById('overlay-hunters');
     const overlayNavegue = document.getElementById('overlay-navegue');
+
+    // === STATUS PILL ===
+    let pillTimer = null;
+    function showStatus(msg, type = 'found') {
+      statusPill.className = 'status-pill show ' + type;
+      statusText.textContent = msg;
+      clearTimeout(pillTimer);
+      pillTimer = setTimeout(() => {
+        statusPill.classList.remove('show');
+      }, type === 'found' ? 8000 : 3000);
+    }
 
     // === IMAGE TARGET DATA ===
     const huntersTarget = {
@@ -334,6 +422,7 @@
     };
 
     // === VIDEO MANAGEMENT ===
+    const targetLabels = { hunters: 'Hunters', navegue: 'Navegue Seguro' };
     const targetVideos = {
       hunters: { video: videoHunters, overlay: overlayHunters },
       navegue: { video: videoNavegue, overlay: overlayNavegue }
@@ -347,7 +436,9 @@
         t.video.muted = true;
         t.video.play().catch(() => {});
       });
-      if (scannerHUD) scannerHUD.classList.add('hidden');
+      scannerHUD.classList.add('hidden');
+      scanHint.classList.add('hidden');
+      showStatus(targetLabels[name] || name, 'found');
     }
 
     function hideVideo(name) {
@@ -355,9 +446,12 @@
       if (!t) return;
       t.video.pause();
       t.overlay.classList.remove('active');
-      // Check if any overlay is still active
       const anyActive = Object.values(targetVideos).some(v => v.overlay.classList.contains('active'));
-      if (!anyActive && scannerHUD) scannerHUD.classList.remove('hidden');
+      if (!anyActive) {
+        scannerHUD.classList.remove('hidden');
+        scanHint.classList.remove('hidden');
+      }
+      showStatus('Escaneando...', 'lost');
     }
 
     function hideAllVideos() {
@@ -372,110 +466,81 @@
           event: 'reality.imagefound',
           process: (event) => {
             const name = event.detail ? event.detail.name : 'unknown';
-            _log('🎯 FOUND: ' + name + ' | keys: ' + Object.keys(event.detail || {}).join(','), '#0ff');
-            showToast('✅ TARGET DETECTADO: ' + name.toUpperCase(), '#00aa00');
             showVideo(name);
           }
         },
         {
           event: 'reality.imageupdated',
-          process: (event) => {
-            // silently track
-          }
+          process: () => {}
         },
         {
           event: 'reality.imagelost',
           process: (event) => {
             const name = event.detail ? event.detail.name : 'unknown';
-            _log('📡 LOST: ' + name, '#f90');
-            showToast('❌ TARGET PERDIDO: ' + name.toUpperCase(), '#cc0000');
             hideVideo(name);
           }
         }
-      ],
-      onStart: () => {
-        _log('🚀 Pipeline started!', '#0ff');
-      },
-      onException: (error) => {
-        _log('💥 Pipeline error: ' + JSON.stringify(error), '#f00');
-      }
+      ]
     };
 
     // === INIT XR ===
     const onxrloaded = () => {
-      _log('✅ XR8 Engine carregado', '#0ff');
-
-      // Configure image targets — NAVEGUE PRIMEIRO para testar
       XR8.XrController.configure({
         imageTargetData: [navegueTarget, huntersTarget]
       });
-      _log('📋 Targets configurados: navegue(1st), hunters(2nd)', '#ff0');
 
-      // Add pipeline modules
       XR8.addCameraPipelineModules([
         XR8.GlTextureRenderer.pipelineModule(),
         XR8.XrController.pipelineModule(),
         imageTargetPipeline
       ]);
 
-      loadingSpinner.style.display = 'none';
       loadingText.style.display = 'none';
       btnIniciar.style.display = 'block';
     };
 
-    // Wait for XR8 to load
     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
 
-    // === BUTTON: INICIAR ===
+    // === START ===
     btnIniciar.addEventListener('click', () => {
-      // Unlock audio
       [videoHunters, videoNavegue].forEach(v => {
         v.muted = false;
         v.play().then(() => { v.pause(); v.currentTime = 0; }).catch(() => {});
       });
-      _log('🔊 Áudio desbloqueado', '#0f0');
 
       loadingScreen.classList.add('hidden');
 
-      // Start XR
       try {
-        const canvas = document.getElementById('camerafeed');
         XR8.run({
-          canvas,
+          canvas: document.getElementById('camerafeed'),
           allowedDevices: XR8.XrConfig.device().ANY
         });
-        _log('▶ Câmera AR iniciada — escaneando...', '#0ff');
       } catch (e) {
-        _log('❌ Erro ao iniciar: ' + e.message, '#f00');
         errorModal.classList.add('show');
       }
     });
 
-    // === BUTTON: VOLTAR ===
+    // === BACK ===
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
       e.preventDefault();
       hideAllVideos();
-      try { XR8.stop(); } catch(e) {}
+      try { XR8.stop(); } catch(err) {}
       window.location.href = 'index.html';
     });
 
     // === CLEANUP ===
     window.addEventListener('pagehide', () => {
       hideAllVideos();
-      try { XR8.stop(); } catch(e) {}
+      try { XR8.stop(); } catch(err) {}
     });
 
     // === TIMEOUT ===
     setTimeout(() => {
       if (!loadingScreen.classList.contains('hidden')) {
-        _log('⏱ Timeout 20s — XR8 não carregou', '#f90');
         loadingScreen.classList.add('hidden');
         errorModal.classList.add('show');
       }
-    }, 20000);
-
-    _log('🔧 8th Wall AR inicializando...', '#ff0');
-    _log('📋 Targets: Hunters ↔ Navegue Seguro', '#ff0');
+    }, 25000);
   </script>
 </body>
 </html>
