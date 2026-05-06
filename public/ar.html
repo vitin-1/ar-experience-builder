@@ -415,11 +415,18 @@
       scene.add(hMesh);
       meshes.hunters = { mesh: hMesh, video: videoHunters, texture: hTex };
 
-      // Navegue video plane
+      // Navegue (Brasil/Neymar) video plane - Vertical video (9:16 aspect ratio)
       const nTex = new THREE.VideoTexture(videoNavegue);
       nTex.minFilter = THREE.LinearFilter;
+      
+      // Se o vídeo continuar deitado (girado 90 graus), o Three.js não lê o metadata de rotação de alguns MP4.
+      // Nesse caso, o código abaixo pode rotacionar a textura:
+      // nTex.center.set(0.5, 0.5);
+      // nTex.rotation = -Math.PI / 2;
+
       const nMat = new THREE.MeshBasicMaterial({ map: nTex, side: THREE.DoubleSide });
-      const nMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.5625), nMat);
+      // Width: 1, Height: 1.7778 (16/9) para vídeos em pé (TikTok/Reels format)
+      const nMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.7778), nMat);
       nMesh.visible = false;
       scene.add(nMesh);
       meshes.navegue = { mesh: nMesh, video: videoNavegue, texture: nTex };
