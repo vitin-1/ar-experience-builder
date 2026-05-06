@@ -148,6 +148,11 @@
       opacity: 0.7;
       filter: drop-shadow(0 0 6px var(--glow));
       transition: opacity 0.3s;
+      animation: cornerPulse 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes cornerPulse {
+      from { opacity: 0.4; filter: drop-shadow(0 0 2px var(--glow)); transform: scale(0.98); }
+      to { opacity: 1; filter: drop-shadow(0 0 12px var(--glow)); transform: scale(1.02); }
     }
     .corn.tl { top: 24px; left: 16px; border-right: 0; border-bottom: 0; border-radius: 4px 0 0 0; }
     .corn.tr { top: 24px; right: 16px; border-left: 0; border-bottom: 0; border-radius: 0 4px 0 0; }
@@ -438,8 +443,14 @@
       if (!t) return;
       t.mesh.position.copy(position);
       t.mesh.quaternion.copy(rotation);
-      t.mesh.scale.set(scale, scale, scale);
-      t.mesh.visible = true;
+      
+      // Efeito Holográfico: começa escala 0 se estava invisível
+      if (!t.mesh.visible) {
+        t.currentScale = 0;
+        t.mesh.scale.set(0, 0, 0);
+        t.mesh.visible = true;
+      }
+      t.targetScale = scale; // Atualiza o alvo da escala para o lerp
       t.video.play().catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
       scannerHUD.classList.add('hidden');
       scanHint.classList.add('hidden');
@@ -463,6 +474,15 @@
     const arPipeline = {
       name: 'hunters-ar',
       onStart: () => { initXrScene(XR8.Threejs.xrScene()); },
+      onUpdate: () => {
+        // Loop de animação: Efeito elástico/suave da escala holográfica
+        Object.values(meshes).forEach(t => {
+          if (t.mesh && t.mesh.visible && t.targetScale !== undefined) {
+            t.currentScale += (t.targetScale - t.currentScale) * 0.15; // Suavização (Lerp)
+            t.mesh.scale.set(t.currentScale, t.currentScale, t.currentScale);
+          }
+        });
+      },
       listeners: [
         { event: 'reality.imagefound', process: (e) => showTarget(e.detail) },
         { event: 'reality.imageupdated', process: (e) => showTarget(e.detail) },
