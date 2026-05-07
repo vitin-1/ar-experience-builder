@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Chefe - Hunters AR</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #03060c; color: white; }
+    .glass { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Container Principal -->
+  <div class="glass rounded-2xl w-full max-w-md p-8 shadow-2xl relative overflow-hidden">
+    
+    <!-- Efeito visual de brilho no fundo -->
+    <div class="absolute -top-20 -right-20 w-40 h-40 bg-blue-600 rounded-full blur-[80px] opacity-30"></div>
+
+    <div class="text-center mb-8">
+      <img src="/Logo_hunters.png.png" alt="Hunters" class="h-16 mx-auto mb-4" onerror="this.style.display='none'">
+      <h1 class="text-2xl font-bold tracking-tight">Painel AR</h1>
+      <p class="text-gray-400 text-sm mt-1">Gerenciamento de Vídeos da Realidade Aumentada</p>
+    </div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen">
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-300 mb-1">E-mail Corporativo</label>
+          <input type="email" id="email" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-300 mb-1">Senha</label>
+          <input type="password" id="password" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all mt-4">
+          Acessar Painel
+        </button>
+      </form>
+    </div>
+
+    <!-- TELA DO CMS (ESCONDIDA POR PADRÃO) -->
+    <div id="cms-screen" class="hidden space-y-6">
+      
+      <div class="bg-blue-900/30 border border-blue-500/30 p-4 rounded-lg text-sm text-blue-200">
+        <p>👋 Bem-vindo! Escolha a logo que você quer alterar e selecione o novo vídeo.</p>
+      </div>
+
+      <form id="upload-form" class="space-y-5">
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-300 mb-1">1. Qual logo você quer atualizar?</label>
+          <select id="target-select" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 appearance-none">
+            <option value="navegue">Logo CBF / Neymar (Navegue)</option>
+            <option value="hunters">Logo Hunters ManPower</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-300 mb-1">2. Escolha o novo vídeo (.mp4)</label>
+          <div class="relative">
+            <input type="file" id="video-file" accept="video/mp4" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+          </div>
+        </div>
+
+        <button id="save-btn" type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-4 rounded-lg transition-all text-lg flex justify-center items-center gap-2">
+          Salvar e Atualizar AR
+        </button>
+
+      </form>
+
+      <button id="logout-btn" class="w-full text-gray-500 text-sm hover:text-white transition-colors mt-4">Sair da conta</button>
+    </div>
+
+    <!-- MENSAGENS DE AVISO (Toast) -->
+    <div id="toast" class="hidden mt-6 p-4 rounded-lg text-sm font-semibold text-center transition-all"></div>
+
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
+    const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    // Elementos da UI
+    const loginScreen = document.getElementById('login-screen');
+    const cmsScreen = document.getElementById('cms-screen');
+    const toast = document.getElementById('toast');
+    const saveBtn = document.getElementById('save-btn');
+
+    // Função de aviso (Toast)
+    function showToast(msg, type = 'success') {
+      toast.textContent = msg;
+      toast.className = `mt-6 p-4 rounded-lg text-sm font-semibold text-center transition-all ${type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`;
+      setTimeout(() => toast.classList.add('hidden'), 5000);
+    }
+
+    // Verificar se já está logado
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        loginScreen.classList.add('hidden');
+        cmsScreen.classList.remove('hidden');
+      } else {
+        loginScreen.classList.remove('hidden');
+        cmsScreen.classList.add('hidden');
+      }
+    }
+    checkAuth();
+
+    // Login
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      const btn = e.target.querySelector('button');
+      btn.textContent = 'Entrando...';
+      
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        showToast('E-mail ou senha incorretos.', 'error');
+        btn.textContent = 'Acessar Painel';
+      } else {
+        checkAuth();
+      }
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      checkAuth();
+    });
+
+    // Upload & Update
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const targetName = document.getElementById('target-select').value;
+      const fileInput = document.getElementById('video-file');
+      
+      if (!fileInput.files || fileInput.files.length === 0) return;
+      const file = fileInput.files[0];
+
+      // Alterar UI para modo "Carregando"
+      saveBtn.innerHTML = `
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        Enviando vídeo (isso pode demorar)...
+      `;
+      saveBtn.disabled = true;
+
+      try {
+        // 1. Gerar nome único para o arquivo (evita cache do navegador velho)
+        const fileExt = file.name.split('.').pop();
+        const uniqueName = `${targetName}-${Date.now()}.${fileExt}`;
+
+        // 2. Upload para o Storage
+        const { error: uploadError } = await supabase.storage
+          .from('videos')
+          .upload(uniqueName, file, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        // 3. Pegar URL Pública
+        const { data: { publicUrl } } = supabase.storage
+          .from('videos')
+          .getPublicUrl(uniqueName);
+
+        // 4. Atualizar o Banco de Dados (Tabela)
+        const { error: dbError } = await supabase
+          .from('ar_targets')
+          .update({ video_url: publicUrl })
+          .eq('target_name', targetName);
+
+        if (dbError) throw dbError;
+
+        showToast('Sucesso! O vídeo da AR foi atualizado ao vivo! 🎉', 'success');
+        fileInput.value = ''; // Limpar input
+        
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao atualizar: ' + err.message, 'error');
+      } finally {
+        saveBtn.innerHTML = 'Salvar e Atualizar AR';
+        saveBtn.disabled = false;
+      }
+    });
+
+  </script>
+</body>
+</html>
