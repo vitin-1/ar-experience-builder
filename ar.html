@@ -18,6 +18,8 @@
   <script async src="/xr/xr.js" data-preload-chunks="slam"></script>
   <!-- Three.js for 3D AR rendering -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -385,6 +387,30 @@
     const statusText = document.getElementById('status-text');
     const videoHunters = document.getElementById('videoHunters');
     const videoNavegue = document.getElementById('videoNavegue');
+
+    // === SUPABASE DYNAMIC VIDEOS ===
+    const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
+    const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function loadDynamicVideos() {
+      try {
+        const { data, error } = await supabase.from('ar_targets').select('target_name, video_url');
+        if (data && !error) {
+          data.forEach(row => {
+            if (row.target_name === 'hunters' && row.video_url) {
+              videoHunters.src = row.video_url;
+            } else if (row.target_name === 'navegue' && row.video_url) {
+              videoNavegue.src = row.video_url;
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao carregar videos dinâmicos:", err);
+      }
+    }
+    loadDynamicVideos();
+
 
     // === STATUS PILL ===
     let pillTimer = null;
