@@ -85,7 +85,13 @@
   <script>
     const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
     const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    let supabase;
+    try {
+      if (!window.supabase) throw new Error("A biblioteca do Supabase não foi carregada (bloqueada pela rede).");
+      supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    } catch (e) {
+      alert("Erro fatal ao iniciar o sistema (Talvez você precise abrir no Safari/Chrome, fora do WhatsApp): " + e.message);
+    }
 
     // Elementos da UI
     const loginScreen = document.getElementById('login-screen');
@@ -102,6 +108,7 @@
 
     // Verificar se já está logado
     async function checkAuth() {
+      if (!supabase) return;
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         loginScreen.classList.add('hidden');
@@ -116,6 +123,10 @@
     // Login
     document.getElementById('login-btn').addEventListener('click', async (e) => {
       e.preventDefault();
+      if (!supabase) {
+        alert("O sistema não pôde ser iniciado. Recarregue a página.");
+        return;
+      }
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
