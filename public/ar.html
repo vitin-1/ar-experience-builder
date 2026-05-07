@@ -366,8 +366,8 @@
   </div>
 
   <!-- Video sources (hidden, used as Three.js textures) -->
-  <video class="video-src" id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
-  <video class="video-src" id="videoNavegue" src="/video-neymar.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+  <video class="video-src" id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline crossorigin="anonymous" preload="none"></video>
+  <video class="video-src" id="videoNavegue" src="/video-neymar.mp4" loop playsinline webkit-playsinline crossorigin="anonymous" preload="none"></video>
 
   <!-- Camera Canvas -->
   <canvas id="camerafeed"></canvas>
@@ -388,28 +388,35 @@
     const videoHunters = document.getElementById('videoHunters');
     const videoNavegue = document.getElementById('videoNavegue');
 
-    // === SUPABASE DYNAMIC VIDEOS ===
-    const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
-    const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
+    // === SUPABASE DYNAMIC VIDEOS (SAFE LOAD) ===
     async function loadDynamicVideos() {
       try {
+        if (!window.supabase) {
+          console.warn("Supabase CDN não carregou. Usando vídeos locais.");
+          return;
+        }
+        const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
+        const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
         const { data, error } = await supabase.from('ar_targets').select('target_name, video_url');
         if (data && !error) {
           data.forEach(row => {
             if (row.target_name === 'hunters' && row.video_url) {
               videoHunters.src = row.video_url;
+              // Não dar play nem load aqui para não roubar banda do motor SLAM
             } else if (row.target_name === 'navegue' && row.video_url) {
               videoNavegue.src = row.video_url;
             }
           });
         }
       } catch (err) {
-        console.error("Erro ao carregar videos dinâmicos:", err);
+        console.warn("Erro ao carregar videos dinâmicos, fallback ativo:", err);
       }
     }
-    loadDynamicVideos();
+    
+    // Inicia a busca de forma assíncrona sem travar a thread
+    setTimeout(loadDynamicVideos, 100);
 
 
     // === STATUS PILL ===
