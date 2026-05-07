@@ -87,10 +87,10 @@
   <script>
     const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
     const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
-    let supabase;
+    let supabaseClient;
     try {
       if (!window.supabase) throw new Error("A biblioteca do Supabase não foi carregada.");
-      supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
     } catch (e) {
       setTimeout(() => showToast("Erro fatal: " + e.message, 'error'), 1000);
     }
@@ -107,9 +107,9 @@
     }
 
     async function checkAuth() {
-      if (!supabase) return;
+      if (!supabaseClient) return;
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
           loginScreen.classList.add('hidden');
           cmsScreen.classList.remove('hidden');
@@ -126,7 +126,7 @@
     window.handleLogin = async function(e) {
       if (e) e.preventDefault();
       
-      if (!supabase) {
+      if (!supabaseClient) {
         showToast("O sistema não pôde ser iniciado. Verifique sua rede.", 'error');
         return;
       }
@@ -143,7 +143,7 @@
       btn.textContent = 'Entrando...';
       
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         
         if (error) {
           console.error(error);
@@ -162,7 +162,7 @@
     };
 
     window.handleLogout = async function() {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       checkAuth();
     };
 
@@ -184,17 +184,17 @@
         const fileExt = file.name.split('.').pop();
         const uniqueName = `${targetName}-${Date.now()}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabaseClient.storage
           .from('videos')
           .upload(uniqueName, file, { cacheControl: '3600', upsert: false });
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
+        const { data: { publicUrl } } = supabaseClient.storage
           .from('videos')
           .getPublicUrl(uniqueName);
 
-        const { error: dbError } = await supabase
+        const { error: dbError } = await supabaseClient
           .from('ar_targets')
           .update({ video_url: publicUrl })
           .eq('target_name', targetName);
