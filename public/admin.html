@@ -90,7 +90,14 @@
     let supabaseClient;
     try {
       if (!window.supabase) throw new Error("A biblioteca do Supabase não foi carregada.");
-      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+      // Configurado para NÃO persistir a sessão (forçar login a cada acesso)
+      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      });
     } catch (e) {
       setTimeout(() => showToast("Erro fatal: " + e.message, 'error'), 1000);
     }
@@ -121,7 +128,8 @@
         showToast("Aviso: " + err.message, 'error');
       }
     }
-    checkAuth();
+    // Removida a chamada automática de checkAuth() aqui para forçar login
+    loginScreen.classList.remove('hidden');
 
     window.handleLogin = async function(e) {
       if (e) e.preventDefault();
