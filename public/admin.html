@@ -38,7 +38,7 @@
           <label class="block text-sm font-semibold text-gray-300 mb-1">Senha</label>
           <input type="password" id="password" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
         </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all mt-4">
+        <button type="button" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all mt-4">
           Acessar Painel
         </button>
       </form>
@@ -113,22 +113,37 @@
     }
     checkAuth();
 
-    // Login
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+    <!-- Login -->
+    document.getElementById('login-btn').addEventListener('click', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
-      const btn = e.target.querySelector('button');
+      if (!email || !password) {
+        alert("Por favor, preencha o e-mail e a senha.");
+        return;
+      }
+      
+      const btn = document.getElementById('login-btn');
       btn.textContent = 'Entrando...';
       
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        showToast('E-mail ou senha incorretos.', 'error');
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+          console.error(error);
+          alert('Erro no Login: ' + error.message);
+          showToast('E-mail ou senha incorretos.', 'error');
+          btn.textContent = 'Acessar Painel';
+        } else {
+          // Força a atualização da interface
+          loginScreen.classList.add('hidden');
+          cmsScreen.classList.remove('hidden');
+          btn.textContent = 'Acessar Painel';
+        }
+      } catch (err) {
+        alert("Erro inesperado: " + err.message);
         btn.textContent = 'Acessar Painel';
-      } else {
-        checkAuth();
       }
     });
 
