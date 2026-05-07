@@ -38,7 +38,7 @@
           <label class="block text-sm font-semibold text-gray-300 mb-1">Senha</label>
           <input type="password" id="password" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
         </div>
-        <button type="button" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all mt-4">
+        <button type="submit" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all mt-4">
           Acessar Painel
         </button>
       </form>
@@ -87,10 +87,11 @@
     const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
     let supabase;
     try {
-      if (!window.supabase) throw new Error("A biblioteca do Supabase não foi carregada (bloqueada pela rede).");
+      if (!window.supabase) throw new Error("A biblioteca do Supabase não foi carregada.");
       supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
     } catch (e) {
-      alert("Erro fatal ao iniciar o sistema (Talvez você precise abrir no Safari/Chrome, fora do WhatsApp): " + e.message);
+      // Deferimos o showToast porque o DOM ainda pode não estar totalmente lido aqui
+      setTimeout(() => showToast("Erro fatal: " + e.message, 'error'), 1000);
     }
 
     // Elementos da UI
@@ -109,33 +110,34 @@
     // Verificar se já está logado
     async function checkAuth() {
       if (!supabase) return;
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        loginScreen.classList.add('hidden');
-        cmsScreen.classList.remove('hidden');
-      } else {
-        loginScreen.classList.remove('hidden');
-        cmsScreen.classList.add('hidden');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          loginScreen.classList.add('hidden');
+          cmsScreen.classList.remove('hidden');
+        } else {
+          loginScreen.classList.remove('hidden');
+          cmsScreen.classList.add('hidden');
+        }
+      } catch (err) {
+        showToast("Aviso: " + err.message, 'error');
       }
     }
     checkAuth();
 
     // Login
-    document.getElementById('login-btn').addEventListener('click', async (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
       if (!supabase) {
-        alert("O sistema não pôde ser iniciado. Recarregue a página.");
+        showToast("O sistema não pôde ser iniciado. Verifique sua rede.", 'error');
         return;
       }
+      
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      
-      if (!email || !password) {
-        alert("Por favor, preencha o e-mail e a senha.");
-        return;
-      }
-      
       const btn = document.getElementById('login-btn');
+      
       btn.textContent = 'Entrando...';
       
       try {
@@ -143,7 +145,6 @@
         
         if (error) {
           console.error(error);
-          alert('Erro no Login: ' + error.message);
           showToast('E-mail ou senha incorretos.', 'error');
           btn.textContent = 'Acessar Painel';
         } else {
@@ -153,7 +154,7 @@
           btn.textContent = 'Acessar Painel';
         }
       } catch (err) {
-        alert("Erro inesperado: " + err.message);
+        showToast("Erro inesperado: " + err.message, 'error');
         btn.textContent = 'Acessar Painel';
       }
     });
