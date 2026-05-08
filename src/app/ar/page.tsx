@@ -5,8 +5,8 @@ import huntersLogo from "@/assets/hunters-logo.png";
 import { Video } from "lucide-react";
 
 export default function ARViewer() {
-  // O logo pode vir como objeto do next/image em projetos Next.js ou string base64, usando any garante o fallback
-  const logoSrc = (huntersLogo as any).src || huntersLogo;
+  // O logo pode vir como objeto do next/image em projetos Next.js ou string base64, usando um tipo específico garante o fallback
+  const logoSrc = (huntersLogo as { src?: string }).src || huntersLogo;
 
   return (
     <motion.div

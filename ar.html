@@ -50,7 +50,15 @@
     }
 
     /* === VIDEO OVERLAY — hidden, used as texture source === */
-    .video-src { display: none; }
+    .video-src {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      opacity: 0.001;
+      pointer-events: none;
+    }
 
     /* === BACK BUTTON === */
     .btn-voltar {
@@ -366,8 +374,8 @@
   </div>
 
   <!-- Video sources (hidden, used as Three.js textures) -->
-  <video class="video-src" id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline crossorigin="anonymous" preload="metadata"></video>
-  <video class="video-src" id="videoNavegue" src="/video-neymar.mp4" loop playsinline webkit-playsinline crossorigin="anonymous" preload="metadata"></video>
+  <video class="video-src" id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline disablePictureInPicture disableRemotePlayback crossorigin="anonymous" preload="metadata"></video>
+  <video class="video-src" id="videoNavegue" src="/video-neymar.mp4" loop playsinline webkit-playsinline disablePictureInPicture disableRemotePlayback crossorigin="anonymous" preload="metadata"></video>
 
   <!-- Camera Canvas -->
   <canvas id="camerafeed"></canvas>
