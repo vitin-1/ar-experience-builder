@@ -492,7 +492,31 @@
         t.mesh.visible = true;
       }
       t.targetScale = scale; // Atualiza o alvo da escala para o lerp
-      t.video.play().catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
+
+      // Garante que o vídeo está pronto antes de dar play (iOS exige)
+      const tryPlay = () => {
+        const p = t.video.play();
+        if (p) p.catch(() => {
+          // Fallback iOS: mutar e tentar de novo
+          t.video.muted = true;
+          t.video.play().catch(() => {});
+        });
+      };
+
+      if (t.video.readyState >= 2) {
+        // Já tem dados suficientes, dá play direto
+        tryPlay();
+      } else {
+        // Precisa carregar primeiro (pode acontecer quando o src veio do Supabase)
+        t.video.load();
+        t.video.addEventListener('canplay', function onCanPlay() {
+          t.video.removeEventListener('canplay', onCanPlay);
+          tryPlay();
+        }, { once: true });
+        // Safety: se canplay não disparar em 3s, tenta play de qualquer forma
+        setTimeout(tryPlay, 3000);
+      }
+
       scannerHUD.classList.add('hidden');
       scanHint.classList.add('hidden');
       showStatus(targetLabels[name] || name, 'found');
@@ -550,8 +574,11 @@
 
     // === TAP TO START ===
     tapOverlay.addEventListener('click', () => {
+      // Warm-up: iOS exige interação do user antes de permitir play.
+      // O load() garante que o vídeo tem src válido carregado.
       [videoHunters, videoNavegue].forEach(v => {
         v.muted = true;
+        v.load(); // Força carregamento do src atual (pode ter mudado via Supabase)
         const p = v.play();
         if (p) p.then(() => { v.pause(); v.currentTime = 0; v.muted = false; }).catch(() => {});
       });
