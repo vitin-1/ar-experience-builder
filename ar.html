@@ -299,10 +299,50 @@
       .btn-voltar { font-size: 12px; padding: 12px 22px; }
       .corn { width: 48px; height: 48px; }
     }
+
+    /* === ADAPTIVE PERFORMANCE: LOW-END DEVICES === */
+    body.perf-low .btn-voltar,
+    body.perf-low .ar-btn,
+    body.perf-low .status-pill {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background: rgba(3, 6, 12, 0.92) !important;
+    }
+    body.perf-low .corn {
+      animation: none !important;
+      filter: none !important;
+      opacity: 0.7;
+    }
+    body.perf-low .scan-line {
+      box-shadow: none !important;
+      animation-duration: 4s !important;
+    }
+    body.perf-low .tap-ring::before,
+    body.perf-low .tap-ring::after {
+      animation: none !important;
+      filter: none !important;
+    }
+    body.perf-low .tap-ring svg { filter: none !important; }
+    body.perf-low .loader-ring::before { filter: none !important; }
+    body.perf-low #tap-overlay {
+      background: var(--bg-dark) !important;
+    }
+    body.perf-low .error-box { backdrop-filter: none !important; }
   </style>
 </head>
 
 <body>
+  <script>
+    // === PERFORMANCE DETECTION ===
+    (function() {
+      var dominated = false;
+      var cores = navigator.hardwareConcurrency || 2;
+      var mem = navigator.deviceMemory || 2;
+      if (cores <= 4 || mem <= 3) dominated = true;
+      if (dominated) document.body.classList.add('perf-low');
+      window.__perfLow = dominated;
+    })();
+  </script>
   <!-- Tap to Start Overlay -->
   <div id="tap-overlay">
     <div class="loader-ring" id="loading-spinner"></div>
@@ -373,14 +413,17 @@
     </a>
   </div>
 
-  <!-- Video sources (hidden, used as Three.js textures) -->
-  <video class="video-src" id="videoHunters" src="/video.mp4" loop playsinline webkit-playsinline disablePictureInPicture disableRemotePlayback crossorigin="anonymous" preload="metadata"></video>
-  <video class="video-src" id="videoNavegue" src="/video-neymar.mp4" loop playsinline webkit-playsinline disablePictureInPicture disableRemotePlayback crossorigin="anonymous" preload="metadata"></video>
+  <!-- Container dinâmico para vídeos (criados via JS) -->
+  <div id="video-container"></div>
 
   <!-- Camera Canvas -->
   <canvas id="camerafeed"></canvas>
 
   <script>
+    // === CONFIG ===
+    const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
+
     // === ELEMENTS ===
     const tapOverlay = document.getElementById('tap-overlay');
     const loadingSpinner = document.getElementById('loading-spinner');
@@ -392,90 +435,79 @@
     const scannerHUD = document.getElementById('scanner-hud');
     const scanHint = document.getElementById('scan-hint');
     const statusPill = document.getElementById('status-pill');
-    const statusText = document.getElementById('status-text');
-    const videoHunters = document.getElementById('videoHunters');
-    const videoNavegue = document.getElementById('videoNavegue');
+    const statusTextEl = document.getElementById('status-text');
+    const videoContainer = document.getElementById('video-container');
 
-    // === SUPABASE DYNAMIC VIDEOS (SAFE LOAD) ===
-    async function loadDynamicVideos() {
-      try {
-        if (!window.supabase) {
-          console.warn("Supabase CDN não carregou. Usando vídeos locais.");
-          return;
-        }
-        const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
-        const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        const { data, error } = await supabase.from('ar_targets').select('target_name, video_url');
-        if (data && !error) {
-          data.forEach(row => {
-            if (row.target_name === 'hunters' && row.video_url) {
-              videoHunters.src = row.video_url;
-              // Não dar play nem load aqui para não roubar banda do motor SLAM
-            } else if (row.target_name === 'navegue' && row.video_url) {
-              videoNavegue.src = row.video_url;
-            }
-          });
-        }
-      } catch (err) {
-        console.warn("Erro ao carregar videos dinâmicos, fallback ativo:", err);
-      }
-    }
-    
-    // Inicia a busca de forma assíncrona sem travar a thread
-    setTimeout(loadDynamicVideos, 100);
-
+    // === DYNAMIC STATE ===
+    const meshes = {};        // name -> { mesh, video, texture }
+    const targetLabels = {};   // name -> label
+    let imageTargetData = [];  // array para XR8
+    let allVideos = [];        // todos os <video> criados
 
     // === STATUS PILL ===
     let pillTimer = null;
     function showStatus(msg, type = 'found') {
       statusPill.className = 'status-pill show ' + type;
-      statusText.textContent = msg;
+      statusTextEl.textContent = msg;
       clearTimeout(pillTimer);
-      pillTimer = setTimeout(() => { statusPill.classList.remove('show'); },
-        type === 'found' ? 8000 : 3000);
+      pillTimer = setTimeout(() => statusPill.classList.remove('show'), type === 'found' ? 8000 : 3000);
     }
 
-    // === IMAGE TARGETS ===
-    const huntersTarget = {
-      imagePath: '/targets/hunters.png', metadata: {}, name: 'hunters', type: 'PLANAR',
-      properties: { left: 0, top: 167, width: 480, height: 305, originalWidth: 480, originalHeight: 640, isRotated: false }
-    };
-    const navegueTarget = {
-      imagePath: '/targets/navegue.png', metadata: {}, name: 'navegue', type: 'PLANAR',
-      properties: { left: 15, top: 0, width: 449, height: 640, originalWidth: 480, originalHeight: 640, isRotated: false }
-    };
+    // === LOAD TARGETS FROM SUPABASE ===
+    async function loadTargetsFromDB() {
+      try {
+        if (!window.supabase) throw new Error('Supabase CDN não carregou');
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const { data, error } = await sb.from('ar_targets')
+          .select('target_name, label, target_image_url, video_url, video_aspect, target_properties')
+          .eq('active', true);
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        console.warn('Erro ao carregar targets, usando fallback:', err);
+        // Fallback hardcoded caso o Supabase falhe
+        return [
+          { target_name:'hunters', label:'Hunters', target_image_url:'/targets/hunters.png', video_url:'/video.mp4', video_aspect:'16:9', target_properties:{left:0,top:167,width:480,height:305,originalWidth:480,originalHeight:640,isRotated:false} },
+          { target_name:'navegue', label:'Navegue Seguro', target_image_url:'/targets/navegue.png', video_url:'/video-neymar.mp4', video_aspect:'9:16', target_properties:{left:15,top:0,width:449,height:640,originalWidth:480,originalHeight:640,isRotated:false} }
+        ];
+      }
+    }
 
-    // === THREE.JS AR SCENE ===
-    const targetLabels = { hunters: 'Hunters', navegue: 'Navegue Seguro' };
-    const meshes = {}; // name -> { mesh, video, texture }
+    function createVideoElement(name, src) {
+      const v = document.createElement('video');
+      v.id = 'video-' + name;
+      v.className = 'video-src';
+      v.src = src;
+      v.loop = true;
+      v.playsInline = true;
+      v.setAttribute('webkit-playsinline', '');
+      v.setAttribute('disablePictureInPicture', '');
+      v.setAttribute('disableRemotePlayback', '');
+      v.crossOrigin = 'anonymous';
+      v.preload = 'metadata';
+      videoContainer.appendChild(v);
+      return v;
+    }
 
-    function initXrScene({ scene, camera }) {
-      // Hunters video plane (16:9 aspect)
-      const hTex = new THREE.VideoTexture(videoHunters);
-      hTex.minFilter = THREE.LinearFilter;
-      const hMat = new THREE.MeshBasicMaterial({ map: hTex, side: THREE.DoubleSide });
-      const hMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.5625), hMat);
-      hMesh.visible = false;
-      scene.add(hMesh);
-      meshes.hunters = { mesh: hMesh, video: videoHunters, texture: hTex };
+    function getAspectHeight(aspect) {
+      if (aspect === '9:16') return 1.7778;
+      if (aspect === '1:1') return 1;
+      return 0.5625; // 16:9 default
+    }
 
-      // Navegue (Brasil/Neymar) video plane - Vertical video (9:16 aspect ratio)
-      const nTex = new THREE.VideoTexture(videoNavegue);
-      nTex.minFilter = THREE.LinearFilter;
-      
-      // Se o vídeo continuar deitado (girado 90 graus), o Three.js não lê o metadata de rotação de alguns MP4.
-      // Nesse caso, o código abaixo pode rotacionar a textura:
-      // nTex.center.set(0.5, 0.5);
-      // nTex.rotation = -Math.PI / 2;
-
-      const nMat = new THREE.MeshBasicMaterial({ map: nTex, side: THREE.DoubleSide });
-      // Width: 1, Height: 1.7778 (16/9) para vídeos em pé (TikTok/Reels format)
-      const nMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.7778), nMat);
-      nMesh.visible = false;
-      scene.add(nMesh);
-      meshes.navegue = { mesh: nMesh, video: videoNavegue, texture: nTex };
+    // === THREE.JS SCENE (DINÂMICO) ===
+    function initXrScene({ scene }) {
+      Object.values(meshes).forEach(t => {
+        const tex = new THREE.VideoTexture(t.video);
+        tex.minFilter = THREE.LinearFilter;
+        const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+        const geo = new THREE.PlaneGeometry(1, t.aspectHeight);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.visible = false;
+        scene.add(mesh);
+        t.mesh = mesh;
+        t.texture = tex;
+      });
     }
 
     function showTarget(detail) {
@@ -484,39 +516,27 @@
       if (!t) return;
       t.mesh.position.copy(position);
       t.mesh.quaternion.copy(rotation);
-      
-      // Efeito Holográfico: começa escala 0 se estava invisível
       if (!t.mesh.visible) {
-        t.currentScale = 0;
-        t.mesh.scale.set(0, 0, 0);
+        if (window.__perfLow) {
+          t.currentScale = scale;
+          t.mesh.scale.set(scale, scale, scale);
+        } else {
+          t.currentScale = 0;
+          t.mesh.scale.set(0, 0, 0);
+        }
         t.mesh.visible = true;
       }
-      t.targetScale = scale; // Atualiza o alvo da escala para o lerp
-
-      // Garante que o vídeo está pronto antes de dar play (iOS exige)
+      t.targetScale = scale;
       const tryPlay = () => {
         const p = t.video.play();
-        if (p) p.catch(() => {
-          // Fallback iOS: mutar e tentar de novo
-          t.video.muted = true;
-          t.video.play().catch(() => {});
-        });
+        if (p) p.catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
       };
-
-      if (t.video.readyState >= 2) {
-        // Já tem dados suficientes, dá play direto
-        tryPlay();
-      } else {
-        // Precisa carregar primeiro (pode acontecer quando o src veio do Supabase)
+      if (t.video.readyState >= 2) { tryPlay(); }
+      else {
         t.video.load();
-        t.video.addEventListener('canplay', function onCanPlay() {
-          t.video.removeEventListener('canplay', onCanPlay);
-          tryPlay();
-        }, { once: true });
-        // Safety: se canplay não disparar em 3s, tenta play de qualquer forma
+        t.video.addEventListener('canplay', () => tryPlay(), { once: true });
         setTimeout(tryPlay, 3000);
       }
-
       scannerHUD.classList.add('hidden');
       scanHint.classList.add('hidden');
       showStatus(targetLabels[name] || name, 'found');
@@ -527,58 +547,85 @@
       if (!t) return;
       t.mesh.visible = false;
       t.video.pause();
-      const anyVisible = Object.values(meshes).some(m => m.mesh.visible);
-      if (!anyVisible) {
+      if (!Object.values(meshes).some(m => m.mesh && m.mesh.visible)) {
         scannerHUD.classList.remove('hidden');
         scanHint.classList.remove('hidden');
       }
       showStatus('Escaneando...', 'lost');
     }
 
-    // === PIPELINE ===
-    const arPipeline = {
-      name: 'hunters-ar',
-      onStart: () => { initXrScene(XR8.Threejs.xrScene()); },
-      onUpdate: () => {
-        // Loop de animação: Efeito elástico/suave da escala holográfica
-        Object.values(meshes).forEach(t => {
-          if (t.mesh && t.mesh.visible && t.targetScale !== undefined) {
-            t.currentScale += (t.targetScale - t.currentScale) * 0.15; // Suavização (Lerp)
-            t.mesh.scale.set(t.currentScale, t.currentScale, t.currentScale);
+    // === MAIN INIT ===
+    async function initAR() {
+      const targets = await loadTargetsFromDB();
+
+      targets.forEach(row => {
+        const vid = createVideoElement(row.target_name, row.video_url || '');
+        allVideos.push(vid);
+        targetLabels[row.target_name] = row.label || row.target_name;
+        meshes[row.target_name] = { video: vid, aspectHeight: getAspectHeight(row.video_aspect), mesh: null, texture: null };
+
+        const props = typeof row.target_properties === 'string' ? JSON.parse(row.target_properties) : (row.target_properties || {});
+        imageTargetData.push({
+          imagePath: row.target_image_url,
+          metadata: {},
+          name: row.target_name,
+          type: 'PLANAR',
+          properties: {
+            left: props.left || 0, top: props.top || 0,
+            width: props.width || 480, height: props.height || 640,
+            originalWidth: props.originalWidth || 480, originalHeight: props.originalHeight || 640,
+            isRotated: props.isRotated || false
           }
         });
-      },
-      listeners: [
-        { event: 'reality.imagefound', process: (e) => showTarget(e.detail) },
-        { event: 'reality.imageupdated', process: (e) => showTarget(e.detail) },
-        { event: 'reality.imagelost', process: (e) => hideTarget(e.detail.name) }
-      ]
-    };
+      });
 
-    // === INIT XR ===
-    const onxrloaded = () => {
-      XR8.XrController.configure({ imageTargetData: [navegueTarget, huntersTarget] });
-      XR8.addCameraPipelineModules([
-        XR8.GlTextureRenderer.pipelineModule(),
-        XR8.Threejs.pipelineModule(),
-        XR8.XrController.pipelineModule(),
-        arPipeline
-      ]);
-      loadingSpinner.style.display = 'none';
-      loadingText.style.display = 'none';
-      tapIcon.style.display = 'flex';
-      tapText.style.display = 'block';
-      tapSub.style.display = 'block';
-    };
-    window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+      // Aguarda XR8
+      const onxrloaded = () => {
+        XR8.XrController.configure({ imageTargetData });
+        XR8.addCameraPipelineModules([
+          XR8.GlTextureRenderer.pipelineModule(),
+          XR8.Threejs.pipelineModule(),
+          XR8.XrController.pipelineModule(),
+          {
+            name: 'hunters-ar',
+            onStart: () => initXrScene(XR8.Threejs.xrScene()),
+            onUpdate: () => {
+              Object.values(meshes).forEach(t => {
+                if (t.mesh && t.mesh.visible && t.targetScale !== undefined) {
+                  if (window.__perfLow) {
+                    t.currentScale = t.targetScale;
+                    t.mesh.scale.set(t.targetScale, t.targetScale, t.targetScale);
+                  } else {
+                    t.currentScale += (t.targetScale - t.currentScale) * 0.15;
+                    t.mesh.scale.set(t.currentScale, t.currentScale, t.currentScale);
+                  }
+                }
+              });
+            },
+            listeners: [
+              { event: 'reality.imagefound', process: e => showTarget(e.detail) },
+              { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
+              { event: 'reality.imagelost', process: e => hideTarget(e.detail.name) }
+            ]
+          }
+        ]);
+        loadingSpinner.style.display = 'none';
+        loadingText.style.display = 'none';
+        tapIcon.style.display = 'flex';
+        tapText.style.display = 'block';
+        tapSub.style.display = 'block';
+      };
+      window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+    }
+
+    // Iniciar
+    initAR();
 
     // === TAP TO START ===
     tapOverlay.addEventListener('click', () => {
-      // Warm-up: iOS exige interação do user antes de permitir play.
-      // O load() garante que o vídeo tem src válido carregado.
-      [videoHunters, videoNavegue].forEach(v => {
+      allVideos.forEach(v => {
         v.muted = true;
-        v.load(); // Força carregamento do src atual (pode ter mudado via Supabase)
+        v.load();
         const p = v.play();
         if (p) p.then(() => { v.pause(); v.currentTime = 0; v.muted = false; }).catch(() => {});
       });
@@ -594,14 +641,14 @@
     // === BACK ===
     document.getElementById('btn-voltar').addEventListener('click', (e) => {
       e.preventDefault();
-      Object.values(meshes).forEach(t => { t.mesh.visible = false; t.video.pause(); });
+      Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
       try { XR8.stop(); } catch(err) {}
       window.location.href = 'index.html';
     });
 
     // === CLEANUP ===
     window.addEventListener('pagehide', () => {
-      Object.values(meshes).forEach(t => { t.mesh.visible = false; t.video.pause(); });
+      Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
       try { XR8.stop(); } catch(err) {}
     });
 
