@@ -336,9 +336,20 @@
     // === PERFORMANCE DETECTION ===
     (function() {
       var dominated = false;
-      var cores = navigator.hardwareConcurrency || 2;
-      var mem = navigator.deviceMemory || 2;
-      if (cores <= 4 || mem <= 3) dominated = true;
+      var cores = navigator.hardwareConcurrency;
+      var mem = navigator.deviceMemory;
+      
+      // Apenas rebaixa a qualidade se tivermos certeza que é um hardware fraco
+      if (cores !== undefined && cores <= 4) dominated = true;
+      if (mem !== undefined && mem <= 3) dominated = true;
+
+      // Safari do iOS esconde a memória por privacidade. 
+      // Qualquer iPhone que roda 8th Wall (ARKit) tem poder de sobra.
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) {
+        dominated = false; 
+      }
+
       if (dominated) document.body.classList.add('perf-low');
       window.__perfLow = dominated;
     })();
