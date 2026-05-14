@@ -3,224 +3,305 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel do Chefe - Hunters AR</title>
+  <title>Painel AR — Hunters ManPower</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #03060c; color: white; }
-    .glass { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+    body { font-family: 'Inter', sans-serif; background: #03060c; color: white; }
+    .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
     .hidden { display: none !important; }
+    .card-glow { box-shadow: 0 0 0 1px rgba(0,212,255,0.1), 0 4px 24px rgba(0,0,0,0.4); }
+    .btn-primary { background: linear-gradient(135deg, #0066ff, #00d4ff); }
+    .btn-primary:hover { filter: brightness(1.15); }
+    .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+    .btn-danger:hover { background: rgba(239,68,68,0.3); }
+    .toggle-active { transition: all 0.3s; }
+    .toggle-active.on { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.5); color: #4ade80; }
+    .toggle-active.off { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.3); color: #fbbf24; }
+    input, select { background: rgba(0,0,0,0.5) !important; }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen p-4 md:p-8">
 
-  <!-- Container Principal -->
-  <div class="glass rounded-2xl w-full max-w-md p-8 shadow-2xl relative overflow-hidden">
-    
-    <!-- Efeito visual de brilho no fundo -->
-    <div class="absolute -top-20 -right-20 w-40 h-40 bg-blue-600 rounded-full blur-[80px] opacity-30"></div>
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed top-4 right-4 z-50 p-4 rounded-lg text-sm font-semibold max-w-sm shadow-xl"></div>
 
-    <div class="text-center mb-8">
-      <img src="/Logo_hunters.png.png" alt="Hunters" class="h-16 mx-auto mb-4" onerror="this.style.display='none'">
-      <h1 class="text-2xl font-bold tracking-tight">Painel AR</h1>
-      <p class="text-gray-400 text-sm mt-1">Gerenciamento de Vídeos da Realidade Aumentada</p>
-    </div>
-
-    <!-- MENSAGENS DE AVISO (Toast) MOVIDO PARA O TOPO -->
-    <div id="toast" class="hidden mb-6 p-4 rounded-lg text-sm font-semibold text-center transition-all"></div>
-
-    <!-- TELA DE LOGIN -->
-    <div id="login-screen">
-      <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
+  <!-- LOGIN -->
+  <div id="login-screen" class="flex items-center justify-center min-h-screen">
+    <div class="glass rounded-2xl w-full max-w-md p-8 card-glow relative overflow-hidden">
+      <div class="absolute -top-20 -right-20 w-40 h-40 bg-blue-600 rounded-full blur-[80px] opacity-30"></div>
+      <div class="text-center mb-8">
+        <img src="/Logo_hunters.png.png" alt="Hunters" class="h-16 mx-auto mb-4" onerror="this.style.display='none'">
+        <h1 class="text-2xl font-bold">Painel AR</h1>
+        <p class="text-gray-400 text-sm mt-1">Gerenciamento de Targets</p>
+      </div>
+      <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-sm font-semibold text-gray-300 mb-1">E-mail Corporativo</label>
-          <input type="email" id="email" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+          <label class="block text-sm font-semibold text-gray-300 mb-1">E-mail</label>
+          <input type="email" id="email" required class="w-full border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-semibold text-gray-300 mb-1">Senha</label>
-          <input type="password" id="password" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+          <input type="password" id="password" required class="w-full border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
         </div>
-        <button type="button" id="login-btn" onclick="handleLogin(event)" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all mt-4">
-          Acessar Painel
-        </button>
+        <button type="submit" id="login-btn" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg transition-all mt-4">Acessar Painel</button>
       </form>
     </div>
+  </div>
 
-    <!-- TELA DO CMS (ESCONDIDA POR PADRÃO) -->
-    <div id="cms-screen" class="hidden space-y-6">
-      
-      <div class="bg-blue-900/30 border border-blue-500/30 p-4 rounded-lg text-sm text-blue-200">
-        <p>👋 Bem-vindo! Escolha a logo que você quer alterar e selecione o novo vídeo.</p>
+  <!-- CMS -->
+  <div id="cms-screen" class="hidden max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold">🎯 Targets AR</h1>
+        <p class="text-gray-400 text-sm">Adicione e gerencie logos que ativam vídeos em Realidade Aumentada</p>
       </div>
+      <div class="flex gap-3">
+        <button onclick="showAddForm()" class="btn-primary text-white font-bold py-2 px-5 rounded-lg text-sm transition-all">+ Novo Target</button>
+        <button onclick="handleLogout()" class="text-gray-500 text-sm hover:text-white transition-colors">Sair</button>
+      </div>
+    </div>
 
-      <form id="upload-form" class="space-y-5" onsubmit="handleUpload(event)">
-        
-        <div>
-          <label class="block text-sm font-semibold text-gray-300 mb-1">1. Qual logo você quer atualizar?</label>
-          <select id="target-select" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 appearance-none">
-            <option value="navegue">Logo CBF / Neymar (Navegue)</option>
-            <option value="hunters">Logo Hunters ManPower</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-300 mb-1">2. Escolha o novo vídeo (.mp4)</label>
-          <div class="relative">
-            <input type="file" id="video-file" accept="video/mp4" required class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+    <!-- ADD/EDIT FORM (hidden by default) -->
+    <div id="form-section" class="hidden glass rounded-2xl p-6 mb-8 card-glow">
+      <h2 id="form-title" class="text-lg font-bold mb-4">Novo Target</h2>
+      <form id="target-form" onsubmit="handleSave(event)" class="space-y-4">
+        <input type="hidden" id="edit-id" value="">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-1">Nome Identificador (sem espaços)</label>
+            <input type="text" id="f-name" required pattern="[a-z0-9_-]+" placeholder="ex: flamengo" class="w-full border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-1">Label (nome de exibição)</label>
+            <input type="text" id="f-label" required placeholder="ex: Flamengo RJ" class="w-full border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500">
           </div>
         </div>
-
-        <button id="save-btn" type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-4 rounded-lg transition-all text-lg flex justify-center items-center gap-2">
-          Salvar e Atualizar AR
-        </button>
-
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-1">Imagem do Target (PNG da logo)</label>
+            <input type="file" id="f-image" accept="image/png,image/jpeg" class="w-full border border-gray-700 rounded-lg px-4 py-3 text-white file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-1">Vídeo MP4</label>
+            <input type="file" id="f-video" accept="video/mp4" class="w-full border border-gray-700 rounded-lg px-4 py-3 text-white file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white cursor-pointer">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-1">Aspect Ratio do Vídeo</label>
+            <select id="f-aspect" class="w-full border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+              <option value="16:9">16:9 (Horizontal)</option>
+              <option value="9:16">9:16 (Vertical / Reels)</option>
+              <option value="1:1">1:1 (Quadrado)</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" id="save-btn" class="btn-primary text-white font-bold py-3 px-8 rounded-lg text-sm transition-all flex items-center gap-2">Salvar</button>
+          <button type="button" onclick="hideForm()" class="text-gray-400 hover:text-white py-3 px-6 text-sm transition-colors">Cancelar</button>
+        </div>
       </form>
-
-      <button id="logout-btn" onclick="handleLogout()" class="w-full text-gray-500 text-sm hover:text-white transition-colors mt-4">Sair da conta</button>
     </div>
 
-    <!-- (Toast movido para o topo) -->
-
+    <!-- TARGET LIST -->
+    <div id="target-list" class="space-y-4"></div>
+    <div id="empty-state" class="hidden text-center py-16 text-gray-500">
+      <p class="text-lg mb-2">Nenhum target cadastrado</p>
+      <p class="text-sm">Clique em "+ Novo Target" para começar</p>
+    </div>
   </div>
 
   <script>
-    const supabaseUrl = 'https://xeyfzhkualdchxedwkhz.supabase.co';
-    const supabaseKey = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
-    let supabaseClient;
+    const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
+    let sb;
     try {
-      if (!window.supabase) throw new Error("A biblioteca do Supabase não foi carregada.");
-      // Configurado para NÃO persistir a sessão (forçar login a cada acesso)
-      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
+      if (!window.supabase) throw new Error('Supabase não carregou');
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
       });
-    } catch (e) {
-      setTimeout(() => showToast("Erro fatal: " + e.message, 'error'), 1000);
-    }
+    } catch(e) { setTimeout(() => showToast('Erro: ' + e.message, 'error'), 500); }
 
-    const loginScreen = document.getElementById('login-screen');
-    const cmsScreen = document.getElementById('cms-screen');
-    const toast = document.getElementById('toast');
-    const saveBtn = document.getElementById('save-btn');
+    const $ = id => document.getElementById(id);
+    const loginScreen = $('login-screen');
+    const cmsScreen = $('cms-screen');
 
     function showToast(msg, type = 'success') {
-      toast.textContent = msg;
-      toast.className = `mb-6 p-4 rounded-lg text-sm font-semibold text-center transition-all ${type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`;
-      setTimeout(() => toast.classList.add('hidden'), 5000);
+      const t = $('toast');
+      t.textContent = msg;
+      t.className = `fixed top-4 right-4 z-50 p-4 rounded-lg text-sm font-semibold max-w-sm shadow-xl transition-all ${type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`;
+      setTimeout(() => t.classList.add('hidden'), 4000);
     }
 
-    async function checkAuth() {
-      if (!supabaseClient) return;
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-          loginScreen.classList.add('hidden');
-          cmsScreen.classList.remove('hidden');
-        } else {
-          loginScreen.classList.remove('hidden');
-          cmsScreen.classList.add('hidden');
-        }
-      } catch (err) {
-        showToast("Aviso: " + err.message, 'error');
-      }
-    }
-    // Removida a chamada automática de checkAuth() aqui para forçar login
-    loginScreen.classList.remove('hidden');
-
+    // === AUTH ===
     window.handleLogin = async function(e) {
-      if (e) e.preventDefault();
-      
-      if (!supabaseClient) {
-        showToast("O sistema não pôde ser iniciado. Verifique sua rede.", 'error');
-        return;
-      }
-      
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const btn = document.getElementById('login-btn');
-      
-      if (!email || !password) {
-        showToast('Preencha o e-mail e a senha.', 'error');
-        return;
-      }
-
+      e.preventDefault();
+      const btn = $('login-btn');
       btn.textContent = 'Entrando...';
-      
       try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-          console.error(error);
-          showToast('Falha no Login: ' + error.message, 'error');
-          setTimeout(() => alert("Aviso: " + error.message), 100);
-          btn.textContent = 'Acessar Painel';
-        } else {
-          loginScreen.classList.add('hidden');
-          cmsScreen.classList.remove('hidden');
-          btn.textContent = 'Acessar Painel';
+        const { error } = await sb.auth.signInWithPassword({ email: $('email').value, password: $('password').value });
+        if (error) throw error;
+        loginScreen.classList.add('hidden');
+        cmsScreen.classList.remove('hidden');
+        loadTargets();
+      } catch(err) { showToast('Falha: ' + err.message, 'error'); }
+      btn.textContent = 'Acessar Painel';
+    };
+    window.handleLogout = async function() { await sb.auth.signOut(); location.reload(); };
+
+    // === LOAD TARGETS ===
+    async function loadTargets() {
+      const { data, error } = await sb.from('ar_targets').select('*').order('id');
+      if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+      const list = $('target-list');
+      const empty = $('empty-state');
+      if (!data || data.length === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+      list.innerHTML = data.map(t => `
+        <div class="glass rounded-xl p-5 card-glow flex flex-col md:flex-row items-start md:items-center gap-4">
+          <div class="flex-shrink-0 w-16 h-16 rounded-lg bg-black/40 border border-gray-700 flex items-center justify-center overflow-hidden">
+            ${t.target_image_url ? `<img src="${t.target_image_url}" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='📷'">` : '📷'}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-white">${t.label || t.target_name}</span>
+              <span class="text-xs text-gray-500 font-mono">${t.target_name}</span>
+            </div>
+            <div class="text-xs text-gray-400 space-x-3">
+              <span>📐 ${t.video_aspect || '16:9'}</span>
+              <span>🎬 ${t.video_url ? '✓ vídeo' : '✗ sem vídeo'}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button onclick="toggleActive(${t.id}, ${!t.active})" class="toggle-active ${t.active ? 'on' : 'off'} text-xs font-bold py-2 px-4 rounded-lg border transition-all">
+              ${t.active ? '● Ativo' : '○ Inativo'}
+            </button>
+            <button onclick="editTarget(${t.id})" class="text-xs text-blue-400 hover:text-blue-300 py-2 px-3 rounded-lg border border-blue-500/20 hover:border-blue-500/40 transition-all">Editar</button>
+            <button onclick="deleteTarget(${t.id}, '${t.target_name}')" class="btn-danger text-xs py-2 px-3 rounded-lg transition-all">Excluir</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // === FORM ===
+    let allTargets = [];
+    function showAddForm() {
+      $('form-title').textContent = 'Novo Target';
+      $('edit-id').value = '';
+      $('f-name').value = ''; $('f-name').disabled = false;
+      $('f-label').value = '';
+      $('f-image').value = ''; $('f-video').value = '';
+      $('f-aspect').value = '16:9';
+      $('form-section').classList.remove('hidden');
+    }
+
+    async function editTarget(id) {
+      const { data } = await sb.from('ar_targets').select('*').eq('id', id).single();
+      if (!data) return;
+      $('form-title').textContent = 'Editar: ' + (data.label || data.target_name);
+      $('edit-id').value = id;
+      $('f-name').value = data.target_name; $('f-name').disabled = true;
+      $('f-label').value = data.label || '';
+      $('f-aspect').value = data.video_aspect || '16:9';
+      $('f-image').value = ''; $('f-video').value = '';
+      $('form-section').classList.remove('hidden');
+    }
+
+    function hideForm() { $('form-section').classList.add('hidden'); }
+
+    // === SAVE (ADD or EDIT) ===
+    window.handleSave = async function(e) {
+      e.preventDefault();
+      const btn = $('save-btn');
+      btn.innerHTML = '⏳ Salvando...'; btn.disabled = true;
+
+      try {
+        const editId = $('edit-id').value;
+        const name = $('f-name').value.trim().toLowerCase().replace(/\s+/g, '-');
+        const label = $('f-label').value.trim();
+        const aspect = $('f-aspect').value;
+        const imageFile = $('f-image').files[0];
+        const videoFile = $('f-video').files[0];
+
+        let targetImageUrl = null;
+        let videoUrl = null;
+
+        // Upload imagem target
+        if (imageFile) {
+          const ext = imageFile.name.split('.').pop();
+          const fileName = `${name}-${Date.now()}.${ext}`;
+          const { error: upErr } = await sb.storage.from('targets').upload(fileName, imageFile, { cacheControl: '3600', upsert: false });
+          if (upErr) throw upErr;
+          const { data: { publicUrl } } = sb.storage.from('targets').getPublicUrl(fileName);
+          targetImageUrl = publicUrl;
         }
-      } catch (err) {
-        showToast("Erro inesperado: " + err.message, 'error');
-        btn.textContent = 'Acessar Painel';
-      }
-    };
 
-    window.handleLogout = async function() {
-      await supabaseClient.auth.signOut();
-      checkAuth();
-    };
+        // Upload vídeo
+        if (videoFile) {
+          const ext = videoFile.name.split('.').pop();
+          const fileName = `${name}-${Date.now()}.${ext}`;
+          const { error: upErr } = await sb.storage.from('videos').upload(fileName, videoFile, { cacheControl: '3600', upsert: false });
+          if (upErr) throw upErr;
+          const { data: { publicUrl } } = sb.storage.from('videos').getPublicUrl(fileName);
+          videoUrl = publicUrl;
+        }
 
-    window.handleUpload = async function(e) {
-      if (e) e.preventDefault();
-      const targetName = document.getElementById('target-select').value;
-      const fileInput = document.getElementById('video-file');
-      
-      if (!fileInput.files || fileInput.files.length === 0) return;
-      const file = fileInput.files[0];
+        if (editId) {
+          // UPDATE
+          const updates = { label, video_aspect: aspect };
+          if (targetImageUrl) updates.target_image_url = targetImageUrl;
+          if (videoUrl) updates.video_url = videoUrl;
+          const { error } = await sb.from('ar_targets').update(updates).eq('id', editId);
+          if (error) throw error;
+          showToast('Target atualizado! 🎉');
+        } else {
+          // INSERT
+          if (!imageFile) throw new Error('A imagem do target é obrigatória para novos targets.');
+          const row = {
+            target_name: name,
+            label,
+            target_image_url: targetImageUrl,
+            video_url: videoUrl,
+            video_aspect: aspect,
+            active: true,
+            target_properties: { left: 0, top: 0, width: 480, height: 640, originalWidth: 480, originalHeight: 640, isRotated: false }
+          };
+          const { error } = await sb.from('ar_targets').insert(row);
+          if (error) throw error;
+          showToast('Novo target adicionado! 🎯');
+        }
 
-      saveBtn.innerHTML = `
-        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Enviando vídeo (isso pode demorar)...
-      `;
-      saveBtn.disabled = true;
-
-      try {
-        const fileExt = file.name.split('.').pop();
-        const uniqueName = `${targetName}-${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } = await supabaseClient.storage
-          .from('videos')
-          .upload(uniqueName, file, { cacheControl: '3600', upsert: false });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabaseClient.storage
-          .from('videos')
-          .getPublicUrl(uniqueName);
-
-        const { error: dbError } = await supabaseClient
-          .from('ar_targets')
-          .update({ video_url: publicUrl })
-          .eq('target_name', targetName);
-
-        if (dbError) throw dbError;
-
-        showToast('Sucesso! O vídeo da AR foi atualizado ao vivo! 🎉', 'success');
-        fileInput.value = '';
-        
-      } catch (err) {
-        console.error(err);
-        showToast('Erro ao atualizar: ' + err.message, 'error');
+        hideForm();
+        loadTargets();
+      } catch(err) {
+        showToast('Erro: ' + err.message, 'error');
       } finally {
-        saveBtn.innerHTML = 'Salvar e Atualizar AR';
-        saveBtn.disabled = false;
+        btn.innerHTML = 'Salvar'; btn.disabled = false;
       }
     };
 
+    // === TOGGLE ACTIVE ===
+    window.toggleActive = async function(id, newState) {
+      const { error } = await sb.from('ar_targets').update({ active: newState }).eq('id', id);
+      if (error) showToast('Erro: ' + error.message, 'error');
+      else showToast(newState ? 'Target ativado ✓' : 'Target desativado');
+      loadTargets();
+    };
+
+    // === DELETE ===
+    window.deleteTarget = async function(id, name) {
+      if (!confirm(`Tem certeza que deseja excluir o target "${name}"? Esta ação não pode ser desfeita.`)) return;
+      const { error } = await sb.from('ar_targets').delete().eq('id', id);
+      if (error) showToast('Erro: ' + error.message, 'error');
+      else showToast('Target excluído');
+      loadTargets();
+    };
+
+    // Init: show login
+    loginScreen.classList.remove('hidden');
   </script>
 </body>
 </html>
