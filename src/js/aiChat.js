@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const messagesContainer = document.getElementById('chat-messages');
   const panelInput = document.getElementById('chat-panel-input');
   const panelSendBtn = document.getElementById('chat-panel-send-btn');
+  
+  // FAB (Botão Flutuante)
+  const chatFab = document.getElementById('ai-chat-fab');
+  const chatFabBadge = document.getElementById('chat-fab-badge');
+  let isChatOpen = false;
 
   let sessionId = localStorage.getItem('n8n_chat_session');
   if (!sessionId) {
@@ -20,10 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openPanel = () => {
     chatPanel.classList.add('open');
+    chatFab.classList.add('hidden');
+    chatFabBadge.classList.remove('active'); // Limpa a notificação ao abrir
+    isChatOpen = true;
   };
 
   const closePanel = () => {
     chatPanel.classList.remove('open');
+    chatFab.classList.remove('hidden');
+    isChatOpen = false;
   };
 
   closeBtn.addEventListener('click', closePanel);
@@ -99,6 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
           addMessage(`Erro na comunicação (Status: ${response.status}). Verifique o console do navegador.`, 'bot');
         }
       }
+      
+      // Se o chat estiver fechado quando a resposta chegar, mostra a notificação
+      if (!isChatOpen) {
+        chatFabBadge.classList.add('active');
+      }
+
     } catch (error) {
       typingDiv.remove();
       addMessage('Erro de conexão com o assistente.', 'bot');
@@ -131,5 +147,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   panelSendBtn.addEventListener('click', () => {
     sendMessage(panelInput);
+  });
+
+  // Eventos do Botão Flutuante (FAB)
+  chatFab.addEventListener('click', () => {
+    openPanel();
+    setTimeout(() => panelInput.focus(), 100);
+  });
+
+  // Fechar o chat clicando fora
+  document.addEventListener('click', (e) => {
+    if (isChatOpen) {
+      // Verifica se o clique não foi no painel, nem no botão de abrir (FAB) e nem nos inputs
+      const clickedInsidePanel = chatPanel.contains(e.target);
+      const clickedOnFab = chatFab.contains(e.target);
+      const clickedOnMainInput = mainInput.contains(e.target);
+      const clickedOnMainBtn = mainSendBtn.contains(e.target);
+      
+      if (!clickedInsidePanel && !clickedOnFab && !clickedOnMainInput && !clickedOnMainBtn) {
+        closePanel();
+      }
+    }
   });
 });
