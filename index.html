@@ -136,6 +136,28 @@
         </button>
       </div>
 
+      <!-- ===== CHAT PANEL (ABA) ===== -->
+      <div id="ai-chat-panel" class="chat-panel">
+        <div class="chat-header">
+          <h3>Assistente IA</h3>
+          <button id="close-chat-btn" aria-label="Fechar">&times;</button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+          <div class="chat-msg bot">Olá! Como posso te ajudar com o Ecossistema Hunters hoje?</div>
+        </div>
+        <div class="chat-panel-input-area">
+          <input type="text" id="chat-panel-input" placeholder="Escreva sua mensagem..." autocomplete="off">
+          <button id="chat-panel-send-btn" aria-label="Enviar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+
     </div>
+    
+    <script type="module" src="/src/js/aiChat.js"></script>
   </body>
 </html>
