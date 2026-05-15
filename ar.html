@@ -226,13 +226,20 @@
       50% { opacity: 0.4; transform: scale(0.7); }
     }
 
-    /* === BOTTOM CONTROLS === */
     #ar-controls {
       position: fixed; bottom: 0; left: 0; right: 0;
       padding: 16px 16px calc(env(safe-area-inset-bottom, 8px) + 16px);
       display: flex; justify-content: center; gap: 10px;
-      z-index: 60; pointer-events: auto;
+      z-index: 60; pointer-events: none;
       background: linear-gradient(to top, rgba(3,6,12,0.9) 0%, transparent 100%);
+      transform: translateY(100%);
+      opacity: 0;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
+    }
+    #ar-controls.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
     }
     .ar-btn {
       flex: 1; max-width: 180px;
@@ -415,7 +422,7 @@
       <img src="/whatsapp.png" alt="" style="object-fit: contain;">
       WhatsApp
     </a>
-    <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ar-btn">
+    <a href="https://huntersia.vercel.app/" target="_blank" rel="noopener noreferrer" class="ar-btn" id="site-btn">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" />
         <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
@@ -448,6 +455,7 @@
     const statusPill = document.getElementById('status-pill');
     const statusTextEl = document.getElementById('status-text');
     const videoContainer = document.getElementById('video-container');
+    const arControls = document.getElementById('ar-controls');
 
     // === DYNAMIC STATE ===
     const meshes = {};        // name -> { mesh, video, texture }
@@ -550,6 +558,7 @@
       }
       scannerHUD.classList.add('hidden');
       scanHint.classList.add('hidden');
+      arControls.classList.add('show');
       showStatus(targetLabels[name] || name, 'found');
     }
 
@@ -561,6 +570,7 @@
       if (!Object.values(meshes).some(m => m.mesh && m.mesh.visible)) {
         scannerHUD.classList.remove('hidden');
         scanHint.classList.remove('hidden');
+        arControls.classList.remove('show');
       }
       showStatus('Escaneando...', 'lost');
     }

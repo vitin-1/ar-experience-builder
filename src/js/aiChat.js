@@ -37,12 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openPanel = () => {
     chatPanel.classList.add('open');
+    document.body.style.overflow = 'hidden'; // Prevents body scroll
     if (mainBtnBadge) mainBtnBadge.classList.remove('active'); // Limpa a notificação ao abrir
     isChatOpen = true;
   };
 
   const closePanel = () => {
     chatPanel.classList.remove('open');
+    document.body.style.overflow = ''; // Restores body scroll
     isChatOpen = false;
     updateMainIcon(); // Garante que o ícone volta ao estado correto
   };
