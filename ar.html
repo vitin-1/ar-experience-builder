@@ -514,13 +514,43 @@
       return 0.5625; // 16:9 default
     }
 
+    // === GEOMETRIA ARREDONDADA PARA OS VÍDEOS ===
+    function createRoundedGeometry(width, height, radius) {
+      const shape = new THREE.Shape();
+      const x = -width / 2;
+      const y = -height / 2;
+
+      shape.moveTo(x, y + radius);
+      shape.lineTo(x, y + height - radius);
+      shape.quadraticCurveTo(x, y + height, x + radius, y + height);
+      shape.lineTo(x + width - radius, y + height);
+      shape.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+      shape.lineTo(x + width, y + radius);
+      shape.quadraticCurveTo(x + width, y, x + width - radius, y);
+      shape.lineTo(x + radius, y);
+      shape.quadraticCurveTo(x, y, x, y + radius);
+
+      const geo = new THREE.ShapeGeometry(shape, 12); // 12 segmentos de curva para suavidade
+      
+      // Mapeamento correto de UV para preencher a textura
+      const pos = geo.attributes.position;
+      const uv = geo.attributes.uv;
+      for (let i = 0; i < pos.count; i++) {
+        uv.setXY(i, (pos.getX(i) + width / 2) / width, (pos.getY(i) + height / 2) / height);
+      }
+      return geo;
+    }
+
     // === THREE.JS SCENE (DINÂMICO) ===
     function initXrScene({ scene }) {
       Object.values(meshes).forEach(t => {
         const tex = new THREE.VideoTexture(t.video);
         tex.minFilter = THREE.LinearFilter;
         const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
-        const geo = new THREE.PlaneGeometry(1, t.aspectHeight);
+        
+        // Em vez do PlaneGeometry quadrado, usa o card arredondado com radius de 0.05
+        const geo = createRoundedGeometry(1, t.aspectHeight, 0.05);
+        
         const mesh = new THREE.Mesh(geo, mat);
         mesh.visible = false;
         scene.add(mesh);
@@ -667,10 +697,31 @@
       window.location.href = 'index.html';
     });
 
-    // === CLEANUP ===
+    // === CLEANUP & BACKGROUND HANDLING ===
     window.addEventListener('pagehide', () => {
       Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
       try { XR8.stop(); } catch(err) {}
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Pausa os vídeos imediatamente se a aba ficar em segundo plano
+        Object.values(meshes).forEach(t => t.video.pause());
+      } else {
+        // Retoma se o alvo ainda estiver visível ao voltar para a aba
+        Object.values(meshes).forEach(t => {
+          if (t.mesh && t.mesh.visible) {
+             t.video.play().catch(() => {});
+          }
+        });
+      }
+    });
+
+    // Pausa os vídeos preventivamente ao clicar nos botões que abrem nova guia
+    document.querySelectorAll('.ar-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        Object.values(meshes).forEach(t => t.video.pause());
+      });
     });
 
     // === TIMEOUT ===
