@@ -12,10 +12,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const panelInput = document.getElementById('chat-panel-input');
   const panelSendBtn = document.getElementById('chat-panel-send-btn');
   
-  // FAB (Botão Flutuante)
-  const chatFab = document.getElementById('ai-chat-fab');
-  const chatFabBadge = document.getElementById('chat-fab-badge');
+  const mainInput = document.getElementById('ai-agent-input');
+  const mainSendBtn = document.getElementById('main-action-btn');
+  const mainBtnIcon = document.getElementById('main-btn-icon');
+  const mainBtnBadge = document.getElementById('main-btn-badge');
+  let hasHistory = false;
   let isChatOpen = false;
+
+  const iconSend = `<line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>`;
+  const iconChat = `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>`;
+
+  // Atualiza o ícone do botão principal (Chat vs Send)
+  const updateMainIcon = () => {
+    if (mainInput.value.trim().length > 0) {
+      mainBtnIcon.innerHTML = iconSend;
+    } else {
+      mainBtnIcon.innerHTML = hasHistory ? iconChat : iconSend;
+    }
+  };
+
+  mainInput.addEventListener('input', updateMainIcon);
 
   let sessionId = localStorage.getItem('n8n_chat_session');
   if (!sessionId) {
@@ -25,15 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openPanel = () => {
     chatPanel.classList.add('open');
-    chatFab.classList.add('hidden');
-    chatFabBadge.classList.remove('active'); // Limpa a notificação ao abrir
+    if (mainBtnBadge) mainBtnBadge.classList.remove('active'); // Limpa a notificação ao abrir
     isChatOpen = true;
   };
 
   const closePanel = () => {
     chatPanel.classList.remove('open');
-    chatFab.classList.remove('hidden');
     isChatOpen = false;
+    updateMainIcon(); // Garante que o ícone volta ao estado correto
   };
 
   closeBtn.addEventListener('click', closePanel);
@@ -46,20 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   };
 
-  const sendMessage = async (sourceInput) => {
-    const text = sourceInput.value.trim();
-    if (!text) {
-      // Se estiver vazio, apenas abre o painel se quiserem ver o histórico
-      openPanel();
-      if (sourceInput === mainInput) {
-        setTimeout(() => panelInput.focus(), 100);
-      }
-      return;
-    }
+  const sendMessage = async (inputElement) => {
+    const text = inputElement.value.trim();
+    if (!text) return;
 
-    sourceInput.value = '';
+    inputElement.value = '';
+    hasHistory = true; // Marca que o usuário já mandou mensagem
+    updateMainIcon(); // Atualiza o botão da landing page
+    
     // Limpa o outro input também para manter sincronizado se necessário
-    if (sourceInput === mainInput) panelInput.value = '';
+    if (inputElement === mainInput) panelInput.value = '';
     else mainInput.value = '';
 
     openPanel();
@@ -111,8 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       // Se o chat estiver fechado quando a resposta chegar, mostra a notificação
-      if (!isChatOpen) {
-        chatFabBadge.classList.add('active');
+      if (!isChatOpen && mainBtnBadge) {
+        mainBtnBadge.classList.add('active');
+        hasHistory = true;
+        updateMainIcon();
       }
 
     } catch (error) {
@@ -133,8 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Enviar a partir do input da landing page (botão dinâmico)
   mainSendBtn.addEventListener('click', () => {
-    sendMessage(mainInput);
+    if (mainInput.value.trim().length > 0) {
+      // Tem texto: Envia a mensagem
+      sendMessage(mainInput);
+    } else {
+      // Não tem texto
+      if (hasHistory) {
+        // Se já tem histórico, abre o chat
+        openPanel();
+        setTimeout(() => panelInput.focus(), 100);
+      } else {
+        // Sem texto e sem histórico: apenas foca ou abre
+        openPanel();
+      }
+    }
   });
 
   // Eventos do input do painel de chat
@@ -149,22 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
     sendMessage(panelInput);
   });
 
-  // Eventos do Botão Flutuante (FAB)
-  chatFab.addEventListener('click', () => {
-    openPanel();
-    setTimeout(() => panelInput.focus(), 100);
-  });
-
   // Fechar o chat clicando fora
   document.addEventListener('click', (e) => {
     if (isChatOpen) {
-      // Verifica se o clique não foi no painel, nem no botão de abrir (FAB) e nem nos inputs
+      // Verifica se o clique não foi no painel e nem nos inputs da main
       const clickedInsidePanel = chatPanel.contains(e.target);
-      const clickedOnFab = chatFab.contains(e.target);
       const clickedOnMainInput = mainInput.contains(e.target);
       const clickedOnMainBtn = mainSendBtn.contains(e.target);
       
-      if (!clickedInsidePanel && !clickedOnFab && !clickedOnMainInput && !clickedOnMainBtn) {
+      if (!clickedInsidePanel && !clickedOnMainInput && !clickedOnMainBtn) {
         closePanel();
       }
     }

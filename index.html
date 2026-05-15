@@ -100,13 +100,115 @@
       <!-- ===== CTA: Botão Câmera AR ===== -->
       <a href="ar.html" class="cta-button fade-up" style="animation-delay: 0.7s;" id="btn-unlock">
         <svg class="cta-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Ecossistema Hunters ManPower — Realidade Aumentada, Embarcadora e Sistema Integrado.">
+    <meta name="theme-color" content="#03060c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Hunters ManPower — Ecossistema AR</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/MARTINEZ.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/css/index.css">
+  </head>
+  
+  <body>
+    <div id="app">
+
+      <!-- ===== HEADER: Logo + Branding ===== -->
+      <header class="header fade-up" style="animation-delay: 0.1s;">
+        <div class="logo-container">
+          <div class="logo-glow"></div>
+          <img src="/MARTINEZ.png" alt="Hunters" class="logo-img" onerror="this.style.display='none'">
+        </div>
+        <h1 class="brand-name">HUNTERS</h1>
+        <p class="brand-tag">M A N P O W E R</p>
+        <div class="divider">
+          <span class="divider-line"></span>
+          <span class="divider-text">ECOSSISTEMA HUNTERS</span>
+          <span class="divider-line"></span>
+        </div>
+      </header>
+
+      <!-- ===== HERO CARD: Fornecemos Mão de Obra ===== -->
+      <section class="hero-card fade-up" style="animation-delay: 0.3s;">
+        <div class="hero-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="hero-content">
+          <p class="hero-title"><strong>FORNECEMOS</strong> <span class="highlight">MÃO DE OBRA</span></p>
+          <p class="hero-desc">Qualificada para operações marítimas, industriais e offshore, com gestão, tecnologia e foco em alta performance.</p>
+        </div>
+      </section>
+
+      <!-- ===== NAVIGATION CARDS GRID ===== -->
+      <nav class="nav-grid fade-up" style="animation-delay: 0.5s;">
+        <a href="https://aimbarcadora.com.br/home" target="_blank" rel="noopener noreferrer" class="nav-card" id="card-aimbarcadora">
+          <div class="nav-avatar">
+            <img src="/Aimbarcadora.png" alt="Aimbarcadora">
+          </div>
+          <div class="nav-info">
+            <span class="nav-title">Aimbarcadora</span>
+            <span class="nav-tag">REDE SOCIAL</span>
+          </div>
+          <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
+        <a href="https://hunterembarque.com/" target="_blank" rel="noopener noreferrer" class="nav-card" id="card-sistema">
+          <div class="nav-avatar">
+            <img src="/andercelo.png" alt="Sistema Hunters">
+          </div>
+          <div class="nav-info">
+            <span class="nav-title">Sistema Hunters</span>
+            <span class="nav-tag">HUNTERS.IO</span>
+          </div>
+          <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
+        <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="nav-card" id="card-site">
+          <div class="nav-avatar">
+            <img src="/andercelo.png" alt="Site Hunters">
+          </div>
+          <div class="nav-info">
+            <span class="nav-title">Site Hunters</span>
+            <span class="nav-tag">MANPOWER</span>
+          </div>
+          <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
+        <a href="https://wa.me/5521997154499" target="_blank" rel="noopener noreferrer" class="nav-card" id="card-whatsapp">
+          <div class="nav-avatar">
+            <img src="/Aimbarcadora.png" alt="Aimbarcadora WhatsApp">
+          </div>
+          <div class="nav-info">
+            <span class="nav-title">Aimbarcadora</span>
+            <span class="nav-tag">WHATSAPP</span>
+          </div>
+          <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </nav>
+
+      <!-- ===== CTA: Botão Câmera AR ===== -->
+      <a href="ar.html" class="cta-button fade-up" style="animation-delay: 0.7s;" id="btn-unlock">
+        <svg class="cta-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
           <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
           <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
           <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
           <rect x="7" y="7" width="10" height="10" rx="1"/>
         </svg>
-        <span id="btn-text">ABRIR CÂMERA E INICIAR RA</span>
+        <span id="btn-text">ATIVAR REALIDADE AUMENTADA</span>
         <div class="cta-logo">
           <img src="/Logo_hunters.png.png" alt="H" onerror="this.style.display='none'">
         </div>
@@ -125,21 +227,14 @@
             <line x1="12" x2="12" y1="19" y2="22"/>
           </svg>
         </button>
-        <button class="ai-eq-btn" type="button" aria-label="Enviar">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="ai-eq-btn" type="button" aria-label="Enviar" id="main-action-btn">
+          <svg id="main-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
+          <span id="main-btn-badge" class="main-btn-badge"></span>
         </button>
       </div>
-
-      <!-- ===== CHAT FAB (BOTAO FLUTUANTE) ===== -->
-      <button id="ai-chat-fab" class="chat-fab hidden" aria-label="Abrir Chat">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span id="chat-fab-badge" class="chat-fab-badge"></span>
-      </button>
 
       <!-- ===== CHAT PANEL (ABA) ===== -->
       <div id="ai-chat-panel" class="chat-panel">
@@ -163,7 +258,6 @@
 
     </div>
     
-
     <script type="module" src="/src/js/aiChat.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
@@ -174,18 +268,13 @@
           btnUnlock.addEventListener('click', (e) => {
             e.preventDefault(); // Impede a navegação imediata
             
-            // Cria a linha de laser do scanner
-            const laser = document.createElement('div');
-            laser.className = 'scanner-laser';
-            document.body.appendChild(laser);
+            // Adiciona o efeito de "Mergulho" (Dive In) no app
+            app.classList.add('dive-out');
             
-            // Adiciona o efeito de "wipe down" / glitch no app
-            app.classList.add('glitch-out');
-            
-            // Espera 1 segundo (quase o tempo da animação acabar) para redirecionar
+            // Espera o tempo da animação acabar (0.7s) para redirecionar
             setTimeout(() => {
               window.location.href = btnUnlock.getAttribute('href');
-            }, 1000);
+            }, 700);
           });
         }
       });
