@@ -1,10 +1,6 @@
 const WEBHOOK_URL = 'https://n8n-n8n.ooqqkc.easypanel.host/webhook/1c780a3c-77c7-4daf-a9dd-4695001fd4c1';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Input da landing page
-  const mainInput = document.getElementById('ai-agent-input');
-  const mainSendBtn = document.querySelector('.ai-eq-btn');
-  
   // Elementos do painel de chat
   const chatPanel = document.getElementById('ai-chat-panel');
   const closeBtn = document.getElementById('close-chat-btn');
