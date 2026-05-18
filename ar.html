@@ -565,17 +565,12 @@
       if (!t) return;
       t.mesh.position.copy(position);
       t.mesh.quaternion.copy(rotation);
+      t.mesh.scale.set(scale, scale, scale); // Aplica a escala instantaneamente para evitar pulsação
+
       if (!t.mesh.visible) {
-        if (window.__perfLow) {
-          t.currentScale = scale;
-          t.mesh.scale.set(scale, scale, scale);
-        } else {
-          t.currentScale = 0;
-          t.mesh.scale.set(0, 0, 0);
-        }
         t.mesh.visible = true;
       }
-      t.targetScale = scale;
+      
       const tryPlay = () => {
         const p = t.video.play();
         if (p) p.catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
@@ -641,17 +636,7 @@
             name: 'hunters-ar',
             onStart: () => initXrScene(XR8.Threejs.xrScene()),
             onUpdate: () => {
-              Object.values(meshes).forEach(t => {
-                if (t.mesh && t.mesh.visible && t.targetScale !== undefined) {
-                  if (window.__perfLow) {
-                    t.currentScale = t.targetScale;
-                    t.mesh.scale.set(t.targetScale, t.targetScale, t.targetScale);
-                  } else {
-                    t.currentScale += (t.targetScale - t.currentScale) * 0.15;
-                    t.mesh.scale.set(t.currentScale, t.currentScale, t.currentScale);
-                  }
-                }
-              });
+              // A escala agora é aplicada instantaneamente, dispensando o loop de animação de pulso.
             },
             listeners: [
               { event: 'reality.imagefound', process: e => showTarget(e.detail) },
