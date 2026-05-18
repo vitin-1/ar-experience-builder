@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainSendBtn = document.getElementById('main-action-btn');
   const mainBtnIcon = document.getElementById('main-btn-icon');
   const mainBtnBadge = document.getElementById('main-btn-badge');
+  const micBtn = document.querySelector('.ai-mic-btn');
   let hasHistory = false;
   let isChatOpen = false;
 
@@ -187,4 +188,71 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // === MICROFONE / RECONHECIMENTO DE VOZ ===
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition && micBtn) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    let isRecording = false;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      micBtn.classList.add('recording');
+      mainInput.placeholder = "Ouvindo...";
+      mainInput.value = "";
+      updateMainIcon();
+    };
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      mainInput.value = finalTranscript + interimTranscript;
+      updateMainIcon();
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Erro no reconhecimento de voz", event.error);
+      stopRecording();
+    };
+
+    recognition.onend = () => {
+      stopRecording();
+      if (mainInput.value.trim().length > 0) {
+        sendMessage(mainInput);
+      }
+    };
+
+    const stopRecording = () => {
+      isRecording = false;
+      micBtn.classList.remove('recording');
+      mainInput.placeholder = "Oi, como posso ajudar?";
+    };
+
+    micBtn.addEventListener('click', () => {
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        try {
+          recognition.start();
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    });
+  } else if (micBtn) {
+    micBtn.addEventListener('click', () => {
+      alert("Desculpe, o seu navegador não suporta reconhecimento de voz.");
+    });
+  }
 });
