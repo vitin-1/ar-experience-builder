@@ -1,4 +1,4 @@
-const WEBHOOK_URL = 'https://n8n-n8n.ooqqkc.easypanel.host/webhook-test/1c780a3c-77c7-4daf-a9dd-4695001fd4c1';
+const WEBHOOK_URL = 'https://n8n-n8n.ooqqkc.easypanel.host/webhook/1c780a3c-77c7-4daf-a9dd-4695001fd4c1';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Elementos do painel de chat
