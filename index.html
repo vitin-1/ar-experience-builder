@@ -369,18 +369,19 @@
             const audioBlob = new Blob([await response.arrayBuffer()], { type: contentType });
             appendBotAudioMessage(audioBlob);
           } else {
+            const rawText = await response.text();
             let replyText = '';
-            if (contentType.includes('application/json')) {
-              const data = await response.json();
-              replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : JSON.stringify(data));
-            } else {
-              replyText = await response.text();
-            }
-            if (replyText.startsWith('[') && replyText.endsWith(']')) {
+            if (rawText) {
               try {
-                const parsed = JSON.parse(replyText);
-                if (parsed.length > 0 && parsed[0].output) replyText = parsed[0].output;
-              } catch(e) {}
+                const data = JSON.parse(rawText);
+                replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : rawText);
+                if (replyText.startsWith('[') && replyText.endsWith(']')) {
+                  const arr = JSON.parse(replyText);
+                  if (arr.length > 0 && arr[0].output) replyText = arr[0].output;
+                }
+              } catch(e) {
+                replyText = rawText;
+              }
             }
             appendMessage(replyText || 'Mensagem recebida!', 'ai');
           }
@@ -580,18 +581,19 @@
             const audioBlob = new Blob([await response.arrayBuffer()], { type: contentType });
             appendBotAudioMessage(audioBlob);
           } else {
+            const rawText = await response.text();
             let replyText = '';
-            if (contentType.includes('application/json')) {
-              const data = await response.json();
-              replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : JSON.stringify(data));
-            } else {
-              replyText = await response.text();
-            }
-            if (replyText.startsWith('[') && replyText.endsWith(']')) {
+            if (rawText) {
               try {
-                const parsed = JSON.parse(replyText);
-                if (parsed.length > 0 && parsed[0].output) replyText = parsed[0].output;
-              } catch(e) {}
+                const data = JSON.parse(rawText);
+                replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : rawText);
+                if (replyText.startsWith('[') && replyText.endsWith(']')) {
+                  const arr = JSON.parse(replyText);
+                  if (arr.length > 0 && arr[0].output) replyText = arr[0].output;
+                }
+              } catch(e) {
+                replyText = rawText;
+              }
             }
             appendMessage(replyText || 'Mensagem recebida!', 'ai');
           }
