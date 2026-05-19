@@ -651,7 +651,7 @@ html, body {
 
 .msg-avatar img { width: 18px; height: 18px; object-fit: contain; }
 
-.msg-content { display: flex; flex-direction: column; gap: 4px; }
+.msg-content { display: flex; flex-direction: column; gap: 4px; max-width: 85%; }
 .user-group .msg-content { align-items: flex-end; }
 
 .msg-time {
@@ -666,7 +666,8 @@ html, body {
   border-radius: 16px;
   font-size: 13px;
   line-height: 1.55;
-  max-width: 80%;
+  width: fit-content;
+  max-width: 85%;
   word-wrap: break-word;
 }
 
