@@ -357,7 +357,7 @@
           const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text, sessionId: sessionId })
+            body: JSON.stringify({ action: 'sendMessage', sessionId: sessionId, chatInput: text, message: text })
           });
           
           removeTypingIndicator();
