@@ -691,36 +691,29 @@
           });
         }
       });
-      // ===== PREVENIR OVERFLOW DO TECLADO MOBILE =====
-      // Força scroll para 0 sempre que um input recebe foco
-      document.addEventListener('focusin', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-          // Reseta qualquer scroll que o browser tente fazer
-          setTimeout(() => {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-          }, 50);
-          setTimeout(() => {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-          }, 300);
-        }
-      });
-
-      // Usa a API visualViewport para travar o scroll quando o teclado abre
+      // ===== AJUSTAR CHAT MODAL COM TECLADO MOBILE =====
+      // Usa visualViewport para reposicionar o modal quando o teclado abre
       if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-          window.scrollTo(0, 0);
-          document.body.scrollTop = 0;
-          document.documentElement.scrollTop = 0;
-        });
-        window.visualViewport.addEventListener('scroll', () => {
-          window.scrollTo(0, 0);
-          document.body.scrollTop = 0;
-          document.documentElement.scrollTop = 0;
-        });
+        const adjustForKeyboard = () => {
+          const modal = document.getElementById('ai-chat-modal');
+          if (modal && !modal.classList.contains('hidden')) {
+            // Altura do teclado = diferença entre layout viewport e visual viewport
+            const keyboardHeight = window.innerHeight - window.visualViewport.height;
+            if (keyboardHeight > 50) {
+              // Teclado aberto: ajusta a altura do modal
+              modal.style.height = window.visualViewport.height + 'px';
+              modal.style.bottom = 'auto';
+              modal.style.top = window.visualViewport.offsetTop + 'px';
+            } else {
+              // Teclado fechado: restaura
+              modal.style.height = '';
+              modal.style.bottom = '';
+              modal.style.top = '';
+            }
+          }
+        };
+        window.visualViewport.addEventListener('resize', adjustForKeyboard);
+        window.visualViewport.addEventListener('scroll', adjustForKeyboard);
       }
 
     </script>
