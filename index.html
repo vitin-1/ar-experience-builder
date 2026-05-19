@@ -248,6 +248,95 @@
         if (loader) loader.remove();
       }
 
+      function appendBotAudioMessage(audioBlob) {
+        const group = document.createElement('div');
+        group.className = 'chat-msg-group ai-group';
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        const playerId = 'audio-bot-' + Date.now();
+
+        const barCount = 32;
+        let barsHtml = '';
+        for (let i = 0; i < barCount; i++) {
+          const h = Math.round(30 + Math.sin(i * 0.45) * 22 + Math.random() * 25);
+          barsHtml += `<span class="wave-bar" style="height:${h}%"></span>`;
+        }
+
+        group.innerHTML = `
+          <div class="msg-avatar"><img src="/Logo_hunters.png.png" alt="H" onerror="this.textContent='H'"></div>
+          <div class="msg-content">
+            <div class="chat-msg ai audio-msg">
+              <div class="waveform-player" id="${playerId}">
+                <button class="wave-play-btn" aria-label="Play">
+                  <svg class="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <svg class="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                </button>
+                <div class="wave-bars">${barsHtml}</div>
+                <span class="wave-time">0:00</span>
+              </div>
+            </div>
+            <span class="msg-time">${getTimeNow()}</span>
+          </div>
+        `;
+
+        chatMessages.appendChild(group);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const player = document.getElementById(playerId);
+        const playBtn = player.querySelector('.wave-play-btn');
+        const iconPlay = player.querySelector('.icon-play');
+        const iconPause = player.querySelector('.icon-pause');
+        const bars = player.querySelectorAll('.wave-bar');
+        const timeEl = player.querySelector('.wave-time');
+        let playing = false;
+
+        function formatTime(s) {
+          const m = Math.floor(s / 60);
+          const sec = Math.floor(s % 60);
+          return m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+
+        audio.addEventListener('loadedmetadata', () => { timeEl.textContent = formatTime(audio.duration); });
+
+        audio.addEventListener('timeupdate', () => {
+          timeEl.textContent = formatTime(audio.currentTime);
+          const progress = audio.currentTime / audio.duration;
+          bars.forEach((bar, i) => { bar.classList.toggle('played', i / bars.length <= progress); });
+        });
+
+        audio.addEventListener('ended', () => {
+          playing = false;
+          iconPlay.style.display = '';
+          iconPause.style.display = 'none';
+          player.classList.remove('is-playing');
+          bars.forEach(b => b.classList.remove('played'));
+          timeEl.textContent = formatTime(audio.duration);
+        });
+
+        playBtn.addEventListener('click', () => {
+          if (playing) {
+            audio.pause();
+            playing = false;
+            iconPlay.style.display = '';
+            iconPause.style.display = 'none';
+            player.classList.remove('is-playing');
+          } else {
+            audio.play();
+            playing = true;
+            iconPlay.style.display = 'none';
+            iconPause.style.display = '';
+            player.classList.add('is-playing');
+          }
+        });
+
+        audio.play().then(() => {
+          playing = true;
+          iconPlay.style.display = 'none';
+          iconPause.style.display = '';
+          player.classList.add('is-playing');
+        }).catch(() => {});
+      }
+
       async function sendMessage(inputText) {
         const text = inputText || aiInput.value.trim();
         if (!text) return;
@@ -275,26 +364,26 @@
 
           if (!response.ok) throw new Error('Erro na rede');
           
-          let replyText = '';
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : JSON.stringify(data));
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('audio/')) {
+            const audioBlob = new Blob([await response.arrayBuffer()], { type: contentType });
+            appendBotAudioMessage(audioBlob);
           } else {
-            replyText = await response.text();
+            let replyText = '';
+            if (contentType.includes('application/json')) {
+              const data = await response.json();
+              replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : JSON.stringify(data));
+            } else {
+              replyText = await response.text();
+            }
+            if (replyText.startsWith('[') && replyText.endsWith(']')) {
+              try {
+                const parsed = JSON.parse(replyText);
+                if (parsed.length > 0 && parsed[0].output) replyText = parsed[0].output;
+              } catch(e) {}
+            }
+            appendMessage(replyText || 'Mensagem recebida!', 'ai');
           }
-
-          // Tratar fallback para quando n8n retornar [{}] ou texto simples
-          if (replyText.startsWith('[') && replyText.endsWith(']')) {
-             try {
-               const parsed = JSON.parse(replyText);
-               if (parsed.length > 0 && parsed[0].output) {
-                 replyText = parsed[0].output;
-               }
-             } catch(e) {}
-          }
-
-          appendMessage(replyText || 'Mensagem recebida!', 'ai');
 
         } catch (error) {
           console.error(error);
@@ -486,25 +575,26 @@
 
           if (!response.ok) throw new Error('Erro na rede');
 
-          let replyText = '';
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : JSON.stringify(data));
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('audio/')) {
+            const audioBlob = new Blob([await response.arrayBuffer()], { type: contentType });
+            appendBotAudioMessage(audioBlob);
           } else {
-            replyText = await response.text();
+            let replyText = '';
+            if (contentType.includes('application/json')) {
+              const data = await response.json();
+              replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : JSON.stringify(data));
+            } else {
+              replyText = await response.text();
+            }
+            if (replyText.startsWith('[') && replyText.endsWith(']')) {
+              try {
+                const parsed = JSON.parse(replyText);
+                if (parsed.length > 0 && parsed[0].output) replyText = parsed[0].output;
+              } catch(e) {}
+            }
+            appendMessage(replyText || 'Mensagem recebida!', 'ai');
           }
-
-          if (replyText.startsWith('[') && replyText.endsWith(']')) {
-            try {
-              const parsed = JSON.parse(replyText);
-              if (parsed.length > 0 && parsed[0].output) {
-                replyText = parsed[0].output;
-              }
-            } catch(e) {}
-          }
-
-          appendMessage(replyText || 'Mensagem recebida!', 'ai');
 
         } catch (error) {
           console.error(error);

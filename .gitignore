@@ -19,6 +19,7 @@ dist-ssr
 
 # AI context (local only)
 .ai/
+.claude/
 
 # SSL certs (local dev only)
 .certs/
