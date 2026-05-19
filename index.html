@@ -52,13 +52,13 @@
 
       <!-- ===== NAVIGATION CARDS GRID ===== -->
       <nav class="nav-grid fade-up" style="animation-delay: 0.5s;">
-        <a href="https://aimbarcadora.com.br/home" target="_blank" rel="noopener noreferrer" class="nav-card" id="card-aimbarcadora">
+        <a href="https://www.instagram.com/huntersmanpower/" target="_blank" rel="noopener noreferrer" class="nav-card" id="card-aimbarcadora">
           <div class="nav-avatar">
-            <img src="/Aimbarcadora.png" alt="Aimbarcadora">
+            <img src="/Aimbarcadora.png" alt="Aimbarcadora Instagram">
           </div>
           <div class="nav-info">
             <span class="nav-title">Aimbarcadora</span>
-            <span class="nav-tag">REDE SOCIAL</span>
+            <span class="nav-tag">INSTAGRAM</span>
           </div>
           <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </a>
@@ -106,7 +106,7 @@
           <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
           <rect x="7" y="7" width="10" height="10" rx="1"/>
         </svg>
-        <span id="btn-text">ABRIR CÂMERA E INICIAR RA</span>
+        <span id="btn-text">ATIVAR REALIDADE AUMENTADA</span>
         <div class="cta-logo">
           <img src="/Logo_hunters.png.png" alt="H" onerror="this.style.display='none'">
         </div>
@@ -123,7 +123,7 @@
           <button id="close-chat" class="chat-close-btn">&times;</button>
         </div>
         <div id="chat-messages" class="chat-messages">
-          <!-- Messages will be injected here -->
+          <div class="chat-msg ai">Olá! Como posso te ajudar com o Ecossistema Hunters hoje?</div>
         </div>
         <div class="chat-footer">
           <input type="text" id="chat-inline-input" class="chat-inline-input" placeholder="Digite sua mensagem..." autocomplete="off">
@@ -235,7 +235,7 @@
           const contentType = response.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            replyText = data.reply || data.response || data.message || (typeof data === 'string' ? data : JSON.stringify(data));
+            replyText = data.reply || data.response || data.message || data.output || (typeof data === 'string' ? data : JSON.stringify(data));
           } else {
             replyText = await response.text();
           }
@@ -245,7 +245,7 @@
              try {
                const parsed = JSON.parse(replyText);
                if (parsed.length > 0 && parsed[0].output) {
-                 replyText = parsed[0].output; // Common n8n webhook response format pattern
+                 replyText = parsed[0].output;
                }
              } catch(e) {}
           }
@@ -287,11 +287,9 @@
       // Fix mobile background/foreground layout bugs
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-          // Force layout recalculation on return from background
           if (!chatModal.classList.contains('hidden')) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }
-          // Stop any active recording if we went to background
           if (isRecording && mediaRecorder) {
             mediaRecorder.stop();
           }
@@ -323,12 +321,8 @@
       }
 
       async function sendAudioToWebhook(audioBlob) {
-        // Abre o chat se estiver escondido
         chatModal.classList.remove('hidden');
-
-        // Mostra o áudio no chat do usuário
         appendAudioMessage(audioBlob);
-
         showTypingIndicator();
 
         try {
@@ -374,7 +368,6 @@
 
       async function toggleRecording() {
         if (isRecording) {
-          // Parar gravação
           mediaRecorder.stop();
           return;
         }
@@ -383,7 +376,6 @@
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           audioChunks = [];
 
-          // Tenta webm primeiro (Chrome/Android), senão mp4 (Safari/iOS)
           const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
             ? 'audio/webm;codecs=opus'
             : 'audio/mp4';
@@ -398,9 +390,8 @@
             isRecording = false;
             if (chatMicBtn) chatMicBtn.classList.remove('listening');
             if (mainMicBtn) mainMicBtn.classList.remove('listening');
-            if (chatMicStatus) chatMicStatus.textContent = 'Toque para falar';
+            if (chatMicStatus) chatMicStatus.textContent = '';
 
-            // Libera o microfone
             audioStream.getTracks().forEach(track => track.stop());
 
             const audioBlob = new Blob(audioChunks, { type: mimeType });
@@ -423,6 +414,22 @@
 
       if (chatMicBtn) chatMicBtn.addEventListener('click', toggleRecording);
       if (mainMicBtn) mainMicBtn.addEventListener('click', toggleRecording);
+
+      // Animação Dive-Out para o botão de AR (do remote)
+      document.addEventListener('DOMContentLoaded', () => {
+        const btnUnlock = document.getElementById('btn-unlock');
+        const app = document.getElementById('app');
+
+        if (btnUnlock && app) {
+          btnUnlock.addEventListener('click', (e) => {
+            e.preventDefault();
+            app.classList.add('dive-out');
+            setTimeout(() => {
+              window.location.href = btnUnlock.getAttribute('href');
+            }, 700);
+          });
+        }
+      });
 
     </script>
   </body>

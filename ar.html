@@ -226,7 +226,6 @@
       50% { opacity: 0.4; transform: scale(0.7); }
     }
 
-    /* === BOTTOM CONTROLS === */
     #ar-controls {
       position: fixed; bottom: 0; left: 0; right: 0;
       padding: 16px 16px calc(env(safe-area-inset-bottom, 8px) + 16px);
@@ -415,12 +414,12 @@
       <img src="/whatsapp.png" alt="" style="object-fit: contain;">
       WhatsApp
     </a>
-    <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ar-btn">
+    <a href="https://huntersia.vercel.app/" target="_blank" rel="noopener noreferrer" class="ar-btn" id="site-btn">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" />
         <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
       </svg>
-      Site
+      HUB
     </a>
   </div>
 
@@ -448,12 +447,45 @@
     const statusPill = document.getElementById('status-pill');
     const statusTextEl = document.getElementById('status-text');
     const videoContainer = document.getElementById('video-container');
+    const arControls = document.getElementById('ar-controls');
 
     // === DYNAMIC STATE ===
     const meshes = {};        // name -> { mesh, video, texture }
     const targetLabels = {};   // name -> label
     let imageTargetData = [];  // array para XR8
     let allVideos = [];        // todos os <video> criados
+
+    // === PINCH TO ZOOM STATE ===
+    let userScaleMultiplier = 1.0;
+    let initialPinchDistance = null;
+    let initialUserScale = 1.0;
+
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialPinchDistance = Math.hypot(dx, dy);
+        initialUserScale = userScaleMultiplier;
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDistance) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDistance = Math.hypot(dx, dy);
+        
+        const scaleFactor = currentDistance / initialPinchDistance;
+        userScaleMultiplier = Math.max(0.3, Math.min(initialUserScale * scaleFactor, 4.0));
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        initialPinchDistance = null;
+      }
+    });
 
     // === STATUS PILL ===
     let pillTimer = null;
@@ -506,13 +538,43 @@
       return 0.5625; // 16:9 default
     }
 
+    // === GEOMETRIA ARREDONDADA PARA OS VÍDEOS ===
+    function createRoundedGeometry(width, height, radius) {
+      const shape = new THREE.Shape();
+      const x = -width / 2;
+      const y = -height / 2;
+
+      shape.moveTo(x, y + radius);
+      shape.lineTo(x, y + height - radius);
+      shape.quadraticCurveTo(x, y + height, x + radius, y + height);
+      shape.lineTo(x + width - radius, y + height);
+      shape.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+      shape.lineTo(x + width, y + radius);
+      shape.quadraticCurveTo(x + width, y, x + width - radius, y);
+      shape.lineTo(x + radius, y);
+      shape.quadraticCurveTo(x, y, x, y + radius);
+
+      const geo = new THREE.ShapeGeometry(shape, 12); // 12 segmentos de curva para suavidade
+      
+      // Mapeamento correto de UV para preencher a textura
+      const pos = geo.attributes.position;
+      const uv = geo.attributes.uv;
+      for (let i = 0; i < pos.count; i++) {
+        uv.setXY(i, (pos.getX(i) + width / 2) / width, (pos.getY(i) + height / 2) / height);
+      }
+      return geo;
+    }
+
     // === THREE.JS SCENE (DINÂMICO) ===
     function initXrScene({ scene }) {
       Object.values(meshes).forEach(t => {
         const tex = new THREE.VideoTexture(t.video);
         tex.minFilter = THREE.LinearFilter;
         const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
-        const geo = new THREE.PlaneGeometry(1, t.aspectHeight);
+        
+        // Em vez do PlaneGeometry quadrado, usa o card arredondado com radius de 0.05
+        const geo = createRoundedGeometry(1, t.aspectHeight, 0.05);
+        
         const mesh = new THREE.Mesh(geo, mat);
         mesh.visible = false;
         scene.add(mesh);
@@ -527,17 +589,14 @@
       if (!t) return;
       t.mesh.position.copy(position);
       t.mesh.quaternion.copy(rotation);
+      
+      const finalScale = scale * userScaleMultiplier;
+      t.mesh.scale.set(finalScale, finalScale, finalScale); // Aplica a escala com o zoom do usuário
+
       if (!t.mesh.visible) {
-        if (window.__perfLow) {
-          t.currentScale = scale;
-          t.mesh.scale.set(scale, scale, scale);
-        } else {
-          t.currentScale = 0;
-          t.mesh.scale.set(0, 0, 0);
-        }
         t.mesh.visible = true;
       }
-      t.targetScale = scale;
+      
       const tryPlay = () => {
         const p = t.video.play();
         if (p) p.catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
@@ -561,6 +620,7 @@
       if (!Object.values(meshes).some(m => m.mesh && m.mesh.visible)) {
         scannerHUD.classList.remove('hidden');
         scanHint.classList.remove('hidden');
+        userScaleMultiplier = 1.0; // Reseta o zoom ao perder os alvos
       }
       showStatus('Escaneando...', 'lost');
     }
@@ -601,17 +661,7 @@
             name: 'hunters-ar',
             onStart: () => initXrScene(XR8.Threejs.xrScene()),
             onUpdate: () => {
-              Object.values(meshes).forEach(t => {
-                if (t.mesh && t.mesh.visible && t.targetScale !== undefined) {
-                  if (window.__perfLow) {
-                    t.currentScale = t.targetScale;
-                    t.mesh.scale.set(t.targetScale, t.targetScale, t.targetScale);
-                  } else {
-                    t.currentScale += (t.targetScale - t.currentScale) * 0.15;
-                    t.mesh.scale.set(t.currentScale, t.currentScale, t.currentScale);
-                  }
-                }
-              });
+              // A escala agora é aplicada instantaneamente, dispensando o loop de animação de pulso.
             },
             listeners: [
               { event: 'reality.imagefound', process: e => showTarget(e.detail) },
@@ -657,10 +707,31 @@
       window.location.href = 'index.html';
     });
 
-    // === CLEANUP ===
+    // === CLEANUP & BACKGROUND HANDLING ===
     window.addEventListener('pagehide', () => {
       Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
       try { XR8.stop(); } catch(err) {}
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Pausa os vídeos imediatamente se a aba ficar em segundo plano
+        Object.values(meshes).forEach(t => t.video.pause());
+      } else {
+        // Retoma se o alvo ainda estiver visível ao voltar para a aba
+        Object.values(meshes).forEach(t => {
+          if (t.mesh && t.mesh.visible) {
+             t.video.play().catch(() => {});
+          }
+        });
+      }
+    });
+
+    // Pausa os vídeos preventivamente ao clicar nos botões que abrem nova guia
+    document.querySelectorAll('.ar-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        Object.values(meshes).forEach(t => t.video.pause());
+      });
     });
 
     // === TIMEOUT ===
