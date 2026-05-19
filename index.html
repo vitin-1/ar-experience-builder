@@ -159,13 +159,10 @@
               <line x1="12" x2="12" y1="19" y2="22"/>
             </svg>
           </button>
-          <button class="ai-eq-btn" type="button" aria-label="Assistente">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="4" y="4" width="16" height="16" rx="8" fill="currentColor" opacity="0.15"/>
-              <path d="M8 15V9"/>
-              <path d="M11 17V7"/>
-              <path d="M14 13V11"/>
-              <path d="M17 15V9"/>
+          <button class="ai-eq-btn" type="button" aria-label="Enviar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
           </button>
         </div>
@@ -305,24 +302,111 @@
       let audioChunks = [];
       let isRecording = false;
       let audioStream = null;
+      let volumeSamples = [];
+      let audioContext = null;
+      let analyserNode = null;
+      let samplingInterval = null;
 
-      function appendAudioMessage(audioBlob) {
+      function appendAudioMessage(audioBlob, samples) {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'chat-msg user audio-msg';
         const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        const playerId = 'audio-' + Date.now();
+
+        // Usa amostras reais de volume para as barras
+        const barCount = 32;
+        const finalSamples = [];
+        if (samples && samples.length > 0) {
+          // Reduz as amostras para o número de barras
+          const step = samples.length / barCount;
+          for (let i = 0; i < barCount; i++) {
+            const idx = Math.floor(i * step);
+            finalSamples.push(samples[idx] || 0);
+          }
+        } else {
+          for (let i = 0; i < barCount; i++) finalSamples.push(5);
+        }
+
+        // Normaliza: encontra o max e escala para 10-90%
+        const maxVal = Math.max(...finalSamples, 1);
+        let barsHtml = '';
+        for (let i = 0; i < barCount; i++) {
+          const normalized = (finalSamples[i] / maxVal);
+          const h = Math.max(8, Math.round(normalized * 85 + 5)); // 5-90%
+          barsHtml += `<span class="wave-bar" style="height:${h}%"></span>`;
+        }
+
         msgDiv.innerHTML = `
-          <div class="audio-bubble">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-            <audio controls src="${audioUrl}" preload="metadata"></audio>
+          <div class="waveform-player" id="${playerId}">
+            <button class="wave-play-btn" aria-label="Play">
+              <svg class="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg class="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <div class="wave-bars">${barsHtml}</div>
+            <span class="wave-time">0:00</span>
           </div>
         `;
+
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Lógica do player
+        const player = document.getElementById(playerId);
+        const playBtn = player.querySelector('.wave-play-btn');
+        const iconPlay = player.querySelector('.icon-play');
+        const iconPause = player.querySelector('.icon-pause');
+        const bars = player.querySelectorAll('.wave-bar');
+        const timeEl = player.querySelector('.wave-time');
+        let playing = false;
+
+        function formatTime(s) {
+          const m = Math.floor(s / 60);
+          const sec = Math.floor(s % 60);
+          return m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+
+        audio.addEventListener('loadedmetadata', () => {
+          timeEl.textContent = formatTime(audio.duration);
+        });
+
+        audio.addEventListener('timeupdate', () => {
+          timeEl.textContent = formatTime(audio.currentTime);
+          const progress = audio.currentTime / audio.duration;
+          bars.forEach((bar, i) => {
+            bar.classList.toggle('played', i / bars.length <= progress);
+          });
+        });
+
+        audio.addEventListener('ended', () => {
+          playing = false;
+          iconPlay.style.display = '';
+          iconPause.style.display = 'none';
+          player.classList.remove('is-playing');
+          bars.forEach(b => b.classList.remove('played'));
+          timeEl.textContent = formatTime(audio.duration);
+        });
+
+        playBtn.addEventListener('click', () => {
+          if (playing) {
+            audio.pause();
+            playing = false;
+            iconPlay.style.display = '';
+            iconPause.style.display = 'none';
+            player.classList.remove('is-playing');
+          } else {
+            audio.play();
+            playing = true;
+            iconPlay.style.display = 'none';
+            iconPause.style.display = '';
+            player.classList.add('is-playing');
+          }
+        });
       }
 
-      async function sendAudioToWebhook(audioBlob) {
+      async function sendAudioToWebhook(audioBlob, samples) {
         chatModal.classList.remove('hidden');
-        appendAudioMessage(audioBlob);
+        appendAudioMessage(audioBlob, samples);
         showTypingIndicator();
 
         try {
@@ -369,12 +453,33 @@
       async function toggleRecording() {
         if (isRecording) {
           mediaRecorder.stop();
+          if (samplingInterval) clearInterval(samplingInterval);
+          if (audioContext) { audioContext.close(); audioContext = null; }
           return;
         }
 
         try {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           audioChunks = [];
+          volumeSamples = [];
+
+          // Web Audio API para capturar volume real
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(audioStream);
+          analyserNode = audioContext.createAnalyser();
+          analyserNode.fftSize = 256;
+          source.connect(analyserNode);
+          const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+
+          // Amostra o volume a cada 80ms
+          samplingInterval = setInterval(() => {
+            analyserNode.getByteFrequencyData(dataArray);
+            // Média das frequências como indicador de volume
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+            const avg = sum / dataArray.length;
+            volumeSamples.push(avg);
+          }, 80);
 
           const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
             ? 'audio/webm;codecs=opus'
@@ -395,7 +500,8 @@
             audioStream.getTracks().forEach(track => track.stop());
 
             const audioBlob = new Blob(audioChunks, { type: mimeType });
-            sendAudioToWebhook(audioBlob);
+            const capturedSamples = [...volumeSamples];
+            sendAudioToWebhook(audioBlob, capturedSamples);
           };
 
           mediaRecorder.start();
