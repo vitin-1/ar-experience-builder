@@ -112,30 +112,43 @@
         </div>
       </a>
 
-      <!-- ===== AI CHAT MODAL (fullscreen overlay) ===== -->
+      <!-- ===== AI CHAT MODAL ===== -->
       <div id="ai-chat-modal" class="ai-chat-modal hidden">
         <div class="chat-header">
-          <div class="chat-title">
-            <span class="chat-status-dot"></span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-            Assistente IA
+          <div class="chat-header-left">
+            <div class="chat-avatar">
+              <img src="/Logo_hunters.png.png" alt="H" onerror="this.textContent='H'">
+              <span class="chat-status-dot"></span>
+            </div>
+            <div class="chat-header-info">
+              <span class="chat-header-name">Assistente Hunters</span>
+              <span class="chat-header-sub" id="chat-header-sub">Online • IA</span>
+            </div>
           </div>
-          <button id="close-chat" class="chat-close-btn">&times;</button>
+          <button id="close-chat" class="chat-close-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
         </div>
         <div id="chat-messages" class="chat-messages">
-          <div class="chat-msg ai">Olá! Como posso te ajudar com o Ecossistema Hunters hoje?</div>
+          <div class="chat-msg-group ai-group">
+            <div class="msg-avatar"><img src="/Logo_hunters.png.png" alt="H" onerror="this.textContent='H'"></div>
+            <div class="msg-content">
+              <div class="chat-msg ai">Olá! Como posso te ajudar com o Ecossistema Hunters hoje?</div>
+              <span class="msg-time">agora</span>
+            </div>
+          </div>
         </div>
         <div class="chat-footer">
-          <input type="text" id="chat-inline-input" class="chat-inline-input" placeholder="Digite sua mensagem..." autocomplete="off">
+          <input type="text" id="chat-inline-input" class="chat-inline-input" placeholder="Escreva uma mensagem..." autocomplete="off">
           <button id="chat-mic-btn" class="chat-mic-btn" type="button" aria-label="Falar com IA">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
               <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
               <line x1="12" x2="12" y1="19" y2="22"/>
             </svg>
           </button>
           <button id="chat-send-btn" class="chat-send-btn" type="button" aria-label="Enviar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/>
               <polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
@@ -180,25 +193,57 @@
 
       const WEBHOOK_URL = 'https://n8n-n8n.ooqqkc.easypanel.host/webhook/1c780a3c-77c7-4daf-a9dd-4695001fd4c1';
       let sessionId = Math.random().toString(36).substring(7);
+      const headerSub = document.getElementById('chat-header-sub');
+
+      function getTimeNow() {
+        const d = new Date();
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+      }
 
       function appendMessage(text, sender) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `chat-msg ${sender}`;
-        msgDiv.textContent = text;
-        chatMessages.appendChild(msgDiv);
+        const group = document.createElement('div');
+        const isAI = sender.includes('ai');
+
+        if (isAI) {
+          group.className = 'chat-msg-group ai-group';
+          group.innerHTML = `
+            <div class="msg-avatar"><img src="/Logo_hunters.png.png" alt="H" onerror="this.textContent='H'"></div>
+            <div class="msg-content">
+              <div class="chat-msg ${sender}">${text}</div>
+              <span class="msg-time">${getTimeNow()}</span>
+            </div>
+          `;
+        } else {
+          group.className = 'chat-msg-group user-group';
+          group.innerHTML = `
+            <div class="msg-content">
+              <div class="chat-msg ${sender}">${text}</div>
+              <span class="msg-time">${getTimeNow()}</span>
+            </div>
+          `;
+        }
+
+        chatMessages.appendChild(group);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
 
       function showTypingIndicator() {
-        const loaderDiv = document.createElement('div');
-        loaderDiv.className = 'chat-msg ai typing-indicator';
-        loaderDiv.id = 'typing-indicator';
-        loaderDiv.innerHTML = '<span></span><span></span><span></span>';
-        chatMessages.appendChild(loaderDiv);
+        if (headerSub) headerSub.textContent = 'digitando...';
+        const group = document.createElement('div');
+        group.className = 'chat-msg-group ai-group';
+        group.id = 'typing-indicator';
+        group.innerHTML = `
+          <div class="msg-avatar"><img src="/Logo_hunters.png.png" alt="H" onerror="this.textContent='H'"></div>
+          <div class="msg-content">
+            <div class="chat-msg ai typing-indicator"><span></span><span></span><span></span></div>
+          </div>
+        `;
+        chatMessages.appendChild(group);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
 
       function removeTypingIndicator() {
+        if (headerSub) headerSub.textContent = 'Online • IA';
         const loader = document.getElementById('typing-indicator');
         if (loader) loader.remove();
       }
