@@ -47,7 +47,7 @@ html, body {
   align-items: center; justify-content: center;
   gap: clamp(16px, 3vh, 28px);
   padding: clamp(20px, 4vh, 40px) clamp(16px, 5vw, 40px);
-  overflow-y: auto; overflow-x: hidden;
+  overflow: hidden;
 
   /* Background glow sutil */
   background:
@@ -666,7 +666,7 @@ html, body {
   border-radius: 16px;
   font-size: 13px;
   line-height: 1.55;
-  max-width: 260px;
+  max-width: 80%;
   word-wrap: break-word;
 }
 
