@@ -176,6 +176,7 @@
       const chatModal = document.getElementById('ai-chat-modal');
       const chatMessages = document.getElementById('chat-messages');
       const closeChat = document.getElementById('close-chat');
+      const mainInputBar = document.querySelector('.ai-interaction-wrapper');
 
       const WEBHOOK_URL = 'https://n8n-n8n.ooqqkc.easypanel.host/webhook/1c780a3c-77c7-4daf-a9dd-4695001fd4c1';
       let sessionId = Math.random().toString(36).substring(7);
@@ -211,6 +212,7 @@
 
         // Show chat modal if hidden
         chatModal.classList.remove('hidden');
+        if (mainInputBar) mainInputBar.style.display = 'none';
         
         // Append user message
         appendMessage(text, 'user');
@@ -279,6 +281,7 @@
 
       closeChat.addEventListener('click', () => {
         chatModal.classList.add('hidden');
+        if (mainInputBar) mainInputBar.style.display = '';
       });
 
       // Fix mobile background/foreground layout bugs
@@ -406,17 +409,32 @@
 
       async function sendAudioToWebhook(audioBlob, samples) {
         chatModal.classList.remove('hidden');
+        if (mainInputBar) mainInputBar.style.display = 'none';
         appendAudioMessage(audioBlob, samples);
         showTypingIndicator();
 
         try {
-          const formData = new FormData();
-          formData.append('audio', audioBlob, 'audio.webm');
-          formData.append('sessionId', sessionId);
+          // Converte o áudio para base64 para enviar como JSON
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve) => {
+            reader.onloadend = () => {
+              const base64 = reader.result.split(',')[1]; // remove "data:audio/...;base64,"
+              resolve(base64);
+            };
+            reader.readAsDataURL(audioBlob);
+          });
+
+          const audioBase64 = await base64Promise;
 
           const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audio: audioBase64,
+              mimeType: audioBlob.type,
+              sessionId: sessionId,
+              type: 'audio'
+            })
           });
 
           removeTypingIndicator();
