@@ -459,27 +459,15 @@
         showTypingIndicator();
 
         try {
-          // Converte o áudio para base64 para enviar como JSON
-          const reader = new FileReader();
-          const base64Promise = new Promise((resolve) => {
-            reader.onloadend = () => {
-              const base64 = reader.result.split(',')[1]; // remove "data:audio/...;base64,"
-              resolve(base64);
-            };
-            reader.readAsDataURL(audioBlob);
-          });
-
-          const audioBase64 = await base64Promise;
+          // Envia o áudio como arquivo binário via FormData
+          const ext = audioBlob.type.includes('webm') ? 'webm' : 'mp4';
+          const formData = new FormData();
+          formData.append('data', audioBlob, `audio.${ext}`);
+          formData.append('sessionId', sessionId);
 
           const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              audio: audioBase64,
-              mimeType: audioBlob.type,
-              sessionId: sessionId,
-              type: 'audio'
-            })
+            body: formData
           });
 
           removeTypingIndicator();
