@@ -14,12 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- 8th Wall XR Engine -->
-  <script src="/xr/xr.js" data-preload-chunks="slam"></script>
-  <!-- Three.js for 3D AR rendering -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 8th Wall XR Engine (self-hosted, sem CDN externo) -->
+  <script src="/xr/xr.js" data-preload-chunks="slam" onerror="document.getElementById('error-modal').classList.add('show')"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

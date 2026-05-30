@@ -1,3 +1,9 @@
+import * as THREE from 'three';
+import { createClient } from '@supabase/supabase-js';
+
+// XR8.Threejs.pipelineModule() acessa window.THREE em runtime
+window.THREE = THREE;
+
 // === CONFIG ===
 const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
@@ -64,8 +70,7 @@ const showStatus = (msg, type = 'found') => {
 // === SUPABASE TARGETS ===
 const loadTargetsFromDB = async () => {
   try {
-    if (!window.supabase) throw new Error('Supabase CDN não carregou');
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
     const { data, error } = await sb
       .from('ar_targets')
       .select('target_name, label, target_image_url, video_url, video_aspect, target_properties')
@@ -267,7 +272,7 @@ const initAR = async () => {
 initAR();
 
 // === TAP TO START ===
-tapOverlay.addEventListener('click', async () => {
+tapOverlay.addEventListener('click', () => {
   allVideos.forEach(v => {
     v.muted = true;
     v.load();
@@ -275,16 +280,6 @@ tapOverlay.addEventListener('click', async () => {
     if (p) p.then(() => { v.pause(); v.currentTime = 0; v.muted = false; }).catch(() => {});
   });
   tapOverlay.classList.add('hidden');
-
-  // Verifica e solicita permissão de câmera antes do XR8.run()
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-    stream.getTracks().forEach(t => t.stop());
-  } catch (_) {
-    errorModal.classList.add('show');
-    return;
-  }
-
   try {
     const canvas = document.getElementById('camerafeed');
     canvas.width  = window.innerWidth;
