@@ -1,0 +1,371 @@
+/* 1. Zera as margens e esconde as barras de rolagem */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #000;
+}
+
+/* 2. Botão de "Voltar" discreto */
+.btn-voltar {
+  position: absolute;
+  top: 30px;
+  left: 20px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: rgba(0, 20, 50, 0.6);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+  text-decoration: none;
+  font-family: sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0, 102, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.btn-voltar:active {
+  transform: scale(0.95);
+  background: rgba(0, 102, 255, 0.3);
+}
+
+.btn-voltar svg {
+  width: 16px;
+  height: 16px;
+  stroke: #00d4ff;
+}
+
+/* 3. Permite que MindAR controle o overlay — apenas esconde loading/scanning UI */
+.mindar-ui-overlay {
+  /* NÃO usar display:none pois pode esconder o container da câmera */
+  /* uiLoading:no e uiScanning:no no a-scene já desativam a UI padrão */
+}
+
+/* Garante que o vídeo da câmera (inserido dinamicamente) preencha a tela e fique visível */
+video:not(#meuVideo) {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  object-fit: cover !important;
+  z-index: 0 !important;
+}
+
+/* 4. Força o canvas do A-Frame a preencher a tela por cima da câmera */
+#main-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 1;
+}
+
+/* Canvas 3D do A-Frame — transparente para mostrar câmera sob ele */
+.a-canvas {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  z-index: 2 !important;
+}
+
+/* 5. Tela de Carregamento & Overlay Inicial */
+#loading-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.1) 0%, #03060c 100%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.6s ease, visibility 0.6s;
+}
+
+#loading-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Mensagem pulsante de tap-to-start */
+#tap-to-start {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  color: #00d4ff;
+  font-weight: bold;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  animation: pulse-tap 1.5s infinite alternate;
+  font-family: sans-serif;
+  text-align: center;
+  padding: 0 20px;
+}
+
+#tap-to-start svg {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.8));
+}
+
+@keyframes pulse-tap {
+  from { opacity: 0.6; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1.05); }
+}
+
+.radar-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(0, 102, 255, 0.2);
+  border-top-color: #00d4ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+  box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  background: linear-gradient(90deg, #fff, #00d4ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: monospace;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: blink 1.5s infinite;
+  text-align: center;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 6. HUD Bordas Táticas (Scanner) */
+.hud-corners {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity 0.5s ease;
+}
+
+.hud-corners.hidden { opacity: 0; }
+
+.corn {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #00d4ff;
+  filter: drop-shadow(0 0 8px rgba(0, 102, 255, 0.8));
+}
+
+.corn.tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
+.corn.tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
+.corn.bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
+.corn.br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
+
+/* Linha de scan animada */
+.scan-line {
+  position: absolute;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+  animation: scan-anim 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 3;
+  border-radius: 50%;
+}
+
+@keyframes scan-anim {
+  0% { top: 20%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 80%; opacity: 0; }
+}
+
+/* 7. Controles Comerciais AR */
+#ar-controls {
+  position: absolute;
+  bottom: 30px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  z-index: 60;
+  pointer-events: auto;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+.ar-btn {
+  background: linear-gradient(135deg, rgba(8, 15, 25, 0.8) 0%, rgba(0, 102, 255, 0.1) 100%);
+  border: 2px solid rgba(0, 102, 255, 0.4);
+  padding: 12px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: sans-serif;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background-image: linear-gradient(90deg, #fff, #00d4ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ar-btn:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, rgba(0, 102, 255, 0.3) 0%, rgba(0, 212, 255, 0.2) 100%);
+  border-color: #00d4ff;
+}
+
+.ar-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: #00d4ff;
+}
+
+.ar-btn.outline svg {
+  fill: none;
+  stroke: #00d4ff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 8. Modal de Erro de Câmera */
+#error-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(11, 15, 25, 0.95);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease;
+  backdrop-filter: blur(10px);
+}
+
+#error-modal.show { opacity: 1; visibility: visible; }
+
+.error-box {
+  background: rgba(0, 102, 255, 0.05);
+  border: 1px solid rgba(0, 102, 255, 0.3);
+  padding: 30px;
+  border-radius: 16px;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.error-box h2 {
+  background: linear-gradient(90deg, #fff, #00d4ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-top: 0;
+  font-family: sans-serif;
+  font-size: 18px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.error-box p {
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: sans-serif;
+  margin-bottom: 25px;
+}
+
+.btn-reload {
+  background: linear-gradient(90deg, #0066ff, #00d4ff);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
+}
+
+.btn-reload:active { transform: scale(0.95); }
+
+/* AJUSTES PARA DESKTOP / TELAS MAIORES */
+@media (min-width: 768px) {
+  .ar-btn {
+    padding: 15px 30px;
+    font-size: 14px;
+    gap: 12px;
+  }
+  .ar-btn svg, .ar-btn img {
+    width: 20px;
+    height: 20px;
+  }
+  .btn-voltar {
+    font-size: 14px;
+    padding: 12px 24px;
+    top: 40px;
+    left: 40px;
+  }
+  .btn-voltar svg { width: 20px; height: 20px; }
+  .corn { width: 60px; height: 60px; border-width: 3px; }
+  .corn.tl { top: 40px; left: 40px; }
+  .corn.tr { top: 40px; right: 40px; }
+  .corn.bl { bottom: 40px; left: 40px; }
+  .corn.br { bottom: 40px; right: 40px; }
+  #ar-controls { bottom: 40px; gap: 25px; }
+}

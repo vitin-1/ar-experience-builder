@@ -1,0 +1,15 @@
+{
+  "imagePath": "./targets/hunters.png",
+  "metadata": {},
+  "name": "hunters",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 167,
+    "width": 480,
+    "height": 305,
+    "originalWidth": 480,
+    "originalHeight": 640,
+    "isRotated": false
+  }
+}
