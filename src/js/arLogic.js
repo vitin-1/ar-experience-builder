@@ -32,6 +32,20 @@ let initialPinchDistance = null;
 let initialUserScale     = 1.0;
 let pillTimer            = null;
 
+// === ANALYTICS ===
+const sbAnalytics = createClient(SUPABASE_URL, SUPABASE_KEY);
+const trackedSessions = {};
+const SCAN_COOLDOWN_MS = 15000;
+
+const trackScan = (targetName) => {
+  const now = Date.now();
+  if (trackedSessions[targetName] && now - trackedSessions[targetName] < SCAN_COOLDOWN_MS) return;
+  trackedSessions[targetName] = now;
+  try {
+    sbAnalytics.from('analytics').insert({ event_type: 'ar_scan', metadata: { target_name: targetName } }).then(() => {});
+  } catch (_) {}
+};
+
 // === PINCH TO ZOOM ===
 document.addEventListener('touchstart', (e) => {
   if (e.touches.length === 2) {
@@ -185,6 +199,7 @@ const showTarget = (detail) => {
   scannerHUD.classList.add('hidden');
   scanHint.classList.add('hidden');
   showStatus(targetLabels[name] || name, 'found');
+  trackScan(name);
 };
 
 const hideTarget = (name) => {

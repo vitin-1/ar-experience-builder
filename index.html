@@ -587,7 +587,32 @@
           });
         }
       });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      (function () {
+        const SB_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
+        const SB_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
+        let sb;
+        try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (_) {}
 
+        const trackLink = (linkId) => {
+          if (!sb) return;
+          sb.from('analytics').insert({ event_type: 'link_click', metadata: { link_id: linkId } }).then(() => {});
+        };
+
+        const linkMap = {
+          'card-aimbarcadora': 'instagram',
+          'card-sistema':      'sistema',
+          'card-site':         'site',
+          'card-whatsapp':     'whatsapp'
+        };
+
+        Object.entries(linkMap).forEach(([id, linkId]) => {
+          const el = document.getElementById(id);
+          if (el) el.addEventListener('click', () => trackLink(linkId));
+        });
+      })();
     </script>
   </body>
 </html>
