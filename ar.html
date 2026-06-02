@@ -250,6 +250,12 @@
     .ar-btn img, .ar-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
     .ar-btn svg { stroke: var(--accent); fill: none; }
 
+    /* Botão compacto só com ícone */
+    .ar-btn-icon {
+      flex: 0; min-width: 52px; width: 52px;
+      padding: 14px; border-radius: 14px;
+    }
+
     /* === ERROR MODAL === */
     #error-modal {
       position: fixed; inset: 0;
@@ -410,6 +416,15 @@
       <img src="/whatsapp.png" alt="" style="object-fit: contain;">
       WhatsApp
     </a>
+    <!-- Botão de troca de câmera -->
+    <button id="btn-flip-camera" class="ar-btn ar-btn-icon" title="Trocar câmera" aria-label="Trocar câmera">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 7h-3l-2-3H9L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+        <circle cx="12" cy="13" r="3"/>
+        <path d="M5 3 3 5l2 2"/>
+        <path d="M19 3l2 2-2 2"/>
+      </svg>
+    </button>
     <a href="https://huntersia.vercel.app/" target="_blank" rel="noopener noreferrer" class="ar-btn" id="site-btn">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" />

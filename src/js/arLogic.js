@@ -8,8 +8,8 @@ window.THREE = THREE;
 const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
 
-// Câmera frontal (selfie). false = câmera traseira (comportamento original).
-const FRONT_CAMERA = true;
+// Câmera frontal (selfie). Pode ser alternada em runtime via switchCamera().
+let isFrontCamera = true;
 
 // Fator de suavização do tracking (0 = máximo suave/lento, 1 = sem suavização).
 // 0.35 dá boa responsividade mantendo estabilidade para mãos em movimento.
@@ -172,7 +172,7 @@ const initXrScene = ({ scene }) => {
   // Câmera frontal: o 8th Wall exibe o feed já espelhado horizontalmente.
   // Espelhar a cena Three.js em X alinha os overlays 3D ao background.
   // DoubleSide no material garante que a inversão de winding não cullie a face.
-  if (FRONT_CAMERA) scene.scale.x = -1;
+  if (isFrontCamera) scene.scale.x = -1;
 
   Object.values(meshes).forEach(t => {
     const tex = new THREE.VideoTexture(t.video);
@@ -181,7 +181,7 @@ const initXrScene = ({ scene }) => {
     // Com scene.scale.x = -1, as UVs ficam invertidas horizontalmente.
     // Inverter repeat.x restaura a orientação correta do vídeo (texto legível,
     // rostos não espelhados).
-    if (FRONT_CAMERA) {
+    if (isFrontCamera) {
       tex.wrapS = THREE.RepeatWrapping;
       tex.repeat.set(-1, 1);
       tex.offset.set(1, 0);
@@ -334,6 +334,51 @@ const initAR = async () => {
 
 initAR();
 
+// === CAMERA SWITCH ===
+// Para trocar de câmera é necessário reiniciar o XR8 — não há API de troca em runtime.
+// Destrói as malhas existentes para que initXrScene as recrie corretamente
+// com as novas configurações de espelho/UV.
+const switchCamera = () => {
+  const { scene } = XR8.Threejs.xrScene();
+
+  Object.values(meshes).forEach(t => {
+    if (t.mesh) {
+      scene.remove(t.mesh);
+      t.mesh.geometry.dispose();
+      t.mesh.material.dispose();
+      t.mesh = null;
+    }
+    if (t.texture) { t.texture.dispose(); t.texture = null; }
+    t.video.pause();
+  });
+
+  Object.keys(smooth).forEach(k => delete smooth[k]);
+  userScaleMultiplier = 1.0;
+  scannerHUD.classList.remove('hidden');
+  scanHint.classList.remove('hidden');
+
+  isFrontCamera = !isFrontCamera;
+  scanHint.textContent = isFrontCamera ? 'Mostre a logo para a câmera' : 'Aponte para uma logo';
+
+  try { XR8.stop(); } catch (_) {}
+
+  setTimeout(() => {
+    try {
+      const canvas = document.getElementById('camerafeed');
+      XR8.run({
+        canvas,
+        allowedDevices: XR8.XrConfig.device().ANY,
+        ...(isFrontCamera && { cameraConfig: { direction: 'front' } })
+      });
+    } catch (_) { errorModal.classList.add('show'); }
+  }, 300);
+};
+
+document.getElementById('btn-flip-camera').addEventListener('click', () => {
+  // Só permite trocar se a sessão XR8 já estiver ativa
+  if (tapOverlay.classList.contains('hidden')) switchCamera();
+});
+
 // === TAP TO START ===
 tapOverlay.addEventListener('click', () => {
   allVideos.forEach(v => {
@@ -351,7 +396,7 @@ tapOverlay.addEventListener('click', () => {
       canvas,
       allowedDevices: XR8.XrConfig.device().ANY,
       // Força câmera frontal (selfie). Remove a propriedade para voltar ao padrão (traseira).
-      ...(FRONT_CAMERA && { cameraConfig: { direction: 'front' } })
+      ...(isFrontCamera && { cameraConfig: { direction: 'front' } })
     });
   } catch (_) {
     errorModal.classList.add('show');
