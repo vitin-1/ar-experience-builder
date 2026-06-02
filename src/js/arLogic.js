@@ -8,23 +8,33 @@ window.THREE = THREE;
 const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
 
+// Câmera frontal (selfie). false = câmera traseira (comportamento original).
+const FRONT_CAMERA = true;
+
+// Fator de suavização do tracking (0 = máximo suave/lento, 1 = sem suavização).
+// 0.35 dá boa responsividade mantendo estabilidade para mãos em movimento.
+const SMOOTH_ALPHA = 0.35;
+
 // === ELEMENTS ===
-const tapOverlay    = document.getElementById('tap-overlay');
+const tapOverlay     = document.getElementById('tap-overlay');
 const loadingSpinner = document.getElementById('loading-spinner');
-const loadingText   = document.getElementById('loading-text');
-const tapIcon       = document.getElementById('tap-icon');
-const tapText       = document.getElementById('tap-text');
-const tapSub        = document.getElementById('tap-sub');
-const errorModal    = document.getElementById('error-modal');
-const scannerHUD    = document.getElementById('scanner-hud');
-const scanHint      = document.getElementById('scan-hint');
-const statusPill    = document.getElementById('status-pill');
-const statusTextEl  = document.getElementById('status-text');
+const loadingText    = document.getElementById('loading-text');
+const tapIcon        = document.getElementById('tap-icon');
+const tapText        = document.getElementById('tap-text');
+const tapSub         = document.getElementById('tap-sub');
+const errorModal     = document.getElementById('error-modal');
+const scannerHUD     = document.getElementById('scanner-hud');
+const scanHint       = document.getElementById('scan-hint');
+const statusPill     = document.getElementById('status-pill');
+const statusTextEl   = document.getElementById('status-text');
 const videoContainer = document.getElementById('video-container');
 
 // === STATE ===
 const meshes       = {};
 const targetLabels = {};
+// Poses suavizadas por alvo — resetadas quando o alvo é perdido para evitar
+// interpolação de posição antiga ao ser reencontrado.
+const smooth       = {};
 let imageTargetData      = [];
 let allVideos            = [];
 let userScaleMultiplier  = 1.0;
@@ -159,9 +169,24 @@ const createRoundedGeometry = (width, height, radius) => {
 
 // === THREE.JS SCENE INIT ===
 const initXrScene = ({ scene }) => {
+  // Câmera frontal: o 8th Wall exibe o feed já espelhado horizontalmente.
+  // Espelhar a cena Three.js em X alinha os overlays 3D ao background.
+  // DoubleSide no material garante que a inversão de winding não cullie a face.
+  if (FRONT_CAMERA) scene.scale.x = -1;
+
   Object.values(meshes).forEach(t => {
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
+
+    // Com scene.scale.x = -1, as UVs ficam invertidas horizontalmente.
+    // Inverter repeat.x restaura a orientação correta do vídeo (texto legível,
+    // rostos não espelhados).
+    if (FRONT_CAMERA) {
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.repeat.set(-1, 1);
+      tex.offset.set(1, 0);
+    }
+
     const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
     const geo = createRoundedGeometry(1, t.aspectHeight, 0.05);
     const mesh = new THREE.Mesh(geo, mat);
@@ -178,9 +203,23 @@ const showTarget = (detail) => {
   const t = meshes[name];
   if (!t) return;
 
-  t.mesh.position.copy(position);
-  t.mesh.quaternion.copy(rotation);
+  // Primeira detecção: snapping direto para evitar interpolação de posição zero.
+  // Detecções subsequentes: lerp/slerp para suavizar motion blur e instabilidade
+  // causados pelo movimento das mãos segurando a logo.
+  if (!smooth[name]) {
+    smooth[name] = {
+      pos: position.clone(),
+      rot: rotation.clone()
+    };
+  } else {
+    smooth[name].pos.lerp(position, SMOOTH_ALPHA);
+    smooth[name].rot.slerp(rotation, SMOOTH_ALPHA);
+  }
+
+  t.mesh.position.copy(smooth[name].pos);
+  t.mesh.quaternion.copy(smooth[name].rot);
   t.mesh.scale.setScalar(scale * userScaleMultiplier);
+
   if (!t.mesh.visible) t.mesh.visible = true;
 
   const tryPlay = () => {
@@ -207,6 +246,10 @@ const hideTarget = (name) => {
   if (!t) return;
   t.mesh.visible = false;
   t.video.pause();
+
+  // Limpar o estado suavizado para que a próxima detecção faça snap
+  // e não interpole a partir da última posição conhecida.
+  delete smooth[name];
 
   const anyVisible = Object.values(meshes).some(m => m.mesh?.visible);
   if (!anyVisible) {
@@ -254,7 +297,12 @@ const initAR = async () => {
   });
 
   const onxrloaded = () => {
-    XR8.XrController.configure({ imageTargetData });
+    XR8.XrController.configure({
+      imageTargetData,
+      // Desativar world tracking (SLAM) quando só precisamos de image targets.
+      // Economiza CPU/GPU significativo — crítico para câmera frontal hand-held.
+      disableWorldTracking: true
+    });
     XR8.addCameraPipelineModules([
       XR8.GlTextureRenderer.pipelineModule(),
       XR8.Threejs.pipelineModule(),
@@ -299,7 +347,12 @@ tapOverlay.addEventListener('click', () => {
     const canvas = document.getElementById('camerafeed');
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    XR8.run({ canvas, allowedDevices: XR8.XrConfig.device().ANY });
+    XR8.run({
+      canvas,
+      allowedDevices: XR8.XrConfig.device().ANY,
+      // Força câmera frontal (selfie). Remove a propriedade para voltar ao padrão (traseira).
+      ...(FRONT_CAMERA && { cameraConfig: { direction: 'front' } })
+    });
   } catch (_) {
     errorModal.classList.add('show');
   }
