@@ -206,17 +206,26 @@ const showTarget = (detail) => {
   const t = meshes[name];
   if (!t || !t.mesh) return;
 
+  // O engine open source pode retornar plain objects {x,y,z} em vez de
+  // instâncias Three.js — garantimos o tipo correto antes de chamar clone/lerp/slerp.
+  const pos = (position && typeof position.clone === 'function')
+    ? position
+    : new THREE.Vector3(position?.x ?? 0, position?.y ?? 0, position?.z ?? 0);
+  const rot = (rotation && typeof rotation.clone === 'function')
+    ? rotation
+    : new THREE.Quaternion(rotation?.x ?? 0, rotation?.y ?? 0, rotation?.z ?? 0, rotation?.w ?? 1);
+
   // Primeira detecção: snapping direto para evitar interpolação de posição zero.
   // Detecções subsequentes: lerp/slerp para suavizar motion blur e instabilidade
   // causados pelo movimento das mãos segurando a logo.
   if (!smooth[name]) {
     smooth[name] = {
-      pos: position.clone(),
-      rot: rotation.clone()
+      pos: pos.clone(),
+      rot: rot.clone()
     };
   } else {
-    smooth[name].pos.lerp(position, SMOOTH_ALPHA);
-    smooth[name].rot.slerp(rotation, SMOOTH_ALPHA);
+    smooth[name].pos.lerp(pos, SMOOTH_ALPHA);
+    smooth[name].rot.slerp(rot, SMOOTH_ALPHA);
   }
 
   t.mesh.position.copy(smooth[name].pos);
@@ -321,7 +330,10 @@ const initAR = async () => {
           // derrube uma sessão que já estava ativa.
           if (status === 'failed' && !cameraReady) errorModal.classList.add('show');
         },
-        onException: () => errorModal.classList.add('show'),
+        onException: (err) => {
+          console.error('[AR] XR8 onException:', err);
+          errorModal.classList.add('show');
+        },
         listeners: [
           { event: 'reality.imagefound',   process: e => showTarget(e.detail) },
           { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
