@@ -41,6 +41,9 @@ let userScaleMultiplier  = 1.0;
 let initialPinchDistance = null;
 let initialUserScale     = 1.0;
 let pillTimer            = null;
+// true após 'hasVideo' — impede que status 'failed' transitório (que o 8th Wall
+// pode disparar durante detecção de target na câmera frontal) mostre o modal.
+let cameraReady = false;
 
 // === ANALYTICS ===
 const sbAnalytics = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -201,7 +204,7 @@ const initXrScene = ({ scene }) => {
 const showTarget = (detail) => {
   const { name, position, rotation, scale } = detail;
   const t = meshes[name];
-  if (!t) return;
+  if (!t || !t.mesh) return;
 
   // Primeira detecção: snapping direto para evitar interpolação de posição zero.
   // Detecções subsequentes: lerp/slerp para suavizar motion blur e instabilidade
@@ -243,7 +246,7 @@ const showTarget = (detail) => {
 
 const hideTarget = (name) => {
   const t = meshes[name];
-  if (!t) return;
+  if (!t || !t.mesh) return;
   t.mesh.visible = false;
   t.video.pause();
 
@@ -312,7 +315,11 @@ const initAR = async () => {
         onStart: () => initXrScene(XR8.Threejs.xrScene()),
         onUpdate: () => {},
         onCameraStatusChange: ({ status }) => {
-          if (status === 'failed') errorModal.classList.add('show');
+          if (status === 'hasVideo') cameraReady = true;
+          // Só mostra o modal se a câmera nunca chegou a funcionar: evita
+          // que um 'failed' transitório (câmera frontal + detecção de target)
+          // derrube uma sessão que já estava ativa.
+          if (status === 'failed' && !cameraReady) errorModal.classList.add('show');
         },
         onException: () => errorModal.classList.add('show'),
         listeners: [
@@ -360,6 +367,7 @@ const switchCamera = () => {
   isFrontCamera = !isFrontCamera;
   scanHint.textContent = isFrontCamera ? 'Mostre a logo para a câmera' : 'Aponte para uma logo';
 
+  cameraReady = false;
   try { XR8.stop(); } catch (_) {}
 
   setTimeout(() => {
