@@ -323,7 +323,7 @@ const initAR = async () => {
       XR8.XrController.pipelineModule(),
       {
         name: 'hunters-ar',
-        onStart: () => initXrScene(XR8.Threejs.xrScene()),
+        onStart: () => {},
         onUpdate: () => {},
         onCameraStatusChange: ({ status }) => {
           if (status === 'hasVideo') cameraReady = true;
@@ -337,6 +337,13 @@ const initAR = async () => {
           errorModal.classList.add('show');
         },
         listeners: [
+          // reality.cameraconfigured garante que XR8.Threejs.xrScene() já está
+          // pronto antes de inicializar a cena — no open-source o objeto de cena
+          // é criado de forma assíncrona e pode ser null durante onStart.
+          { event: 'reality.cameraconfigured', process: () => {
+            const xs = XR8.Threejs.xrScene();
+            if (xs && !xs._huntersInit) { xs._huntersInit = true; initXrScene(xs); }
+          }},
           { event: 'reality.imagefound',   process: e => showTarget(e.detail) },
           { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
           { event: 'reality.imagelost',    process: e => hideTarget(e.detail.name) }
