@@ -45,8 +45,11 @@ let pillTimer            = null;
 // pode disparar durante detecção de target na câmera frontal) mostre o modal.
 let cameraReady = false;
 
+// === SUPABASE CLIENT (singleton) ===
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // === ANALYTICS ===
-const sbAnalytics = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sbAnalytics = sb;
 const trackedSessions = {};
 const SCAN_COOLDOWN_MS = 15000;
 
@@ -97,7 +100,6 @@ const showStatus = (msg, type = 'found') => {
 // === SUPABASE TARGETS ===
 const loadTargetsFromDB = async () => {
   try {
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
     const { data, error } = await sb
       .from('ar_targets')
       .select('target_name, label, target_image_url, video_url, video_aspect, target_properties')
@@ -348,7 +350,7 @@ const initAR = async () => {
     tapSub.style.display  = 'block';
   };
 
-  window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+  window.addEventListener('xrloaded', onxrloaded);
 };
 
 initAR();
