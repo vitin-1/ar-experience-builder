@@ -357,7 +357,7 @@ const initAR = async () => {
     tapSub.style.display  = 'block';
   };
 
-  window.addEventListener('xrloaded', onxrloaded);
+  window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
 };
 
 initAR();
