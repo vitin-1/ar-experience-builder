@@ -233,6 +233,7 @@ const showTarget = (detail) => {
   if (!t.mesh.visible) t.mesh.visible = true;
 
   const tryPlay = () => {
+    if (!t.mesh || !t.mesh.visible) return;
     if (!t.video.paused) return;
     const p = t.video.play();
     if (p) p.catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
