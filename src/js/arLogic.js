@@ -237,6 +237,7 @@ const showTarget = (detail) => {
   if (!t.mesh.visible) t.mesh.visible = true;
 
   const tryPlay = () => {
+    if (!t.video.paused) return;
     const p = t.video.play();
     if (p) p.catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
   };
@@ -394,6 +395,7 @@ const switchCamera = () => {
   setTimeout(() => {
     try {
       const canvas = document.getElementById('camerafeed');
+      XR8.XrController.configure({ imageTargetData, disableWorldTracking: true });
       XR8.run({
         canvas,
         allowedDevices: XR8.XrConfig.device().ANY,
