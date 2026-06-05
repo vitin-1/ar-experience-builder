@@ -41,9 +41,15 @@ let userScaleMultiplier  = 1.0;
 let initialPinchDistance = null;
 let initialUserScale     = 1.0;
 let pillTimer            = null;
+// true após 'hasVideo' — impede que status 'failed' transitório (que o 8th Wall
+// pode disparar durante detecção de target na câmera frontal) mostre o modal.
+let cameraReady = false;
+
+// === SUPABASE CLIENT (singleton) ===
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // === ANALYTICS ===
-const sbAnalytics = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sbAnalytics = sb;
 const trackedSessions = {};
 const SCAN_COOLDOWN_MS = 15000;
 
@@ -94,7 +100,6 @@ const showStatus = (msg, type = 'found') => {
 // === SUPABASE TARGETS ===
 const loadTargetsFromDB = async () => {
   try {
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
     const { data, error } = await sb
       .from('ar_targets')
       .select('target_name, label, target_image_url, video_url, video_aspect, target_properties')
@@ -169,23 +174,9 @@ const createRoundedGeometry = (width, height, radius) => {
 
 // === THREE.JS SCENE INIT ===
 const initXrScene = ({ scene }) => {
-  // Câmera frontal: o 8th Wall exibe o feed já espelhado horizontalmente.
-  // Espelhar a cena Three.js em X alinha os overlays 3D ao background.
-  // DoubleSide no material garante que a inversão de winding não cullie a face.
-  if (isFrontCamera) scene.scale.x = -1;
-
   Object.values(meshes).forEach(t => {
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
-
-    // Com scene.scale.x = -1, as UVs ficam invertidas horizontalmente.
-    // Inverter repeat.x restaura a orientação correta do vídeo (texto legível,
-    // rostos não espelhados).
-    if (isFrontCamera) {
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.repeat.set(-1, 1);
-      tex.offset.set(1, 0);
-    }
 
     const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
     const geo = createRoundedGeometry(1, t.aspectHeight, 0.05);
@@ -201,19 +192,28 @@ const initXrScene = ({ scene }) => {
 const showTarget = (detail) => {
   const { name, position, rotation, scale } = detail;
   const t = meshes[name];
-  if (!t) return;
+  if (!t || !t.mesh) return;
+
+  // O engine open source pode retornar plain objects {x,y,z} em vez de
+  // instâncias Three.js — garantimos o tipo correto antes de chamar clone/lerp/slerp.
+  const pos = (position && typeof position.clone === 'function')
+    ? position
+    : new THREE.Vector3(position?.x ?? 0, position?.y ?? 0, position?.z ?? 0);
+  const rot = (rotation && typeof rotation.clone === 'function')
+    ? rotation
+    : new THREE.Quaternion(rotation?.x ?? 0, rotation?.y ?? 0, rotation?.z ?? 0, rotation?.w ?? 1);
 
   // Primeira detecção: snapping direto para evitar interpolação de posição zero.
   // Detecções subsequentes: lerp/slerp para suavizar motion blur e instabilidade
   // causados pelo movimento das mãos segurando a logo.
   if (!smooth[name]) {
     smooth[name] = {
-      pos: position.clone(),
-      rot: rotation.clone()
+      pos: pos.clone(),
+      rot: rot.clone()
     };
   } else {
-    smooth[name].pos.lerp(position, SMOOTH_ALPHA);
-    smooth[name].rot.slerp(rotation, SMOOTH_ALPHA);
+    smooth[name].pos.lerp(pos, SMOOTH_ALPHA);
+    smooth[name].rot.slerp(rot, SMOOTH_ALPHA);
   }
 
   t.mesh.position.copy(smooth[name].pos);
@@ -223,6 +223,7 @@ const showTarget = (detail) => {
   if (!t.mesh.visible) t.mesh.visible = true;
 
   const tryPlay = () => {
+    if (!t.video.paused) return;
     const p = t.video.play();
     if (p) p.catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
   };
@@ -243,7 +244,7 @@ const showTarget = (detail) => {
 
 const hideTarget = (name) => {
   const t = meshes[name];
-  if (!t) return;
+  if (!t || !t.mesh) return;
   t.mesh.visible = false;
   t.video.pause();
 
@@ -309,13 +310,27 @@ const initAR = async () => {
       XR8.XrController.pipelineModule(),
       {
         name: 'hunters-ar',
-        onStart: () => initXrScene(XR8.Threejs.xrScene()),
+        onStart: () => {},
         onUpdate: () => {},
         onCameraStatusChange: ({ status }) => {
-          if (status === 'failed') errorModal.classList.add('show');
+          if (status === 'hasVideo') cameraReady = true;
+          // Só mostra o modal se a câmera nunca chegou a funcionar: evita
+          // que um 'failed' transitório (câmera frontal + detecção de target)
+          // derrube uma sessão que já estava ativa.
+          if (status === 'failed' && !cameraReady) errorModal.classList.add('show');
         },
-        onException: () => errorModal.classList.add('show'),
+        onException: (err) => {
+          console.error('[AR] XR8 onException:', err);
+          errorModal.classList.add('show');
+        },
         listeners: [
+          // reality.cameraconfigured garante que XR8.Threejs.xrScene() já está
+          // pronto antes de inicializar a cena — no open-source o objeto de cena
+          // é criado de forma assíncrona e pode ser null durante onStart.
+          { event: 'reality.cameraconfigured', process: () => {
+            const xs = XR8.Threejs.xrScene();
+            if (xs && !xs._huntersInit) { xs._huntersInit = true; initXrScene(xs); }
+          }},
           { event: 'reality.imagefound',   process: e => showTarget(e.detail) },
           { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
           { event: 'reality.imagelost',    process: e => hideTarget(e.detail.name) }
@@ -360,11 +375,13 @@ const switchCamera = () => {
   isFrontCamera = !isFrontCamera;
   scanHint.textContent = isFrontCamera ? 'Mostre a logo para a câmera' : 'Aponte para uma logo';
 
+  cameraReady = false;
   try { XR8.stop(); } catch (_) {}
 
   setTimeout(() => {
     try {
       const canvas = document.getElementById('camerafeed');
+      XR8.XrController.configure({ imageTargetData, disableWorldTracking: true });
       XR8.run({
         canvas,
         allowedDevices: XR8.XrConfig.device().ANY,
