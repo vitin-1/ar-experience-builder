@@ -174,23 +174,9 @@ const createRoundedGeometry = (width, height, radius) => {
 
 // === THREE.JS SCENE INIT ===
 const initXrScene = ({ scene }) => {
-  // Câmera frontal: o 8th Wall exibe o feed já espelhado horizontalmente.
-  // Espelhar a cena Three.js em X alinha os overlays 3D ao background.
-  // DoubleSide no material garante que a inversão de winding não cullie a face.
-  if (isFrontCamera) scene.scale.x = -1;
-
   Object.values(meshes).forEach(t => {
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
-
-    // Com scene.scale.x = -1, as UVs ficam invertidas horizontalmente.
-    // Inverter repeat.x restaura a orientação correta do vídeo (texto legível,
-    // rostos não espelhados).
-    if (isFrontCamera) {
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.repeat.set(-1, 1);
-      tex.offset.set(1, 0);
-    }
 
     const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
     const geo = createRoundedGeometry(1, t.aspectHeight, 0.05);
