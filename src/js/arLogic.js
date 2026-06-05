@@ -174,9 +174,19 @@ const createRoundedGeometry = (width, height, radius) => {
 
 // === THREE.JS SCENE INIT ===
 const initXrScene = ({ scene }) => {
+  // Câmera frontal: espelha a cena em X para o feed ficar como espelho (igual
+  // qualquer app selfie). O UV do vídeo é compensado para o conteúdo não inverter.
+  if (isFrontCamera) scene.scale.x = -1;
+
   Object.values(meshes).forEach(t => {
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
+
+    if (isFrontCamera) {
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.repeat.set(-1, 1);
+      tex.offset.set(1, 0);
+    }
 
     const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
     const geo = createRoundedGeometry(1, t.aspectHeight, 0.05);
