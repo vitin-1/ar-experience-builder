@@ -25,6 +25,7 @@ let userScaleMultiplier  = 1.0;
 let initialPinchDistance = null;
 let initialUserScale     = 1.0;
 let pillTimer            = null;
+let currentCameraDir     = 'back';
 
 // === PINCH TO ZOOM ===
 document.addEventListener('touchstart', (e) => {
@@ -234,7 +235,10 @@ const initAR = async () => {
   });
 
   const onxrloaded = () => {
-    XR8.XrController.configure({ imageTargetData });
+    XR8.XrController.configure({
+      imageTargetData,
+      cameraConfig: { direction: XR8.XrConfig.camera().BACK }
+    });
     XR8.addCameraPipelineModules([
       XR8.GlTextureRenderer.pipelineModule(),
       XR8.Threejs.pipelineModule(),
@@ -271,6 +275,19 @@ const showCameraError = () => {
 
 window.addEventListener('xrerror', showCameraError);
 
+// === FLIP CAMERA ===
+const btnFlipCamera = document.getElementById('btn-flip-camera');
+
+btnFlipCamera.addEventListener('click', async () => {
+  const nextDir = currentCameraDir === 'back'
+    ? XR8.XrConfig.camera().FRONT
+    : XR8.XrConfig.camera().BACK;
+  try {
+    await XR8.reconfigureSession({ cameraConfig: { direction: nextDir } });
+    currentCameraDir = currentCameraDir === 'back' ? 'front' : 'back';
+  } catch (_) {}
+});
+
 // === TAP TO START ===
 tapOverlay.addEventListener('click', () => {
   allVideos.forEach(v => {
@@ -280,6 +297,7 @@ tapOverlay.addEventListener('click', () => {
     if (p) p.then(() => { v.pause(); v.currentTime = 0; v.muted = false; }).catch(() => {});
   });
   tapOverlay.classList.add('hidden');
+  btnFlipCamera.style.display = 'flex';
 
   // Intercepta location.reload() para evitar loop infinito de reload do XR8
   const _origReload = location.reload.bind(location);
