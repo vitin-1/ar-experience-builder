@@ -253,6 +253,7 @@
     }
     .ar-btn img, .ar-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
     .ar-btn svg { stroke: var(--accent); fill: none; }
+    button.ar-btn { cursor: pointer; outline: none; }
 
     /* === ERROR MODAL === */
     #error-modal {
@@ -299,21 +300,8 @@
       .corn { width: 48px; height: 48px; }
     }
 
-    /* === FLIP CAMERA BUTTON === */
-    .btn-flip-cam {
-      position: fixed; bottom: 100px; right: 16px;
-      margin-bottom: env(safe-area-inset-bottom, 0px);
-      z-index: 100;
-      width: 46px; height: 46px;
-      background: var(--glass); border: 1px solid var(--glass-border);
-      color: var(--accent); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-      cursor: pointer; transition: all 0.25s ease;
-    }
-    .btn-flip-cam:active { transform: scale(0.93); background: rgba(0,102,255,0.25); }
-    .btn-flip-cam svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    /* === FRONT CAMERA MIRROR === */
+    #camerafeed.front-cam { transform: scaleX(-1); }
 
     /* === ADAPTIVE PERFORMANCE: LOW-END DEVICES === */
     body.perf-low .btn-voltar,
@@ -424,21 +412,20 @@
     Voltar
   </a>
 
-  <!-- Flip Camera Button (aparece após iniciar AR) -->
-  <button id="btn-flip-camera" class="btn-flip-cam" style="display:none" aria-label="Virar câmera">
-    <svg viewBox="0 0 24 24">
-      <path d="M20 7h-3l-2-3H9L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/>
-      <path d="M15 10a3 3 0 1 1-6 0"/>
-      <path d="m9 7 3-3 3 3"/>
-    </svg>
-  </button>
-
   <!-- Bottom Controls -->
   <div id="ar-controls">
     <a href="https://wa.me/5521997154499?text=Ol%C3%A1%2C%20vim%20pela%20experi%C3%AAncia%20AR%20da%20Hunters!" target="_blank" rel="noopener noreferrer" class="ar-btn">
       <img src="/whatsapp.png" alt="" style="object-fit: contain;">
       WhatsApp
     </a>
+    <button id="btn-flip-camera" class="ar-btn" style="display:none" aria-label="Virar câmera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 7h-3l-2-3H9L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/>
+        <path d="M15 10a3 3 0 1 1-6 0"/>
+        <path d="m9 7 3-3 3 3"/>
+      </svg>
+      Câmera
+    </button>
     <a href="https://huntersia.vercel.app/" target="_blank" rel="noopener noreferrer" class="ar-btn" id="site-btn">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" />

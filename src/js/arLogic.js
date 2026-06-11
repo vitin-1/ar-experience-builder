@@ -286,6 +286,7 @@ const showCameraError = () => {
 
 // === FLIP CAMERA ===
 const btnFlipCamera = document.getElementById('btn-flip-camera');
+const arCanvas = document.getElementById('camerafeed');
 
 btnFlipCamera.addEventListener('click', async () => {
   const nextDir = currentCameraDir === 'back'
@@ -294,6 +295,7 @@ btnFlipCamera.addEventListener('click', async () => {
   try {
     await XR8.reconfigureSession({ cameraConfig: { direction: nextDir } });
     currentCameraDir = currentCameraDir === 'back' ? 'front' : 'back';
+    arCanvas.classList.toggle('front-cam', currentCameraDir === 'front');
   } catch (_) {}
 });
 
