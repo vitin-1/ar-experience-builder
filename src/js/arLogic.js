@@ -235,10 +235,7 @@ const initAR = async () => {
   });
 
   const onxrloaded = () => {
-    XR8.XrController.configure({
-      imageTargetData,
-      cameraConfig: { direction: XR8.XrConfig.camera().BACK }
-    });
+    XR8.XrController.configure({ imageTargetData });
     XR8.addCameraPipelineModules([
       XR8.GlTextureRenderer.pipelineModule(),
       XR8.Threejs.pipelineModule(),
@@ -307,7 +304,11 @@ tapOverlay.addEventListener('click', () => {
     const canvas = document.getElementById('camerafeed');
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    XR8.run({ canvas, allowedDevices: XR8.XrConfig.device().ANY });
+    XR8.run({
+      canvas,
+      allowedDevices: XR8.XrConfig.device().ANY,
+      cameraConfig: { direction: XR8.XrConfig.camera().BACK }
+    });
   } catch (_) {
     errorModal.classList.add('show');
     location.reload = _origReload;
