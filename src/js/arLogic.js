@@ -63,32 +63,40 @@ const showStatus = (msg, type = 'found') => {
 };
 
 // === SUPABASE TARGETS ===
+const DB_FALLBACK = [
+  {
+    target_name: 'hunters', label: 'Hunters',
+    target_image_url: '/targets/hunters.png', video_url: '/video.mp4',
+    video_aspect: '16:9',
+    target_properties: { left: 0, top: 167, width: 480, height: 305, originalWidth: 480, originalHeight: 640, isRotated: false }
+  },
+  {
+    target_name: 'navegue', label: 'Navegue Seguro',
+    target_image_url: '/targets/navegue.png', video_url: '/video-neymar.mp4',
+    video_aspect: '9:16',
+    target_properties: { left: 15, top: 0, width: 449, height: 640, originalWidth: 480, originalHeight: 640, isRotated: false }
+  }
+];
+
 const loadTargetsFromDB = async () => {
   try {
     if (!window.supabase) throw new Error('Supabase CDN não carregou');
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const { data, error } = await sb
+
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 5000)
+    );
+    const query = sb
       .from('ar_targets')
       .select('target_name, label, target_image_url, video_url, video_aspect, target_properties')
       .eq('active', true);
+
+    const { data, error } = await Promise.race([query, timeout]);
     if (error) throw error;
     return data || [];
   } catch (err) {
     console.warn('Erro ao carregar targets, usando fallback:', err);
-    return [
-      {
-        target_name: 'hunters', label: 'Hunters',
-        target_image_url: '/targets/hunters.png', video_url: '/video.mp4',
-        video_aspect: '16:9',
-        target_properties: { left: 0, top: 167, width: 480, height: 305, originalWidth: 480, originalHeight: 640, isRotated: false }
-      },
-      {
-        target_name: 'navegue', label: 'Navegue Seguro',
-        target_image_url: '/targets/navegue.png', video_url: '/video-neymar.mp4',
-        video_aspect: '9:16',
-        target_properties: { left: 15, top: 0, width: 449, height: 640, originalWidth: 480, originalHeight: 640, isRotated: false }
-      }
-    ];
+    return DB_FALLBACK;
   }
 };
 
@@ -235,22 +243,29 @@ const initAR = async () => {
   });
 
   const onxrloaded = () => {
-    XR8.XrController.configure({ imageTargetData });
-    XR8.addCameraPipelineModules([
-      XR8.GlTextureRenderer.pipelineModule(),
-      XR8.Threejs.pipelineModule(),
-      XR8.XrController.pipelineModule(),
-      {
-        name: 'hunters-ar',
-        onStart: () => initXrScene(XR8.Threejs.xrScene()),
-        onUpdate: () => {},
-        listeners: [
-          { event: 'reality.imagefound',   process: e => showTarget(e.detail) },
-          { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
-          { event: 'reality.imagelost',    process: e => hideTarget(e.detail.name) }
-        ]
-      }
-    ]);
+    try {
+      XR8.XrController.configure({ imageTargetData });
+      XR8.addCameraPipelineModules([
+        XR8.GlTextureRenderer.pipelineModule(),
+        XR8.Threejs.pipelineModule(),
+        XR8.XrController.pipelineModule(),
+        {
+          name: 'hunters-ar',
+          onStart: () => initXrScene(XR8.Threejs.xrScene()),
+          onUpdate: () => {},
+          onError: () => showCameraError(),
+          listeners: [
+            { event: 'reality.imagefound',   process: e => showTarget(e.detail) },
+            { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
+            { event: 'reality.imagelost',    process: e => hideTarget(e.detail.name) }
+          ]
+        }
+      ]);
+    } catch (err) {
+      console.error('[AR] Falha ao inicializar pipeline:', err);
+      showCameraError();
+      return;
+    }
     loadingSpinner.style.display = 'none';
     loadingText.style.display   = 'none';
     tapIcon.style.display = 'flex';
@@ -267,10 +282,7 @@ initAR();
 const showCameraError = () => {
   tapOverlay.classList.add('hidden');
   errorModal.classList.add('show');
-  try { XR8.stop(); } catch (_) {}
 };
-
-window.addEventListener('xrerror', showCameraError);
 
 // === FLIP CAMERA ===
 const btnFlipCamera = document.getElementById('btn-flip-camera');
@@ -296,10 +308,6 @@ tapOverlay.addEventListener('click', () => {
   tapOverlay.classList.add('hidden');
   btnFlipCamera.style.display = 'flex';
 
-  // Intercepta location.reload() para evitar loop infinito de reload do XR8
-  const _origReload = location.reload.bind(location);
-  location.reload = () => { showCameraError(); };
-
   try {
     const canvas = document.getElementById('camerafeed');
     canvas.width  = window.innerWidth;
@@ -310,8 +318,7 @@ tapOverlay.addEventListener('click', () => {
       cameraConfig: { direction: XR8.XrConfig.camera().BACK }
     });
   } catch (_) {
-    errorModal.classList.add('show');
-    location.reload = _origReload;
+    showCameraError();
   }
 });
 
@@ -345,10 +352,10 @@ document.querySelectorAll('.ar-btn').forEach(btn =>
   btn.addEventListener('click', () => Object.values(meshes).forEach(t => t.video.pause()))
 );
 
-// 25s timeout — prevents infinite black screen if XR8 never fires
+// 12s timeout — se XR8 não carregar, mostra erro em vez de travar para sempre
 setTimeout(() => {
   if (!tapOverlay.classList.contains('hidden')) {
     tapOverlay.classList.add('hidden');
     errorModal.classList.add('show');
   }
-}, 25000);
+}, 12000);
