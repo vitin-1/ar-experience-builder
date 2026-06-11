@@ -262,6 +262,15 @@ const initAR = async () => {
 
 initAR();
 
+// === CAMERA ERROR GUARD: previne reload infinito do 8th Wall ===
+const showCameraError = () => {
+  tapOverlay.classList.add('hidden');
+  errorModal.classList.add('show');
+  try { XR8.stop(); } catch (_) {}
+};
+
+window.addEventListener('xrerror', showCameraError);
+
 // === TAP TO START ===
 tapOverlay.addEventListener('click', () => {
   allVideos.forEach(v => {
@@ -271,6 +280,11 @@ tapOverlay.addEventListener('click', () => {
     if (p) p.then(() => { v.pause(); v.currentTime = 0; v.muted = false; }).catch(() => {});
   });
   tapOverlay.classList.add('hidden');
+
+  // Intercepta location.reload() para evitar loop infinito de reload do XR8
+  const _origReload = location.reload.bind(location);
+  location.reload = () => { showCameraError(); };
+
   try {
     const canvas = document.getElementById('camerafeed');
     canvas.width  = window.innerWidth;
@@ -278,6 +292,7 @@ tapOverlay.addEventListener('click', () => {
     XR8.run({ canvas, allowedDevices: XR8.XrConfig.device().ANY });
   } catch (_) {
     errorModal.classList.add('show');
+    location.reload = _origReload;
   }
 });
 
