@@ -222,7 +222,7 @@ html, body {
 .insta-badge-link:hover { transform: scale(1.1); opacity: 1; }
 .insta-badge-link:active { transform: scale(0.95); }
 .insta-badge-icon {
-  width: 36px; height: 36px;
+  width: 22px; height: 22px;
   object-fit: contain;
   border-radius: 50%;
 }
