@@ -1,31 +1,59 @@
+import * as THREE from 'three';
+import { createClient } from '@supabase/supabase-js';
+
+window.THREE = THREE;
+
 // === CONFIG ===
 const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
 
+let isFrontCamera = false;
+
+// Suavização do tracking — 0 = máximo suave, 1 = sem suavização
+const SMOOTH_ALPHA = 0.35;
+
 // === ELEMENTS ===
-const tapOverlay    = document.getElementById('tap-overlay');
+const tapOverlay     = document.getElementById('tap-overlay');
 const loadingSpinner = document.getElementById('loading-spinner');
-const loadingText   = document.getElementById('loading-text');
-const tapIcon       = document.getElementById('tap-icon');
-const tapText       = document.getElementById('tap-text');
-const tapSub        = document.getElementById('tap-sub');
-const errorModal    = document.getElementById('error-modal');
-const scannerHUD    = document.getElementById('scanner-hud');
-const scanHint      = document.getElementById('scan-hint');
-const statusPill    = document.getElementById('status-pill');
-const statusTextEl  = document.getElementById('status-text');
+const loadingText    = document.getElementById('loading-text');
+const tapIcon        = document.getElementById('tap-icon');
+const tapText        = document.getElementById('tap-text');
+const tapSub         = document.getElementById('tap-sub');
+const errorModal     = document.getElementById('error-modal');
+const scannerHUD     = document.getElementById('scanner-hud');
+const scanHint       = document.getElementById('scan-hint');
+const statusPill     = document.getElementById('status-pill');
+const statusTextEl   = document.getElementById('status-text');
 const videoContainer = document.getElementById('video-container');
 
 // === STATE ===
 const meshes       = {};
 const targetLabels = {};
+const smooth       = {};
 let imageTargetData      = [];
 let allVideos            = [];
 let userScaleMultiplier  = 1.0;
 let initialPinchDistance = null;
 let initialUserScale     = 1.0;
 let pillTimer            = null;
-let currentCameraDir     = 'back';
+// true após 'hasVideo' — impede que um 'failed' transitório mostre o modal de erro
+let cameraReady = false;
+
+// === SUPABASE ===
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// === ANALYTICS ===
+const trackedSessions = {};
+const SCAN_COOLDOWN_MS = 15000;
+
+const trackScan = (targetName) => {
+  const now = Date.now();
+  if (trackedSessions[targetName] && now - trackedSessions[targetName] < SCAN_COOLDOWN_MS) return;
+  trackedSessions[targetName] = now;
+  try {
+    sb.from('analytics').insert({ event_type: 'ar_scan', metadata: { target_name: targetName } }).then(() => {});
+  } catch (_) {}
+};
 
 // === PINCH TO ZOOM ===
 document.addEventListener('touchstart', (e) => {
@@ -80,18 +108,10 @@ const DB_FALLBACK = [
 
 const loadTargetsFromDB = async () => {
   try {
-    if (!window.supabase) throw new Error('Supabase CDN não carregou');
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('timeout')), 5000)
-    );
-    const query = sb
+    const { data, error } = await sb
       .from('ar_targets')
       .select('target_name, label, target_image_url, video_url, video_aspect, target_properties')
       .eq('active', true);
-
-    const { data, error } = await Promise.race([query, timeout]);
     if (error) throw error;
     return data || [];
   } catch (err) {
@@ -119,7 +139,7 @@ const createVideoElement = (name, src) => {
 const getAspectHeight = (aspect) => {
   if (aspect === '9:16') return 1.7778;
   if (aspect === '1:1') return 1;
-  return 0.5625; // 16:9 default
+  return 0.5625;
 };
 
 // === ROUNDED VIDEO CARD GEOMETRY ===
@@ -149,9 +169,8 @@ const createRoundedGeometry = (width, height, radius) => {
 
 // === THREE.JS SCENE INIT ===
 const initXrScene = ({ scene }) => {
-  console.log('[initXrScene] inicializando cena, cam:', currentCameraDir);
+  console.log('[initXrScene] cam:', isFrontCamera ? 'front' : 'back');
   Object.values(meshes).forEach(t => {
-    // Descarta mesh anterior (cena foi recriada pelo Threejs.pipelineModule no restart)
     t.mesh = null;
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
@@ -168,39 +187,43 @@ const initXrScene = ({ scene }) => {
 // === AR TARGET EVENTS ===
 const showTarget = (detail) => {
   const { name, position, rotation, scale } = detail;
-  console.log('[showTarget] name:', name, '| cam:', currentCameraDir,
-    '| pos:', JSON.stringify(position), '| rot:', JSON.stringify(rotation),
-    '| scale:', scale);
+  console.log('[showTarget] name:', name, '| cam:', isFrontCamera ? 'front' : 'back',
+    '| pos:', JSON.stringify(position), '| scale:', scale);
 
   const t = meshes[name];
-  if (!t) { console.warn('[showTarget] mesh não encontrado para:', name); return; }
-  if (!t.mesh) { console.warn('[showTarget] t.mesh é null para:', name); return; }
+  if (!t) { console.warn('[showTarget] mesh não encontrado:', name); return; }
+  if (!t.mesh) { console.warn('[showTarget] t.mesh é null:', name); return; }
 
-  try {
-    t.mesh.position.copy(position);
-  } catch (e) { console.error('[showTarget] ERRO ao copiar position:', e, 'valor:', position); }
+  const pos = (position && typeof position.clone === 'function')
+    ? position
+    : new THREE.Vector3(position?.x ?? 0, position?.y ?? 0, position?.z ?? 0);
+  const rot = (rotation && typeof rotation.clone === 'function')
+    ? rotation
+    : new THREE.Quaternion(rotation?.x ?? 0, rotation?.y ?? 0, rotation?.z ?? 0, rotation?.w ?? 1);
 
-  try {
-    t.mesh.quaternion.copy(rotation);
-  } catch (e) { console.error('[showTarget] ERRO ao copiar rotation:', e, 'valor:', rotation); }
+  if (!smooth[name]) {
+    smooth[name] = { pos: pos.clone(), rot: rot.clone() };
+  } else {
+    smooth[name].pos.lerp(pos, SMOOTH_ALPHA);
+    smooth[name].rot.slerp(rot, SMOOTH_ALPHA);
+  }
 
-  try {
-    t.mesh.scale.setScalar(scale * userScaleMultiplier);
-  } catch (e) { console.error('[showTarget] ERRO ao setar scale:', e); }
+  try { t.mesh.position.copy(smooth[name].pos); } catch (e) { console.error('[showTarget] ERRO position:', e); }
+  try { t.mesh.quaternion.copy(smooth[name].rot); } catch (e) { console.error('[showTarget] ERRO rotation:', e); }
+  try { t.mesh.scale.setScalar(scale * userScaleMultiplier); } catch (e) { console.error('[showTarget] ERRO scale:', e); }
 
   if (!t.mesh.visible) t.mesh.visible = true;
 
   const tryPlay = () => {
-    console.log('[tryPlay] readyState:', t.video.readyState, '| paused:', t.video.paused,
-      '| src:', t.video.src, '| cam:', currentCameraDir);
-    try {
-      const p = t.video.play();
-      if (p) p.catch((err) => {
-        console.error('[tryPlay] play() rejeitado:', err.name, err.message);
-        t.video.muted = true;
-        t.video.play().catch((err2) => console.error('[tryPlay] play() muted também falhou:', err2.name, err2.message));
-      });
-    } catch (e) { console.error('[tryPlay] EXCEÇÃO ao chamar play():', e); }
+    if (!t.mesh || !t.mesh.visible) return;
+    if (!t.video.paused) return;
+    console.log('[tryPlay] readyState:', t.video.readyState, '| src:', t.video.src);
+    const p = t.video.play();
+    if (p) p.catch((err) => {
+      console.error('[tryPlay] play() rejeitado:', err.name, err.message);
+      t.video.muted = true;
+      t.video.play().catch((e2) => console.error('[tryPlay] play() muted falhou:', e2.name, e2.message));
+    });
   };
 
   if (t.video.readyState >= 2) {
@@ -215,13 +238,15 @@ const showTarget = (detail) => {
   scannerHUD.classList.add('hidden');
   scanHint.classList.add('hidden');
   showStatus(targetLabels[name] || name, 'found');
+  trackScan(name);
 };
 
 const hideTarget = (name) => {
   const t = meshes[name];
-  if (!t) return;
+  if (!t || !t.mesh) return;
   t.mesh.visible = false;
   t.video.pause();
+  delete smooth[name];
 
   const anyVisible = Object.values(meshes).some(m => m.mesh?.visible);
   if (!anyVisible) {
@@ -257,41 +282,55 @@ const initAR = async () => {
       name: row.target_name,
       type: 'PLANAR',
       properties: {
-        left:          props.left          || 0,
-        top:           props.top           || 0,
-        width:         props.width         || 480,
-        height:        props.height        || 640,
-        originalWidth: props.originalWidth || 480,
+        left:           props.left           || 0,
+        top:            props.top            || 0,
+        width:          props.width          || 480,
+        height:         props.height         || 640,
+        originalWidth:  props.originalWidth  || 480,
         originalHeight: props.originalHeight || 640,
-        isRotated:     props.isRotated     || false
+        isRotated:      props.isRotated      || false
       }
     });
   });
 
   const onxrloaded = () => {
-    try {
-      XR8.XrController.configure({ imageTargetData });
-      XR8.addCameraPipelineModules([
-        XR8.GlTextureRenderer.pipelineModule(),
-        XR8.Threejs.pipelineModule(),
-        XR8.XrController.pipelineModule(),
-        {
-          name: 'hunters-ar',
-          onStart: () => initXrScene(XR8.Threejs.xrScene()),
-          onUpdate: () => {},
-          onError: () => showCameraError(),
-          listeners: [
-            { event: 'reality.imagefound',   process: e => showTarget(e.detail) },
-            { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
-            { event: 'reality.imagelost',    process: e => hideTarget(e.detail.name) }
-          ]
-        }
-      ]);
-    } catch (err) {
-      console.error('[AR] Falha ao inicializar pipeline:', err);
-      showCameraError();
-      return;
-    }
+    XR8.XrController.configure({
+      imageTargetData,
+      // Desativa SLAM/world tracking — só precisamos de image targets.
+      // Sem isso o XR8 tenta iniciar o session manager de world tracking,
+      // que falha na câmera frontal com "No valid session manager".
+      disableWorldTracking: true
+    });
+    XR8.addCameraPipelineModules([
+      XR8.GlTextureRenderer.pipelineModule(),
+      XR8.Threejs.pipelineModule(),
+      XR8.XrController.pipelineModule(),
+      {
+        name: 'hunters-ar',
+        onStart: () => {},
+        onUpdate: () => {},
+        onCameraStatusChange: ({ status }) => {
+          console.log('[AR] cameraStatus:', status);
+          if (status === 'hasVideo') cameraReady = true;
+          if (status === 'failed' && !cameraReady) errorModal.classList.add('show');
+        },
+        onException: (err) => {
+          console.error('[AR] onException:', err);
+          errorModal.classList.add('show');
+        },
+        listeners: [
+          // reality.cameraconfigured garante que xrScene() está pronto
+          // antes de inicializar meshes (no open-source pode ser null em onStart)
+          { event: 'reality.cameraconfigured', process: () => {
+            const xs = XR8.Threejs.xrScene();
+            if (xs && !xs._huntersInit) { xs._huntersInit = true; initXrScene(xs); }
+          }},
+          { event: 'reality.imagefound',   process: e => showTarget(e.detail) },
+          { event: 'reality.imageupdated', process: e => showTarget(e.detail) },
+          { event: 'reality.imagelost',    process: e => hideTarget(e.detail.name) }
+        ]
+      }
+    ]);
     loadingSpinner.style.display = 'none';
     loadingText.style.display   = 'none';
     tapIcon.style.display = 'flex';
@@ -304,47 +343,66 @@ const initAR = async () => {
 
 initAR();
 
-// === CAMERA ERROR GUARD: previne reload infinito do 8th Wall ===
+// === CAMERA SWITCH ===
+// Reinicia XR8 completamente — reconfigureSession não é suportado no open-source
+const btnFlipCamera = document.getElementById('btn-flip-camera');
+const arCanvas      = document.getElementById('camerafeed');
+
+const switchCamera = () => {
+  console.log('[switchCamera] início, isFront antes:', isFrontCamera);
+  const { scene } = XR8.Threejs.xrScene();
+
+  // Descarta meshes da cena atual para que initXrScene os recrie limpos
+  Object.values(meshes).forEach(t => {
+    if (t.mesh) {
+      scene.remove(t.mesh);
+      t.mesh.geometry.dispose();
+      t.mesh.material.dispose();
+      t.mesh = null;
+    }
+    if (t.texture) { t.texture.dispose(); t.texture = null; }
+    t.video.pause();
+  });
+  Object.keys(smooth).forEach(k => delete smooth[k]);
+  userScaleMultiplier = 1.0;
+  scannerHUD.classList.remove('hidden');
+  scanHint.classList.remove('hidden');
+
+  isFrontCamera = !isFrontCamera;
+  cameraReady = false;
+
+  arCanvas.classList.toggle('front-cam', isFrontCamera);
+  console.log('[switchCamera] trocando para:', isFrontCamera ? 'front' : 'back');
+
+  try { XR8.stop(); } catch (_) {}
+
+  setTimeout(() => {
+    try {
+      arCanvas.width  = window.innerWidth;
+      arCanvas.height = window.innerHeight;
+      XR8.XrController.configure({ imageTargetData, disableWorldTracking: true });
+      XR8.run({
+        canvas: arCanvas,
+        allowedDevices: XR8.XrConfig.device().ANY,
+        ...(isFrontCamera && { cameraConfig: { direction: 'front' } })
+      });
+      console.log('[switchCamera] XR8.run() ok');
+    } catch (err) {
+      console.error('[switchCamera] ERRO no XR8.run():', err.name, err.message);
+      errorModal.classList.add('show');
+    }
+  }, 300);
+};
+
+btnFlipCamera.addEventListener('click', () => {
+  if (tapOverlay.classList.contains('hidden')) switchCamera();
+});
+
+// === CAMERA ERROR GUARD ===
 const showCameraError = () => {
   tapOverlay.classList.add('hidden');
   errorModal.classList.add('show');
 };
-
-// === FLIP CAMERA ===
-const btnFlipCamera = document.getElementById('btn-flip-camera');
-const arCanvas = document.getElementById('camerafeed');
-
-btnFlipCamera.addEventListener('click', async () => {
-  const nextDirStr = currentCameraDir === 'back' ? 'front' : 'back';
-  const nextDir = nextDirStr === 'front'
-    ? XR8.XrConfig.camera().FRONT
-    : XR8.XrConfig.camera().BACK;
-
-  console.log('[flipCamera] trocando para:', nextDirStr);
-
-  try {
-    // Para a sessão atual
-    XR8.stop();
-    Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
-
-    await new Promise(r => setTimeout(r, 200));
-
-    currentCameraDir = nextDirStr;
-    arCanvas.classList.toggle('front-cam', currentCameraDir === 'front');
-
-    // Reinicia com a nova câmera (módulos do pipeline são preservados)
-    arCanvas.width  = window.innerWidth;
-    arCanvas.height = window.innerHeight;
-    XR8.run({
-      canvas: arCanvas,
-      allowedDevices: XR8.XrConfig.device().ANY,
-      cameraConfig: { direction: nextDir }
-    });
-    console.log('[flipCamera] XR8.run() chamado com câmera:', nextDirStr);
-  } catch (err) {
-    console.error('[flipCamera] Erro:', err.name, err.message);
-  }
-});
 
 // === TAP TO START ===
 tapOverlay.addEventListener('click', () => {
@@ -358,13 +416,12 @@ tapOverlay.addEventListener('click', () => {
   btnFlipCamera.style.display = 'flex';
 
   try {
-    const canvas = document.getElementById('camerafeed');
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
+    arCanvas.width  = window.innerWidth;
+    arCanvas.height = window.innerHeight;
     XR8.run({
-      canvas,
+      canvas: arCanvas,
       allowedDevices: XR8.XrConfig.device().ANY,
-      cameraConfig: { direction: XR8.XrConfig.camera().BACK }
+      ...(isFrontCamera && { cameraConfig: { direction: 'front' } })
     });
   } catch (_) {
     showCameraError();
@@ -401,10 +458,10 @@ document.querySelectorAll('.ar-btn').forEach(btn =>
   btn.addEventListener('click', () => Object.values(meshes).forEach(t => t.video.pause()))
 );
 
-// 12s timeout — se XR8 não carregar, mostra erro em vez de travar para sempre
+// 25s timeout — evita tela preta infinita se XR8 não carregar
 setTimeout(() => {
   if (!tapOverlay.classList.contains('hidden')) {
     tapOverlay.classList.add('hidden');
     errorModal.classList.add('show');
   }
-}, 12000);
+}, 25000);
