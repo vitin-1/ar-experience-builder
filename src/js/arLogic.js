@@ -165,22 +165,45 @@ const initXrScene = ({ scene }) => {
 // === AR TARGET EVENTS ===
 const showTarget = (detail) => {
   const { name, position, rotation, scale } = detail;
-  const t = meshes[name];
-  if (!t) return;
+  console.log('[showTarget] name:', name, '| cam:', currentCameraDir,
+    '| pos:', JSON.stringify(position), '| rot:', JSON.stringify(rotation),
+    '| scale:', scale);
 
-  t.mesh.position.copy(position);
-  t.mesh.quaternion.copy(rotation);
-  t.mesh.scale.setScalar(scale * userScaleMultiplier);
+  const t = meshes[name];
+  if (!t) { console.warn('[showTarget] mesh não encontrado para:', name); return; }
+  if (!t.mesh) { console.warn('[showTarget] t.mesh é null para:', name); return; }
+
+  try {
+    t.mesh.position.copy(position);
+  } catch (e) { console.error('[showTarget] ERRO ao copiar position:', e, 'valor:', position); }
+
+  try {
+    t.mesh.quaternion.copy(rotation);
+  } catch (e) { console.error('[showTarget] ERRO ao copiar rotation:', e, 'valor:', rotation); }
+
+  try {
+    t.mesh.scale.setScalar(scale * userScaleMultiplier);
+  } catch (e) { console.error('[showTarget] ERRO ao setar scale:', e); }
+
   if (!t.mesh.visible) t.mesh.visible = true;
 
   const tryPlay = () => {
-    const p = t.video.play();
-    if (p) p.catch(() => { t.video.muted = true; t.video.play().catch(() => {}); });
+    console.log('[tryPlay] readyState:', t.video.readyState, '| paused:', t.video.paused,
+      '| src:', t.video.src, '| cam:', currentCameraDir);
+    try {
+      const p = t.video.play();
+      if (p) p.catch((err) => {
+        console.error('[tryPlay] play() rejeitado:', err.name, err.message);
+        t.video.muted = true;
+        t.video.play().catch((err2) => console.error('[tryPlay] play() muted também falhou:', err2.name, err2.message));
+      });
+    } catch (e) { console.error('[tryPlay] EXCEÇÃO ao chamar play():', e); }
   };
 
   if (t.video.readyState >= 2) {
     tryPlay();
   } else {
+    console.log('[showTarget] vídeo não pronto (readyState:', t.video.readyState, '), aguardando canplay');
     t.video.load();
     t.video.addEventListener('canplay', tryPlay, { once: true });
     setTimeout(tryPlay, 3000);
