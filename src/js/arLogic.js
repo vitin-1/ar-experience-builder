@@ -149,7 +149,10 @@ const createRoundedGeometry = (width, height, radius) => {
 
 // === THREE.JS SCENE INIT ===
 const initXrScene = ({ scene }) => {
+  console.log('[initXrScene] inicializando cena, cam:', currentCameraDir);
   Object.values(meshes).forEach(t => {
+    // Descarta mesh anterior (cena foi recriada pelo Threejs.pipelineModule no restart)
+    t.mesh = null;
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
     const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
@@ -312,14 +315,35 @@ const btnFlipCamera = document.getElementById('btn-flip-camera');
 const arCanvas = document.getElementById('camerafeed');
 
 btnFlipCamera.addEventListener('click', async () => {
-  const nextDir = currentCameraDir === 'back'
+  const nextDirStr = currentCameraDir === 'back' ? 'front' : 'back';
+  const nextDir = nextDirStr === 'front'
     ? XR8.XrConfig.camera().FRONT
     : XR8.XrConfig.camera().BACK;
+
+  console.log('[flipCamera] trocando para:', nextDirStr);
+
   try {
-    await XR8.reconfigureSession({ cameraConfig: { direction: nextDir } });
-    currentCameraDir = currentCameraDir === 'back' ? 'front' : 'back';
+    // Para a sessão atual
+    XR8.stop();
+    Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
+
+    await new Promise(r => setTimeout(r, 200));
+
+    currentCameraDir = nextDirStr;
     arCanvas.classList.toggle('front-cam', currentCameraDir === 'front');
-  } catch (_) {}
+
+    // Reinicia com a nova câmera (módulos do pipeline são preservados)
+    arCanvas.width  = window.innerWidth;
+    arCanvas.height = window.innerHeight;
+    XR8.run({
+      canvas: arCanvas,
+      allowedDevices: XR8.XrConfig.device().ANY,
+      cameraConfig: { direction: nextDir }
+    });
+    console.log('[flipCamera] XR8.run() chamado com câmera:', nextDirStr);
+  } catch (err) {
+    console.error('[flipCamera] Erro:', err.name, err.message);
+  }
 });
 
 // === TAP TO START ===
