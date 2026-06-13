@@ -171,6 +171,13 @@ const initXrScene = ({ scene }) => {
     t.mesh = null;
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
+    if (isFrontCamera) {
+      // CSS scaleX(-1) espelha o canvas todo; flipa o UV horizontalmente
+      // para o texto do vídeo aparecer correto na câmera frontal.
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.repeat.x = -1;
+      tex.offset.x = 1;
+    }
     const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
     const geo = createRoundedGeometry(1, t.aspectHeight, 0.05);
     const mesh = new THREE.Mesh(geo, mat);
