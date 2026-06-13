@@ -1,7 +1,4 @@
-import * as THREE from 'three';
-import { createClient } from '@supabase/supabase-js';
-
-window.THREE = THREE;
+// THREE e supabase chegam como globais via CDN em ar.html
 
 // === CONFIG ===
 const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
@@ -40,7 +37,7 @@ let pillTimer            = null;
 let cameraReady = false;
 
 // === SUPABASE ===
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // === ANALYTICS ===
 const trackedSessions = {};
