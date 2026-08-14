@@ -121,14 +121,14 @@ const createVideoElement = (name, src) => {
   const v = document.createElement('video');
   v.id = 'video-' + name;
   v.className = 'video-src';
-  v.src = src;
+  v.crossOrigin = 'anonymous';
   v.loop = true;
   v.playsInline = true;
   v.setAttribute('webkit-playsinline', '');
   v.setAttribute('disablePictureInPicture', '');
   v.setAttribute('disableRemotePlayback', '');
-  v.crossOrigin = 'anonymous';
-  v.preload = 'metadata';
+  v.preload = 'auto';
+  v.src = src;
   videoContainer.appendChild(v);
   return v;
 };
@@ -232,11 +232,11 @@ const showTarget = (detail) => {
 
   if (t.video.readyState >= 2) {
     tryPlay();
-  } else {
+  } else if (!t._playPending) {
+    t._playPending = true;
     console.log('[showTarget] vídeo não pronto (readyState:', t.video.readyState, '), aguardando canplay');
-    t.video.load();
-    t.video.addEventListener('canplay', tryPlay, { once: true });
-    setTimeout(tryPlay, 3000);
+    t.video.addEventListener('canplay', () => { t._playPending = false; tryPlay(); }, { once: true });
+    setTimeout(() => { t._playPending = false; tryPlay(); }, 3000);
   }
 
   scannerHUD.classList.add('hidden');
