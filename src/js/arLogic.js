@@ -1,8 +1,8 @@
 // THREE e supabase chegam como globais via CDN em ar.html
 
 // === CONFIG ===
-const SUPABASE_URL = 'https://xeyfzhkualdchxedwkhz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_MmczBA1FTY2mMU3TBX32gw_YUHzHgci';
+const SUPABASE_URL = 'https://wdckyjojtcekwxlhktjt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_vfC3JSYceyCpRGKfPWqyjA_4C8N-cUu';
 
 let isFrontCamera = false;
 
@@ -171,9 +171,9 @@ const initXrScene = ({ scene }) => {
     t.mesh = null;
     const tex = new THREE.VideoTexture(t.video);
     tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.format = THREE.RGBAFormat;
     if (isFrontCamera) {
-      // CSS scaleX(-1) espelha o canvas todo; flipa o UV horizontalmente
-      // para o texto do vídeo aparecer correto na câmera frontal.
       tex.wrapS = THREE.RepeatWrapping;
       tex.repeat.x = -1;
       tex.offset.x = 1;
@@ -312,7 +312,13 @@ const initAR = async () => {
       {
         name: 'hunters-ar',
         onStart: () => {},
-        onUpdate: () => {},
+        onUpdate: () => {
+          Object.values(meshes).forEach(t => {
+            if (t.texture && t.mesh?.visible && !t.video.paused) {
+              t.texture.needsUpdate = true;
+            }
+          });
+        },
         onCameraStatusChange: ({ status }) => {
           console.log('[AR] cameraStatus:', status);
           if (status === 'hasVideo') cameraReady = true;
