@@ -212,9 +212,15 @@ const connect = async () => {
 
     // 3. Elemento de áudio para a voz da IA
     audioEl = document.createElement('audio');
-    audioEl.autoplay = true;
+    audioEl.autoplay   = true;
+    audioEl.playsInline = true;
+    audioEl.style.display = 'none';
     document.body.appendChild(audioEl);
-    pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; remoteStream = e.streams[0]; };
+    pc.ontrack = (e) => {
+      audioEl.srcObject = e.streams[0];
+      remoteStream = e.streams[0];
+      audioEl.play().catch(err => console.warn('[RealtimeVoice] play():', err));
+    };
 
     // 4. Microfone do usuário
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
