@@ -17,10 +17,19 @@ const app          = document.getElementById('app');
 let pc             = null;
 let dc             = null;
 let localStream    = null;
+let remoteStream   = null;
 let audioEl        = null;
 let connected      = false;
-let aiMsgEl        = null;   // elemento DOM da bolha de transcrição atual da IA
-let aiTranscript   = '';     // buffer do transcript streaming
+let aiMsgEl        = null;
+let aiTranscript   = '';
+let audioCtx       = null;
+let analyser       = null;
+let dataArray      = null;
+let blobFrame      = null;
+let blobEnergy     = 1;
+
+const blobEl   = document.getElementById('maria-blob');
+const blobCore = blobEl?.querySelector('.maria-blob-core');
 
 // === HELPERS ===
 const getTimeNow = () => {
@@ -91,12 +100,13 @@ const handleEvent = (e) => {
       break;
     }
 
-    // IA começa a responder — abre a bolha de transcrição
+    // IA começa a responder — abre a bolha de transcrição e ativa blob
     case 'response.created':
       openChat();
       aiTranscript = '';
       aiMsgEl = appendBubble('', 'ai');
       setStatus('Falando...');
+      startBlob();
       break;
 
     // Transcript da IA chegando em pedaços (streaming)
@@ -115,19 +125,57 @@ const handleEvent = (e) => {
       setStatus('Conectado • Realtime');
       break;
 
-    // Resposta completa
+    // Resposta completa — para a bolha
     case 'response.done':
+      stopBlob();
       setStatus('Conectado • Realtime');
       break;
   }
 };
 
+// === BLOB ANIMATION ===
+const startBlob = () => {
+  if (!remoteStream || !blobEl) return;
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    analyser.smoothingTimeConstant = 0.8;
+    const src = audioCtx.createMediaStreamSource(remoteStream);
+    src.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+  } else if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  blobEl.classList.add('speaking');
+  const tick = () => {
+    blobFrame = requestAnimationFrame(tick);
+    analyser.getByteFrequencyData(dataArray);
+    const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+    const volume = avg / 128;
+    const target = 1 + volume * 0.55;
+    blobEnergy += (target - blobEnergy) * 0.12;
+    if (blobCore) blobCore.style.transform = `scale(${blobEnergy.toFixed(3)})`;
+  };
+  tick();
+};
+
+const stopBlob = () => {
+  if (blobFrame) { cancelAnimationFrame(blobFrame); blobFrame = null; }
+  blobEl?.classList.remove('speaking');
+  blobEnergy = 1;
+  if (blobCore) blobCore.style.transform = 'scale(1)';
+};
+
 // === DESCONECTAR ===
 const disconnect = () => {
+  stopBlob();
+  if (audioCtx) { audioCtx.close(); audioCtx = null; analyser = null; dataArray = null; }
   if (dc)          { try { dc.close(); }          catch (_) {} dc = null; }
   if (pc)          { try { pc.close(); }          catch (_) {} pc = null; }
   if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   if (audioEl)     { audioEl.srcObject = null; audioEl.remove(); audioEl = null; }
+  remoteStream = null;
   connected = false;
   chatMicBtn?.classList.remove('listening');
   mainMicBtn?.classList.remove('listening');
@@ -156,7 +204,7 @@ const connect = async () => {
     audioEl = document.createElement('audio');
     audioEl.autoplay = true;
     document.body.appendChild(audioEl);
-    pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; };
+    pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; remoteStream = e.streams[0]; };
 
     // 4. Microfone do usuário
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
