@@ -152,7 +152,7 @@ export default async function handler(req, res) {
           output_modalities: ['audio'],
           audio: {
             output: { voice: 'marin' },
-            input: { transcription: { model: 'gpt-4o-mini-transcribe', language: 'pt' } },
+            input: { transcription: { model: 'gpt-4o-mini-transcribe' } },
           },
         },
       }),
