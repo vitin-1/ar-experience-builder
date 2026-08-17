@@ -114,7 +114,7 @@ const handleEvent = (e) => {
       break;
 
     // Transcript da IA chegando em pedaços (streaming)
-    case 'response.audio_transcript.delta':
+    case 'response.output_audio_transcript.delta':
       aiTranscript += event.delta || '';
       if (aiMsgEl) {
         aiMsgEl.textContent = aiTranscript;
@@ -123,7 +123,7 @@ const handleEvent = (e) => {
       break;
 
     // Transcript da IA completo
-    case 'response.audio_transcript.done':
+    case 'response.output_audio_transcript.done':
       aiTranscript = '';
       aiMsgEl = null;
       break;

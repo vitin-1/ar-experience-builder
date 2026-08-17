@@ -151,7 +151,7 @@ export default async function handler(req, res) {
           instructions: MARIA_INSTRUCTIONS,
           audio: {
             output: { voice: 'marin' },
-            input: { transcription: { model: 'gpt-4o-mini-transcribe' } },
+            input: { transcription: { model: 'gpt-4o-mini-transcribe', language: 'pt' } },
           },
         },
       }),
