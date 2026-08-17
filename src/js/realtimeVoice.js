@@ -188,10 +188,7 @@ const disconnect = () => {
 
 // === CONECTAR ===
 const connect = async () => {
-  if (window.__mariaRealtimeActive) {
-    console.warn('[RealtimeVoice] conexão já ativa — ignorando chamada duplicada');
-    return;
-  }
+  if (window.__mariaRealtimeActive) return;
   window.__mariaRealtimeActive = true;
   try {
     openChat();
@@ -206,7 +203,6 @@ const connect = async () => {
     const sessionRes = await fetch('/api/realtime-session', { method: 'POST' });
     if (!sessionRes.ok) {
       const errBody = await sessionRes.text().catch(() => '');
-      console.error('[RealtimeVoice] Resposta do servidor:', sessionRes.status, errBody);
       throw new Error(`Sessão falhou: ${sessionRes.status} — ${errBody}`);
     }
     const sessionData = await sessionRes.json();
@@ -224,36 +220,26 @@ const connect = async () => {
     audioEl.style.display = 'none';
     document.body.appendChild(audioEl);
     pc.ontrack = (e) => {
-      console.log('[RealtimeVoice] ontrack — kind:', e.track.kind, '| streams:', e.streams.length);
-      const remoteTrack = e.streams[0]?.getAudioTracks()[0];
-      if (remoteTrack) {
-        console.log('[RealtimeVoice] remoteTrack — muted:', remoteTrack.muted, '| enabled:', remoteTrack.enabled, '| readyState:', remoteTrack.readyState);
-        remoteTrack.onunmute = () => console.log('[RealtimeVoice] remoteTrack DESMUTADA — áudio deve chegar agora');
-        remoteTrack.onmute   = () => console.log('[RealtimeVoice] remoteTrack MUTADA');
-      }
       audioEl.srcObject = e.streams[0];
       remoteStream = e.streams[0];
-      audioEl.play()
-        .then(() => console.log('[RealtimeVoice] play() iniciado com sucesso'))
-        .catch(err => console.warn('[RealtimeVoice] play() bloqueado:', err));
+      audioEl.play().catch(() => {});
     };
-    pc.oniceconnectionstatechange = () => console.log('[RealtimeVoice] iceConnectionState:', pc.iceConnectionState);
-    pc.onconnectionstatechange    = () => console.log('[RealtimeVoice] connectionState:', pc.connectionState);
 
-    // 4. Microfone do usuário — transceiver bidirecional (send mic + recv IA)
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // 4. Microfone do usuário — constraints para reduzir vazamento e ruído
+    localStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl:  true,
+      },
+    });
     const micTrack = localStream.getAudioTracks()[0];
     pc.addTransceiver(micTrack, { direction: 'sendrecv', streams: [localStream] });
 
     // 5. Data channel para eventos (transcrição, status)
     dc = pc.createDataChannel('oai-events');
-    dc.onopen    = () => console.log('[RealtimeVoice] DataChannel aberto');
-    dc.onclose   = () => console.log('[RealtimeVoice] DataChannel fechado');
     dc.onerror   = (err) => console.error('[RealtimeVoice] DataChannel erro:', err);
-    dc.onmessage = (e) => {
-      try { console.log('[RealtimeVoice] evento:', JSON.parse(e.data).type); } catch (_) {}
-      handleEvent(e);
-    };
+    dc.onmessage = handleEvent;
 
     // 6. Oferta SDP
     const offer = await pc.createOffer();
