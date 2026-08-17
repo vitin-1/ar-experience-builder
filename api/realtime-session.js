@@ -149,6 +149,7 @@ export default async function handler(req, res) {
           type: 'realtime',
           model: MODEL,
           instructions: MARIA_INSTRUCTIONS,
+          output_modalities: ['audio'],
           audio: {
             output: { voice: 'marin' },
             input: { transcription: { model: 'gpt-4o-mini-transcribe', language: 'pt' } },
