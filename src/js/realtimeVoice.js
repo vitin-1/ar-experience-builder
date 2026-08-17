@@ -84,8 +84,8 @@ const handleEvent = (e) => {
     // Usuário começou a falar
     case 'input_audio_buffer.speech_started':
       setStatus('Ouvindo...');
-      // Interrompe qualquer áudio da IA que esteja tocando
-      if (audioEl) { try { audioEl.srcObject = null; } catch (_) {} }
+      // Não zera srcObject — o servidor para de enviar áudio automaticamente.
+      // Zerá-lo impedia a IA de falar depois (ontrack só dispara uma vez).
       break;
 
     // Usuário parou de falar
@@ -247,8 +247,13 @@ const connect = async () => {
 
     // 5. Data channel para eventos (transcrição, status)
     dc = pc.createDataChannel('oai-events');
-    dc.onmessage = handleEvent;
+    dc.onopen    = () => console.log('[RealtimeVoice] DataChannel aberto');
+    dc.onclose   = () => console.log('[RealtimeVoice] DataChannel fechado');
     dc.onerror   = (err) => console.error('[RealtimeVoice] DataChannel erro:', err);
+    dc.onmessage = (e) => {
+      try { console.log('[RealtimeVoice] evento:', JSON.parse(e.data).type); } catch (_) {}
+      handleEvent(e);
+    };
 
     // 6. Oferta SDP
     const offer = await pc.createOffer();
