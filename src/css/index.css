@@ -1168,41 +1168,7 @@ html, body {
   flex-shrink: 0;
 }
 
-/* Pill mic button */
-.orb-mic-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 38px;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.55);
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  letter-spacing: 0.2px;
-}
-
-.orb-mic-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(0, 212, 255, 0.3);
-  color: #fff;
-  box-shadow: 0 0 24px rgba(0, 150, 255, 0.15);
-}
-
-.orb-mic-btn:active { transform: scale(0.96); }
-
-.orb-mic-btn.listening {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #f87171;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
-}
-
-/* ===== AI TRIGGER BUTTON (main page) ===== */
+/* ===== SHARED MIC BUTTON — círculo 64px + texto abaixo ===== */
 .ai-trigger-wrap {
   width: 100%;
   max-width: 420px;
@@ -1210,59 +1176,92 @@ html, body {
   justify-content: center;
 }
 
-.ai-mic-btn {
+.ai-mic-btn,
+.orb-mic-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 14px 28px;
-  border-radius: 50px;
-  border: 1px solid rgba(0, 150, 255, 0.22);
-  background: rgba(0, 70, 180, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  letter-spacing: 0.3px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 0 30px rgba(0, 100, 255, 0.08);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 8px 20px;
+  font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Círculo 64px com ícone */
+.mic-orb {
   position: relative;
-  overflow: hidden;
-}
-
-.ai-mic-btn:hover {
-  border-color: rgba(0, 212, 255, 0.4);
-  color: #fff;
-  background: rgba(0, 90, 210, 0.18);
-  box-shadow: 0 0 40px rgba(0, 150, 255, 0.18), 0 4px 20px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-.ai-mic-btn:active { transform: scale(0.97); }
-
-.ai-trigger-orb {
-  width: 8px;
-  height: 8px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: var(--cyan);
-  box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
-  flex-shrink: 0;
-  animation: dotPulse 2s ease-in-out infinite;
+  background: rgba(0, 70, 180, 0.13);
+  border: 1.5px solid rgba(0, 150, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  box-shadow: 0 0 20px rgba(0, 100, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ai-mic-btn.listening {
-  border-color: rgba(239, 68, 68, 0.45);
+/* Anel de pulso atrás do círculo */
+.mic-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 212, 255, 0.32);
+  animation: micRingPulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes micRingPulse {
+  0%   { transform: scale(1);    opacity: 0.5; }
+  100% { transform: scale(1.75); opacity: 0; }
+}
+
+/* Texto abaixo */
+.mic-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+/* Hover */
+.ai-mic-btn:hover .mic-orb,
+.orb-mic-btn:hover .mic-orb {
+  background: rgba(0, 100, 220, 0.22);
+  border-color: rgba(0, 212, 255, 0.55);
+  box-shadow: 0 0 32px rgba(0, 150, 255, 0.22);
+  transform: scale(1.07);
+}
+
+.ai-mic-btn:hover .mic-label,
+.orb-mic-btn:hover .mic-label { color: rgba(255, 255, 255, 0.8); }
+
+.ai-mic-btn:active .mic-orb,
+.orb-mic-btn:active .mic-orb { transform: scale(0.93); }
+
+/* Estado ativo/ouvindo → vermelho */
+.ai-mic-btn.listening .mic-orb,
+.orb-mic-btn.listening .mic-orb {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
   color: #f87171;
-  background: rgba(239, 68, 68, 0.08);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
 }
 
-.ai-mic-btn.listening .ai-trigger-orb {
-  background: #ef4444;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
-  animation: none;
+.ai-mic-btn.listening .mic-ring,
+.orb-mic-btn.listening .mic-ring {
+  border-color: rgba(239, 68, 68, 0.38);
 }
+
+.ai-mic-btn.listening .mic-label,
+.orb-mic-btn.listening .mic-label { color: #f87171; }
 
 /* ===== TRANSICAO DIVE-IN (MERGULHO) ===== */
 .dive-out {
