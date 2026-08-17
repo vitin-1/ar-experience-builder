@@ -198,7 +198,11 @@ const connect = async () => {
 
     // 1. Token efêmero via nosso backend (nunca expõe a API key no frontend)
     const sessionRes = await fetch('/api/realtime-session', { method: 'POST' });
-    if (!sessionRes.ok) throw new Error(`Sessão falhou: ${sessionRes.status}`);
+    if (!sessionRes.ok) {
+      const errBody = await sessionRes.text().catch(() => '');
+      console.error('[RealtimeVoice] Resposta do servidor:', sessionRes.status, errBody);
+      throw new Error(`Sessão falhou: ${sessionRes.status} — ${errBody}`);
+    }
     const sessionData = await sessionRes.json();
     const token = sessionData.client_secret?.value;
     if (!token) throw new Error('Token não retornado pelo servidor');
