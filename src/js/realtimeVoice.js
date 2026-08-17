@@ -169,6 +169,7 @@ const stopBlob = () => {
 
 // === DESCONECTAR ===
 const disconnect = () => {
+  window.__mariaRealtimeActive = false;
   stopBlob();
   if (audioCtx) { audioCtx.close(); audioCtx = null; analyser = null; dataArray = null; }
   if (dc)          { try { dc.close(); }          catch (_) {} dc = null; }
@@ -187,6 +188,11 @@ const disconnect = () => {
 
 // === CONECTAR ===
 const connect = async () => {
+  if (window.__mariaRealtimeActive) {
+    console.warn('[RealtimeVoice] conexão já ativa — ignorando chamada duplicada');
+    return;
+  }
+  window.__mariaRealtimeActive = true;
   try {
     openChat();
     setStatus('Conectando...');
