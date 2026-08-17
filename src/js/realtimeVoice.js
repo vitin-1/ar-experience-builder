@@ -204,7 +204,7 @@ const connect = async () => {
       throw new Error(`Sessão falhou: ${sessionRes.status} — ${errBody}`);
     }
     const sessionData = await sessionRes.json();
-    const token = sessionData.client_secret?.value;
+    const token = sessionData.value;
     if (!token) throw new Error('Token não retornado pelo servidor');
 
     // 2. PeerConnection
@@ -230,7 +230,7 @@ const connect = async () => {
     await pc.setLocalDescription(offer);
 
     // 7. Troca de SDP com a OpenAI
-    const sdpRes = await fetch(`https://api.openai.com/v1/realtime?model=${REALTIME_MODEL}`, {
+    const sdpRes = await fetch('https://api.openai.com/v1/realtime/calls', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

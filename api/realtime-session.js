@@ -1,7 +1,7 @@
 // Vercel Serverless Function — gera token efêmero para a OpenAI Realtime API
 // A OPENAI_API_KEY deve ser configurada nas variáveis de ambiente da Vercel, nunca no código.
 
-const MODEL = 'gpt-4o-realtime-preview';
+const MODEL = 'gpt-realtime';
 
 const MARIA_INSTRUCTIONS = `
 Você é a MarIA — Assistente Inteligente do Ecossistema Hunters, a porta de entrada digital da Hunters Manpower.
@@ -138,23 +138,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const r = await fetch('https://api.openai.com/v1/realtime/sessions', {
+    const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: MODEL,
-        voice: 'shimmer',
-        instructions: MARIA_INSTRUCTIONS,
-        modalities: ['audio', 'text'],
-        input_audio_transcription: { model: 'whisper-1' },
-        turn_detection: {
-          type: 'server_vad',
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 700,
+        session: {
+          type: 'realtime',
+          model: MODEL,
+          instructions: MARIA_INSTRUCTIONS,
+          audio: {
+            output: { voice: 'marin' },
+            input: { transcription: { model: 'gpt-4o-mini-transcribe' } },
+          },
         },
       }),
     });
