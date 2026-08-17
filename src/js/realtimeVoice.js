@@ -218,13 +218,21 @@ const connect = async () => {
     audioEl.style.display = 'none';
     document.body.appendChild(audioEl);
     pc.ontrack = (e) => {
-      console.log('[RealtimeVoice] ontrack — track recebida:', e.track.kind, e.streams);
+      console.log('[RealtimeVoice] ontrack — kind:', e.track.kind, '| streams:', e.streams.length);
+      const remoteTrack = e.streams[0]?.getAudioTracks()[0];
+      if (remoteTrack) {
+        console.log('[RealtimeVoice] remoteTrack — muted:', remoteTrack.muted, '| enabled:', remoteTrack.enabled, '| readyState:', remoteTrack.readyState);
+        remoteTrack.onunmute = () => console.log('[RealtimeVoice] remoteTrack DESMUTADA — áudio deve chegar agora');
+        remoteTrack.onmute   = () => console.log('[RealtimeVoice] remoteTrack MUTADA');
+      }
       audioEl.srcObject = e.streams[0];
       remoteStream = e.streams[0];
       audioEl.play()
         .then(() => console.log('[RealtimeVoice] play() iniciado com sucesso'))
         .catch(err => console.warn('[RealtimeVoice] play() bloqueado:', err));
     };
+    pc.oniceconnectionstatechange = () => console.log('[RealtimeVoice] iceConnectionState:', pc.iceConnectionState);
+    pc.onconnectionstatechange    = () => console.log('[RealtimeVoice] connectionState:', pc.connectionState);
 
     // 4. Microfone do usuário — transceiver bidirecional (send mic + recv IA)
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
