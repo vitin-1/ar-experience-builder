@@ -6,11 +6,13 @@ const REALTIME_MODEL = 'gpt-4o-realtime-preview';
 const chatModal    = document.getElementById('ai-chat-modal');
 const chatMessages = document.getElementById('chat-messages');
 const headerSub    = document.getElementById('chat-header-sub');
-const mainInputBar = document.querySelector('.ai-interaction-wrapper');
+const mainInputBar = document.querySelector('.ai-trigger-wrap');
 const chatMicBtn   = document.getElementById('chat-mic-btn');
 const mainMicBtn   = document.querySelector('.ai-mic-btn');
 const closeChat    = document.getElementById('close-chat');
 const btnUnlock    = document.getElementById('btn-unlock');
+const orbHint      = document.getElementById('orb-hint');
+const orbBtnLabel  = document.getElementById('orb-btn-label');
 const app          = document.getElementById('app');
 
 // === STATE ===
@@ -39,6 +41,7 @@ const getTimeNow = () => {
 
 const setStatus = (text) => {
   if (headerSub) headerSub.textContent = text;
+  if (orbHint)   orbHint.textContent   = text;
 };
 
 const openChat = () => {
@@ -100,12 +103,13 @@ const handleEvent = (e) => {
       break;
     }
 
-    // IA começa a responder — abre a bolha de transcrição e ativa blob
+    // IA começa a responder
     case 'response.created':
       openChat();
       aiTranscript = '';
       aiMsgEl = appendBubble('', 'ai');
-      setStatus('Falando...');
+      if (orbHint) orbHint.textContent = 'Falando...';
+      if (headerSub) headerSub.textContent = 'Falando...';
       startBlob();
       break;
 
@@ -122,20 +126,19 @@ const handleEvent = (e) => {
     case 'response.audio_transcript.done':
       aiTranscript = '';
       aiMsgEl = null;
-      setStatus('Conectado • Realtime');
       break;
 
-    // Resposta completa — para a bolha
+    // Resposta completa — para escala de volume, volta a ouvir
     case 'response.done':
       stopBlob();
-      setStatus('Conectado • Realtime');
+      setStatus('Ouvindo...');
       break;
   }
 };
 
 // === BLOB ANIMATION ===
 const startBlob = () => {
-  if (!remoteStream || !blobEl) return;
+  if (!remoteStream) return;
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioCtx.createAnalyser();
@@ -147,13 +150,11 @@ const startBlob = () => {
   } else if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
-  blobEl.classList.add('speaking');
   const tick = () => {
     blobFrame = requestAnimationFrame(tick);
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    const volume = avg / 128;
-    const target = 1 + volume * 0.55;
+    const target = 1 + (avg / 128) * 0.55;
     blobEnergy += (target - blobEnergy) * 0.12;
     if (blobCore) blobCore.style.transform = `scale(${blobEnergy.toFixed(3)})`;
   };
@@ -162,7 +163,6 @@ const startBlob = () => {
 
 const stopBlob = () => {
   if (blobFrame) { cancelAnimationFrame(blobFrame); blobFrame = null; }
-  blobEl?.classList.remove('speaking');
   blobEnergy = 1;
   if (blobCore) blobCore.style.transform = 'scale(1)';
 };
@@ -177,18 +177,24 @@ const disconnect = () => {
   if (audioEl)     { audioEl.srcObject = null; audioEl.remove(); audioEl = null; }
   remoteStream = null;
   connected = false;
+  blobEl?.classList.remove('active');
   chatMicBtn?.classList.remove('listening');
   mainMicBtn?.classList.remove('listening');
-  setStatus('Online • IA');
+  if (orbBtnLabel) orbBtnLabel.textContent = 'Falar';
+  if (orbHint)     orbHint.textContent     = 'Toque para falar';
+  if (headerSub)   headerSub.textContent   = 'Online • IA';
 };
 
 // === CONECTAR ===
 const connect = async () => {
   try {
+    openChat();
     setStatus('Conectando...');
+    if (orbHint)    orbHint.textContent    = 'Conectando...';
+    if (orbBtnLabel) orbBtnLabel.textContent = 'Aguarde...';
     chatMicBtn?.classList.add('listening');
     mainMicBtn?.classList.add('listening');
-    openChat();
+    blobEl?.classList.add('active');
 
     // 1. Token efêmero via nosso backend (nunca expõe a API key no frontend)
     const sessionRes = await fetch('/api/realtime-session', { method: 'POST' });
@@ -234,7 +240,8 @@ const connect = async () => {
     await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
 
     connected = true;
-    setStatus('Conectado • Realtime');
+    setStatus('Ouvindo...');
+    if (orbBtnLabel) orbBtnLabel.textContent = 'Encerrar';
 
   } catch (err) {
     console.error('[RealtimeVoice] Erro ao conectar:', err);
