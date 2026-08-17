@@ -1162,11 +1162,11 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Círculo 80px — gradiente do site */
+/* Círculo — gradiente do site */
 .mic-orb {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: clamp(54px, 14vmin, 68px);
+  height: clamp(54px, 14vmin, 68px);
   flex-shrink: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--brand-blue), #0088ff, var(--cyan));
