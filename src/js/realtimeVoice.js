@@ -212,19 +212,24 @@ const connect = async () => {
 
     // 3. Elemento de áudio para a voz da IA
     audioEl = document.createElement('audio');
-    audioEl.autoplay   = true;
+    audioEl.autoplay    = true;
     audioEl.playsInline = true;
+    audioEl.volume      = 1;
     audioEl.style.display = 'none';
     document.body.appendChild(audioEl);
     pc.ontrack = (e) => {
+      console.log('[RealtimeVoice] ontrack — track recebida:', e.track.kind, e.streams);
       audioEl.srcObject = e.streams[0];
       remoteStream = e.streams[0];
-      audioEl.play().catch(err => console.warn('[RealtimeVoice] play():', err));
+      audioEl.play()
+        .then(() => console.log('[RealtimeVoice] play() iniciado com sucesso'))
+        .catch(err => console.warn('[RealtimeVoice] play() bloqueado:', err));
     };
 
-    // 4. Microfone do usuário
+    // 4. Microfone do usuário — transceiver bidirecional (send mic + recv IA)
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+    const micTrack = localStream.getAudioTracks()[0];
+    pc.addTransceiver(micTrack, { direction: 'sendrecv', streams: [localStream] });
 
     // 5. Data channel para eventos (transcrição, status)
     dc = pc.createDataChannel('oai-events');
