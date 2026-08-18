@@ -1298,6 +1298,30 @@ html, body {
   cursor: default;
 }
 
+/* Typing indicator dentro de bolha */
+.chat-msg.typing-bubble {
+  min-width: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.typing-dots span {
+  display: block;
+  width: 6px; height: 6px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
 /* Linha de input de texto */
 .text-input-row {
   display: flex;

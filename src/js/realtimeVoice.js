@@ -28,9 +28,9 @@ let micTrack       = null;
 let remoteStream   = null;
 let audioEl        = null;
 let connected      = false;
-let isMuted        = false;
-let pendingTextMsg = null;
-let aiMsgEl        = null;
+let isMuted           = false;
+let aiMsgEl           = null;
+const textChatHistory = [];
 let aiTranscript   = '';
 let audioCtx       = null;
 let analyser       = null;
@@ -175,18 +175,42 @@ const stopBlob = () => {
   if (blobCore) blobCore.style.transform = 'scale(1)';
 };
 
-// === ENVIO POR TEXTO ===
-const sendViaDataChannel = (text) => {
-  dc.send(JSON.stringify({
-    type: 'conversation.item.create',
-    item: {
-      type: 'message',
-      role: 'user',
-      content: [{ type: 'input_text', text }],
-    },
-  }));
-  dc.send(JSON.stringify({ type: 'response.create' }));
-  setStatus('Processando...');
+// === CHAT DE TEXTO (REST — sem WebRTC) ===
+const sendTextToAPI = async (text) => {
+  textChatHistory.push({ role: 'user', content: text });
+
+  // Typing indicator
+  const group = document.createElement('div');
+  group.className = 'chat-msg-group ai-group';
+  group.innerHTML = `
+    <div class="msg-avatar"><img src="/Logo_hunters.png.png" alt="H" onerror="this.style.display='none'"></div>
+    <div class="msg-content">
+      <div class="chat-msg ai typing-bubble">
+        <span class="typing-dots"><span></span><span></span><span></span></span>
+      </div>
+    </div>`;
+  chatMessages.appendChild(group);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  const bubble = group.querySelector('.chat-msg');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: textChatHistory }),
+    });
+    if (!res.ok) throw new Error(`${res.status}`);
+    const { reply } = await res.json();
+    bubble.className = 'chat-msg ai';
+    bubble.textContent = reply;
+    textChatHistory.push({ role: 'assistant', content: reply });
+  } catch {
+    bubble.className = 'chat-msg error';
+    bubble.textContent = 'Não foi possível obter resposta. Tente novamente.';
+    textChatHistory.pop();
+  }
+
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 };
 
 const handleTextSend = (text, inputEl) => {
@@ -194,16 +218,11 @@ const handleTextSend = (text, inputEl) => {
   if (inputEl) inputEl.value = '';
   openChat();
   appendBubble(text, 'user');
-  if (connected && dc?.readyState === 'open') {
-    sendViaDataChannel(text);
-  } else {
-    pendingTextMsg = text;
-    connect();
-  }
+  sendTextToAPI(text);
 };
 
-const sendTextMessage  = () => handleTextSend(chatTextInput?.value.trim(), chatTextInput);
-const sendMainText     = () => handleTextSend(mainTextInput?.value.trim(), mainTextInput);
+const sendTextMessage = () => handleTextSend(chatTextInput?.value.trim(), chatTextInput);
+const sendMainText    = () => handleTextSend(mainTextInput?.value.trim(), mainTextInput);
 
 // === MUTE TOGGLE ===
 const toggleMute = () => {
@@ -299,12 +318,6 @@ const connect = async () => {
 
     // 5. Data channel para eventos (transcrição, status)
     dc = pc.createDataChannel('oai-events');
-    dc.onopen    = () => {
-      if (pendingTextMsg) {
-        sendViaDataChannel(pendingTextMsg);
-        pendingTextMsg = null;
-      }
-    };
     dc.onerror   = (err) => console.error('[RealtimeVoice] DataChannel erro:', err);
     dc.onmessage = handleEvent;
 
