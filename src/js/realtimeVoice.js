@@ -13,15 +13,18 @@ const closeChat    = document.getElementById('close-chat');
 const btnUnlock    = document.getElementById('btn-unlock');
 const orbHint      = document.getElementById('orb-hint');
 const orbBtnLabel  = document.getElementById('orb-btn-label');
+const muteBtn      = document.getElementById('mute-btn');
 const app          = document.getElementById('app');
 
 // === STATE ===
 let pc             = null;
 let dc             = null;
 let localStream    = null;
+let micTrack       = null;
 let remoteStream   = null;
 let audioEl        = null;
 let connected      = false;
+let isMuted        = false;
 let aiMsgEl        = null;
 let aiTranscript   = '';
 let audioCtx       = null;
@@ -131,7 +134,7 @@ const handleEvent = (e) => {
     // Resposta completa — para escala de volume, volta a ouvir
     case 'response.done':
       stopBlob();
-      setStatus('Ouvindo...');
+      setStatus(isMuted ? 'Microfone mudo' : 'Ouvindo...');
       break;
   }
 };
@@ -167,6 +170,19 @@ const stopBlob = () => {
   if (blobCore) blobCore.style.transform = 'scale(1)';
 };
 
+// === MUTE TOGGLE ===
+const toggleMute = () => {
+  if (!micTrack) return;
+  isMuted = !isMuted;
+  micTrack.enabled = !isMuted;
+  muteBtn?.classList.toggle('muted', isMuted);
+  if (muteBtn) {
+    muteBtn.querySelector('.icon-mic').style.display     = isMuted ? 'none'  : 'block';
+    muteBtn.querySelector('.icon-mic-off').style.display = isMuted ? 'block' : 'none';
+  }
+  if (orbHint) orbHint.textContent = isMuted ? 'Microfone mudo' : 'Ouvindo...';
+};
+
 // === DESCONECTAR ===
 const disconnect = () => {
   window.__mariaRealtimeActive = false;
@@ -177,7 +193,16 @@ const disconnect = () => {
   if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   if (audioEl)     { audioEl.srcObject = null; audioEl.remove(); audioEl = null; }
   remoteStream = null;
+  micTrack = null;
+  isMuted  = false;
   connected = false;
+  // Esconde botão de mute e reseta ícones
+  if (muteBtn) {
+    muteBtn.style.display = 'none';
+    muteBtn.classList.remove('muted');
+    muteBtn.querySelector('.icon-mic').style.display     = 'block';
+    muteBtn.querySelector('.icon-mic-off').style.display = 'none';
+  }
   blobEl?.classList.remove('active');
   chatMicBtn?.classList.remove('listening');
   mainMicBtn?.classList.remove('listening');
@@ -231,9 +256,10 @@ const connect = async () => {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl:  true,
+        sampleRate: 24000,
       },
     });
-    const micTrack = localStream.getAudioTracks()[0];
+    micTrack = localStream.getAudioTracks()[0];
     pc.addTransceiver(micTrack, { direction: 'sendrecv', streams: [localStream] });
 
     // 5. Data channel para eventos (transcrição, status)
@@ -262,6 +288,8 @@ const connect = async () => {
     connected = true;
     setStatus('Ouvindo...');
     if (orbBtnLabel) orbBtnLabel.textContent = 'Encerrar';
+    // Mostra botão de mute
+    if (muteBtn) { muteBtn.style.display = 'flex'; muteBtn.classList.remove('muted'); isMuted = false; micTrack.enabled = true; }
 
   } catch (err) {
     console.error('[RealtimeVoice] Erro ao conectar:', err);
@@ -277,6 +305,7 @@ const toggle = () => { connected ? disconnect() : connect(); };
 // === LISTENERS ===
 chatMicBtn?.addEventListener('click', toggle);
 mainMicBtn?.addEventListener('click', toggle);
+muteBtn?.addEventListener('click', toggleMute);
 
 closeChat?.addEventListener('click', () => {
   disconnect();

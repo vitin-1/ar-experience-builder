@@ -107,46 +107,72 @@
       <!-- ===== AI CHAT MODAL ===== -->
       <div id="ai-chat-modal" class="ai-chat-modal hidden">
 
-        <!-- Header -->
-        <div class="orb-header">
-          <div class="orb-header-left">
-            <span class="orb-live-dot"></span>
-            <span class="orb-header-name">MarIA</span>
-            <span class="orb-header-sep">·</span>
-            <span class="orb-header-sub" id="chat-header-sub">Online • IA</span>
+        <!-- Header (chatbox style) -->
+        <div class="chat-header">
+          <div class="chat-header-left">
+            <div class="chat-avatar">
+              <img src="/Logo_hunters.png.png" alt="H" onerror="this.style.display='none'">
+              <span class="chat-status-dot"></span>
+            </div>
+            <div class="chat-header-info">
+              <span class="chat-header-name">MarIA</span>
+              <span class="chat-header-sub" id="chat-header-sub">Online • IA</span>
+            </div>
           </div>
-          <button id="close-chat" class="orb-close-btn" aria-label="Fechar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <button id="close-chat" class="chat-close-btn" aria-label="Fechar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
 
-        <!-- Transcripts -->
-        <div id="chat-messages" class="orb-transcript"></div>
+        <!-- Messages -->
+        <div id="chat-messages" class="chat-messages"></div>
 
-        <!-- Orb Stage -->
-        <div class="orb-stage">
-          <div id="maria-blob" class="maria-orb">
-            <span class="orb-ring r1"></span>
-            <span class="orb-ring r2"></span>
-            <span class="orb-ring r3"></span>
-            <div class="maria-blob-core"></div>
-          </div>
-          <p class="orb-hint" id="orb-hint">Toque para falar</p>
-        </div>
+        <!-- Voice Footer -->
+        <div class="voice-footer">
+          <p class="voice-hint" id="orb-hint">Toque para falar</p>
+          <div class="voice-controls-row">
 
-        <!-- Controls -->
-        <div class="orb-controls">
-          <button id="chat-mic-btn" class="orb-mic-btn" type="button" aria-label="Falar com MarIA">
-            <span class="mic-orb">
-              <span class="mic-ring"></span>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Mini orb (status visual) -->
+            <div id="maria-blob" class="maria-orb voice-orb">
+              <span class="orb-ring r1"></span>
+              <span class="orb-ring r2"></span>
+              <span class="orb-ring r3"></span>
+              <div class="maria-blob-core"></div>
+            </div>
+
+            <!-- Connect / disconnect -->
+            <button id="chat-mic-btn" class="orb-mic-btn" type="button" aria-label="Falar com MarIA">
+              <span class="mic-orb">
+                <span class="mic-ring"></span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" x2="12" y1="19" y2="22"/>
+                </svg>
+              </span>
+              <span id="orb-btn-label" class="mic-label">Falar</span>
+            </button>
+
+            <!-- Mute toggle (aparece só quando conectado) -->
+            <button id="mute-btn" class="voice-ctrl-btn" type="button" aria-label="Silenciar microfone" style="display:none">
+              <!-- mic ativo -->
+              <svg class="icon-mic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                 <line x1="12" x2="12" y1="19" y2="22"/>
               </svg>
-            </span>
-            <span id="orb-btn-label" class="mic-label">Falar</span>
-          </button>
+              <!-- mic mutado -->
+              <svg class="icon-mic-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <line x1="2" x2="22" y1="2" y2="22"/>
+                <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/>
+                <path d="M5 10v2a7 7 0 0 0 12 5"/>
+                <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/>
+                <path d="M9 9v3a3 3 0 0 0 5.12 2.12"/>
+                <line x1="12" x2="12" y1="19" y2="22"/>
+              </svg>
+            </button>
+
+          </div>
         </div>
 
       </div>

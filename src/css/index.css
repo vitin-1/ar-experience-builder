@@ -1237,6 +1237,73 @@ html, body {
 .ai-mic-btn.listening .mic-label,
 .orb-mic-btn.listening .mic-label { color: #fca5a5; }
 
+/* ===== VOICE FOOTER (chatbox + realtime) ===== */
+.voice-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.voice-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.5px;
+  text-align: center;
+  transition: color 0.4s ease;
+}
+
+.voice-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+/* Mini orb status (dentro do voice footer) */
+.maria-orb.voice-orb {
+  width: clamp(44px, 11vmin, 54px);
+  height: clamp(44px, 11vmin, 54px);
+  cursor: default;
+}
+
+/* Botão de mute */
+.voice-ctrl-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.voice-ctrl-btn:hover {
+  border-color: rgba(0, 150, 255, 0.45);
+  color: #00b4ff;
+  transform: scale(1.08);
+}
+
+.voice-ctrl-btn:active { transform: scale(0.95); }
+
+/* Estado mutado — vermelho */
+.voice-ctrl-btn.muted {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.18);
+  color: #ef4444;
+  animation: micPulse 1.4s ease-in-out infinite;
+}
+
 /* ===== TRANSICAO DIVE-IN (MERGULHO) ===== */
 .dive-out {
   animation: dive-anim 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
