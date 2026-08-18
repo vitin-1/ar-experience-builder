@@ -35,7 +35,9 @@ let initialUserScale     = 1.0;
 let pillTimer            = null;
 // true após 'hasVideo' — impede que um 'failed' transitório mostre o modal de erro
 let cameraReady = false;
-// Timeout de segurança: se a câmera não abrir em 6s após XR8.run(), recarrega com URL nova
+// true entre XR8.run() e XR8.stop() — evita double-stop (botão Voltar + pagehide)
+let xrStarted = false;
+// Timeout de segurança: se a câmera não abrir em 4s após XR8.run(), recarrega com URL nova
 let camStartTimeout = null;
 
 // === SUPABASE ===
@@ -439,21 +441,25 @@ tapOverlay.addEventListener('click', () => {
   tapOverlay.classList.add('hidden');
   btnFlipCamera.style.display = 'flex';
 
-  try {
-    arCanvas.width  = window.innerWidth;
-    arCanvas.height = window.innerHeight;
-    XR8.run({
-      canvas: arCanvas,
-      allowedDevices: XR8.XrConfig.device().ANY,
-      ...(isFrontCamera && { cameraConfig: { direction: 'front' } })
-    });
-    // Se a câmera não abrir em 6s (tela preta silenciosa), recarrega com URL nova
-    camStartTimeout = setTimeout(() => {
-      if (!cameraReady) location.replace('/ar.html?t=' + Date.now());
-    }, 6000);
-  } catch (_) {
-    showCameraError();
-  }
+  // Aguarda 400ms para garantir que a câmera do ciclo anterior foi liberada pelo SO
+  setTimeout(() => {
+    try {
+      arCanvas.width  = window.innerWidth;
+      arCanvas.height = window.innerHeight;
+      XR8.run({
+        canvas: arCanvas,
+        allowedDevices: XR8.XrConfig.device().ANY,
+        ...(isFrontCamera && { cameraConfig: { direction: 'front' } })
+      });
+      xrStarted = true;
+      // Se a câmera não abrir em 4s (tela preta silenciosa), recarrega com URL nova
+      camStartTimeout = setTimeout(() => {
+        if (!cameraReady) location.replace('/ar.html?t=' + Date.now());
+      }, 4000);
+    } catch (_) {
+      showCameraError();
+    }
+  }, 400);
 });
 
 // === BACK BUTTON ===
@@ -461,18 +467,33 @@ document.getElementById('btn-voltar').addEventListener('click', (e) => {
   e.preventDefault();
   clearTimeout(camStartTimeout);
   Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
-  try { XR8.stop(); } catch (_) {}
-  // replace() remove ar.html do histórico — browser não pode voltar via botão do sistema
-  window.location.replace('index.html');
+  if (xrStarted) {
+    xrStarted = false;
+    try { XR8.stop(); } catch (_) {}
+  }
+  // Delay de 350ms para dar tempo ao SO de liberar a câmera antes de sair da página
+  setTimeout(() => window.location.replace('index.html'), 350);
 });
 
 // === CLEANUP ===
 const stopAll = () => {
+  clearTimeout(camStartTimeout);
   Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
-  try { XR8.stop(); } catch (_) {}
+  // Só chama XR8.stop() se ainda não foi chamado (evita double-stop com o botão Voltar)
+  if (xrStarted) {
+    xrStarted = false;
+    try { XR8.stop(); } catch (_) {}
+  }
 };
 
 window.addEventListener('pagehide', stopAll);
+
+// WebGL context loss (comum no Android após múltiplos ciclos) — recarrega automaticamente
+arCanvas.addEventListener('webglcontextlost', (e) => {
+  e.preventDefault();
+  console.warn('[AR] WebGL context lost — recarregando');
+  location.replace('/ar.html?t=' + Date.now());
+}, false);
 
 // Quando o browser restaura ar.html do bfcache (volta via histórico depois de usar a câmera),
 // o XR8 está parado e a câmera liberada. location.reload() ainda pode servir do cache HTTP.
