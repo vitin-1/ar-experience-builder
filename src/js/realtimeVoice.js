@@ -7,16 +7,18 @@ const chatModal    = document.getElementById('ai-chat-modal');
 const chatMessages = document.getElementById('chat-messages');
 const headerSub    = document.getElementById('chat-header-sub');
 const mainInputBar = document.querySelector('.ai-trigger-wrap');
-const chatMicBtn   = document.getElementById('chat-mic-btn');
-const mainMicBtn   = document.querySelector('.ai-mic-btn');
-const closeChat    = document.getElementById('close-chat');
-const btnUnlock    = document.getElementById('btn-unlock');
-const orbHint      = document.getElementById('orb-hint');
-const orbBtnLabel  = document.getElementById('orb-btn-label');
-const muteBtn      = document.getElementById('mute-btn');
+const chatMicBtn    = document.getElementById('chat-mic-btn');
+const mainMicBtn    = document.getElementById('main-mic-btn');
+const closeChat     = document.getElementById('close-chat');
+const btnUnlock     = document.getElementById('btn-unlock');
+const orbHint       = document.getElementById('orb-hint');
+const orbBtnLabel   = document.getElementById('orb-btn-label');
+const muteBtn       = document.getElementById('mute-btn');
 const chatTextInput = document.getElementById('chat-text-input');
 const chatSendBtn   = document.getElementById('chat-send-btn');
-const app          = document.getElementById('app');
+const mainTextInput = document.getElementById('main-text-input');
+const mainSendBtn   = document.getElementById('main-send-btn');
+const app           = document.getElementById('app');
 
 // === STATE ===
 let pc             = null;
@@ -187,13 +189,11 @@ const sendViaDataChannel = (text) => {
   setStatus('Processando...');
 };
 
-const sendTextMessage = () => {
-  const text = chatTextInput?.value.trim();
+const handleTextSend = (text, inputEl) => {
   if (!text) return;
-  chatTextInput.value = '';
+  if (inputEl) inputEl.value = '';
   openChat();
   appendBubble(text, 'user');
-
   if (connected && dc?.readyState === 'open') {
     sendViaDataChannel(text);
   } else {
@@ -201,6 +201,9 @@ const sendTextMessage = () => {
     connect();
   }
 };
+
+const sendTextMessage  = () => handleTextSend(chatTextInput?.value.trim(), chatTextInput);
+const sendMainText     = () => handleTextSend(mainTextInput?.value.trim(), mainTextInput);
 
 // === MUTE TOGGLE ===
 const toggleMute = () => {
@@ -346,6 +349,9 @@ mainMicBtn?.addEventListener('click', toggle);
 muteBtn?.addEventListener('click', toggleMute);
 chatSendBtn?.addEventListener('click', sendTextMessage);
 chatTextInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendTextMessage(); });
+mainSendBtn?.addEventListener('click', sendMainText);
+mainMicBtn?.addEventListener('click', toggle);
+mainTextInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMainText(); });
 
 closeChat?.addEventListener('click', () => {
   disconnect();
