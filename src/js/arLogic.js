@@ -35,6 +35,8 @@ let initialUserScale     = 1.0;
 let pillTimer            = null;
 // true após 'hasVideo' — impede que um 'failed' transitório mostre o modal de erro
 let cameraReady = false;
+// Timeout de segurança: se a câmera não abrir em 6s após XR8.run(), recarrega com URL nova
+let camStartTimeout = null;
 
 // === SUPABASE ===
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -321,8 +323,20 @@ const initAR = async () => {
         },
         onCameraStatusChange: ({ status }) => {
           console.log('[AR] cameraStatus:', status);
-          if (status === 'hasVideo') cameraReady = true;
-          if (status === 'failed' && !cameraReady) errorModal.classList.add('show');
+          if (status === 'hasVideo') {
+            cameraReady = true;
+            clearTimeout(camStartTimeout);
+          }
+          if (status === 'failed' && !cameraReady) {
+            clearTimeout(camStartTimeout);
+            // Tenta recarregar uma vez antes de mostrar o erro
+            if (!window.__xrCamRetried) {
+              window.__xrCamRetried = true;
+              setTimeout(() => location.replace('/ar.html?t=' + Date.now()), 300);
+            } else {
+              errorModal.classList.add('show');
+            }
+          }
         },
         onException: (err) => {
           console.error('[AR] onException:', err);
@@ -433,6 +447,10 @@ tapOverlay.addEventListener('click', () => {
       allowedDevices: XR8.XrConfig.device().ANY,
       ...(isFrontCamera && { cameraConfig: { direction: 'front' } })
     });
+    // Se a câmera não abrir em 6s (tela preta silenciosa), recarrega com URL nova
+    camStartTimeout = setTimeout(() => {
+      if (!cameraReady) location.replace('/ar.html?t=' + Date.now());
+    }, 6000);
   } catch (_) {
     showCameraError();
   }
@@ -441,9 +459,11 @@ tapOverlay.addEventListener('click', () => {
 // === BACK BUTTON ===
 document.getElementById('btn-voltar').addEventListener('click', (e) => {
   e.preventDefault();
+  clearTimeout(camStartTimeout);
   Object.values(meshes).forEach(t => { if (t.mesh) t.mesh.visible = false; t.video.pause(); });
   try { XR8.stop(); } catch (_) {}
-  window.location.href = 'index.html';
+  // replace() remove ar.html do histórico — browser não pode voltar via botão do sistema
+  window.location.replace('index.html');
 });
 
 // === CLEANUP ===
