@@ -1272,6 +1272,14 @@ html, body {
   cursor: default;
 }
 
+/* Linha de input de texto */
+.text-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
 /* Botão de mute */
 .voice-ctrl-btn {
   width: 46px;

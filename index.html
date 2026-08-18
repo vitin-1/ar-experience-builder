@@ -129,10 +129,9 @@
 
         <!-- Voice Footer -->
         <div class="voice-footer">
-          <p class="voice-hint" id="orb-hint">Toque para falar</p>
+          <p class="voice-hint" id="orb-hint">Toque para falar ou digite abaixo</p>
           <div class="voice-controls-row">
 
-            <!-- Mini orb (status visual) -->
             <div id="maria-blob" class="maria-orb voice-orb">
               <span class="orb-ring r1"></span>
               <span class="orb-ring r2"></span>
@@ -140,7 +139,6 @@
               <div class="maria-blob-core"></div>
             </div>
 
-            <!-- Connect / disconnect -->
             <button id="chat-mic-btn" class="orb-mic-btn" type="button" aria-label="Falar com MarIA">
               <span class="mic-orb">
                 <span class="mic-ring"></span>
@@ -153,15 +151,12 @@
               <span id="orb-btn-label" class="mic-label">Falar</span>
             </button>
 
-            <!-- Mute toggle (aparece só quando conectado) -->
             <button id="mute-btn" class="voice-ctrl-btn" type="button" aria-label="Silenciar microfone" style="display:none">
-              <!-- mic ativo -->
               <svg class="icon-mic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                 <line x1="12" x2="12" y1="19" y2="22"/>
               </svg>
-              <!-- mic mutado -->
               <svg class="icon-mic-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
                 <line x1="2" x2="22" y1="2" y2="22"/>
                 <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/>
@@ -173,6 +168,25 @@
             </button>
 
           </div>
+
+          <!-- Barra de texto -->
+          <div class="text-input-row">
+            <input
+              type="text"
+              id="chat-text-input"
+              class="chat-inline-input"
+              placeholder="Digite uma mensagem..."
+              autocomplete="off"
+              enterkeyhint="send"
+            >
+            <button id="chat-send-btn" class="chat-send-btn" type="button" aria-label="Enviar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z"/>
+                <path d="M22 2 11 13"/>
+              </svg>
+            </button>
+          </div>
+
         </div>
 
       </div>

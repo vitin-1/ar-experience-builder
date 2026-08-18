@@ -14,6 +14,8 @@ const btnUnlock    = document.getElementById('btn-unlock');
 const orbHint      = document.getElementById('orb-hint');
 const orbBtnLabel  = document.getElementById('orb-btn-label');
 const muteBtn      = document.getElementById('mute-btn');
+const chatTextInput = document.getElementById('chat-text-input');
+const chatSendBtn   = document.getElementById('chat-send-btn');
 const app          = document.getElementById('app');
 
 // === STATE ===
@@ -25,6 +27,7 @@ let remoteStream   = null;
 let audioEl        = null;
 let connected      = false;
 let isMuted        = false;
+let pendingTextMsg = null;
 let aiMsgEl        = null;
 let aiTranscript   = '';
 let audioCtx       = null;
@@ -170,6 +173,35 @@ const stopBlob = () => {
   if (blobCore) blobCore.style.transform = 'scale(1)';
 };
 
+// === ENVIO POR TEXTO ===
+const sendViaDataChannel = (text) => {
+  dc.send(JSON.stringify({
+    type: 'conversation.item.create',
+    item: {
+      type: 'message',
+      role: 'user',
+      content: [{ type: 'input_text', text }],
+    },
+  }));
+  dc.send(JSON.stringify({ type: 'response.create' }));
+  setStatus('Processando...');
+};
+
+const sendTextMessage = () => {
+  const text = chatTextInput?.value.trim();
+  if (!text) return;
+  chatTextInput.value = '';
+  openChat();
+  appendBubble(text, 'user');
+
+  if (connected && dc?.readyState === 'open') {
+    sendViaDataChannel(text);
+  } else {
+    pendingTextMsg = text;
+    connect();
+  }
+};
+
 // === MUTE TOGGLE ===
 const toggleMute = () => {
   if (!micTrack) return;
@@ -264,6 +296,12 @@ const connect = async () => {
 
     // 5. Data channel para eventos (transcrição, status)
     dc = pc.createDataChannel('oai-events');
+    dc.onopen    = () => {
+      if (pendingTextMsg) {
+        sendViaDataChannel(pendingTextMsg);
+        pendingTextMsg = null;
+      }
+    };
     dc.onerror   = (err) => console.error('[RealtimeVoice] DataChannel erro:', err);
     dc.onmessage = handleEvent;
 
@@ -306,6 +344,8 @@ const toggle = () => { connected ? disconnect() : connect(); };
 chatMicBtn?.addEventListener('click', toggle);
 mainMicBtn?.addEventListener('click', toggle);
 muteBtn?.addEventListener('click', toggleMute);
+chatSendBtn?.addEventListener('click', sendTextMessage);
+chatTextInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendTextMessage(); });
 
 closeChat?.addEventListener('click', () => {
   disconnect();
