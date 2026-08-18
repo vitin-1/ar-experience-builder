@@ -454,6 +454,12 @@ const stopAll = () => {
 
 window.addEventListener('pagehide', stopAll);
 
+// Quando o browser restaura ar.html do bfcache (volta via histórico depois de usar a câmera),
+// o XR8 já está parado e a câmera liberada — forçar reload é a única forma confiável de reiniciar.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) location.reload();
+});
+
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     Object.values(meshes).forEach(t => t.video.pause());
