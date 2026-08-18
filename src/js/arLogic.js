@@ -455,9 +455,13 @@ const stopAll = () => {
 window.addEventListener('pagehide', stopAll);
 
 // Quando o browser restaura ar.html do bfcache (volta via histórico depois de usar a câmera),
-// o XR8 já está parado e a câmera liberada — forçar reload é a única forma confiável de reiniciar.
+// o XR8 está parado e a câmera liberada. location.reload() ainda pode servir do cache HTTP.
+// Navegar para uma URL com timestamp garante carga completamente nova e contorna o bfcache.
 window.addEventListener('pageshow', (e) => {
-  if (e.persisted) location.reload();
+  if (e.persisted) {
+    try { if (typeof XR8 !== 'undefined') XR8.stop(); } catch (_) {}
+    location.replace('/ar.html?t=' + Date.now());
+  }
 });
 
 document.addEventListener('visibilitychange', () => {

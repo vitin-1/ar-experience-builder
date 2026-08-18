@@ -377,7 +377,7 @@ btnUnlock?.addEventListener('click', (e) => {
   e.preventDefault();
   disconnect();
   app?.classList.add('dive-out');
-  setTimeout(() => { window.location.href = btnUnlock.getAttribute('href'); }, 700);
+  setTimeout(() => { window.location.href = 'ar.html?t=' + Date.now(); }, 700);
 });
 
 // Desconecta ao minimizar / trocar de aba
