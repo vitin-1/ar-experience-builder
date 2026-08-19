@@ -363,7 +363,6 @@ muteBtn?.addEventListener('click', toggleMute);
 chatSendBtn?.addEventListener('click', sendTextMessage);
 chatTextInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendTextMessage(); });
 mainSendBtn?.addEventListener('click', sendMainText);
-mainMicBtn?.addEventListener('click', toggle);
 mainTextInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMainText(); });
 
 closeChat?.addEventListener('click', () => {
