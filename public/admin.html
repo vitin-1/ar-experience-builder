@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel AR — Hunters ManPower</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@600;700;800;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -27,6 +27,14 @@
     .analytics-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .analytics-row:last-child { border-bottom: none; }
     .analytics-bar { height: 4px; border-radius: 2px; background: rgba(0,212,255,0.3); margin-top: 4px; transition: width 0.5s; }
+    @media (min-width: 1024px) {
+      h1 { font-family: 'Epilogue', sans-serif; font-weight: 800; }
+      h2 { font-family: 'Epilogue', sans-serif; font-weight: 700; }
+      .btn-primary { border-radius: 100px; transition: all 0.2s ease-in-out; }
+      .btn-primary:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 8px 28px rgba(0, 102, 255, 0.4); filter: brightness(1.1); }
+      .btn-danger { border-radius: 100px; transition: all 0.2s ease-in-out; }
+      .btn-danger:hover { transform: translateY(-1px); }
+    }
   </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">

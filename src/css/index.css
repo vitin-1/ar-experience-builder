@@ -21,6 +21,7 @@
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-full: 50%;
+  --radius-pill: 100px;
 }
 
 /* ===== RESET & BASE ===== */
@@ -927,6 +928,51 @@ html, body {
     border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 100, 255, 0.08);
+  }
+}
+
+/* ===== DESKTOP REFINEMENTS — apenas >= 1024px ===== */
+@media (min-width: 1024px) {
+
+  /* Tipografia Epilogue em elementos de destaque */
+  .brand-name {
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 800;
+  }
+  .hero-title {
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 700;
+  }
+  .nav-title {
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 700;
+  }
+
+  /* Pill radius em botões e nav-cards */
+  .cta-button {
+    border-radius: var(--radius-pill);
+  }
+  .nav-card {
+    border-radius: var(--radius-pill);
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Hover aprimorado: gradiente sutil + microanimação */
+  .nav-card:hover {
+    background: linear-gradient(135deg, rgba(0, 102, 255, 0.45) 0%, rgba(0, 180, 255, 0.25) 100%);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 100, 255, 0.3);
+    border-color: var(--card-border-hover);
+  }
+  .nav-card:hover .nav-avatar {
+    animation: glow-pulse 1.5s ease-in-out infinite;
+  }
+
+  .cta-button:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow:
+      0 16px 48px rgba(0, 102, 255, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
 

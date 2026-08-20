@@ -344,6 +344,41 @@ video:not(#meuVideo) {
 
 .btn-reload:active { transform: scale(0.95); }
 
+/* DESKTOP REFINEMENTS — apenas >= 1024px */
+@media (min-width: 1024px) {
+  .error-box h2 {
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 800;
+  }
+  .ar-btn {
+    border-radius: 100px;
+    transition: all 0.2s ease-in-out;
+  }
+  .ar-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 28px rgba(0, 100, 255, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4);
+    border-color: rgba(0, 212, 255, 0.6);
+  }
+  .btn-voltar {
+    border-radius: 100px;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-voltar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 100, 255, 0.3);
+    border-color: rgba(0, 212, 255, 0.6);
+    background: rgba(0, 30, 70, 0.75);
+  }
+  .btn-reload {
+    border-radius: 100px;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-reload:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 8px 28px rgba(0, 102, 255, 0.5);
+  }
+}
+
 /* AJUSTES PARA DESKTOP / TELAS MAIORES */
 @media (min-width: 768px) {
   .ar-btn {
