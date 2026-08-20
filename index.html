@@ -221,8 +221,162 @@
         </div>
       </div>
 
-    </div>
+
+      <!-- ===== DESKTOP LAYOUT — snap scroll, oculto em mobile ===== -->
+      <div class="desktop-layout" id="desktop-layout">
+
+        <!-- Dots de navegação (fixo, direita) -->
+        <nav class="ds-dots" aria-label="Seções">
+          <button class="ds-dot active" data-idx="0" aria-label="Início"></button>
+          <button class="ds-dot" data-idx="1" aria-label="Aimbarcadora"></button>
+          <button class="ds-dot" data-idx="2" aria-label="Sistema Hunters"></button>
+          <button class="ds-dot" data-idx="3" aria-label="Hunters Manpower"></button>
+          <button class="ds-dot" data-idx="4" aria-label="Realidade Aumentada"></button>
+        </nav>
+
+        <!-- S0: Hero -->
+        <section class="ds-section ds-hero" id="ds-s0">
+          <div class="ds-particles" aria-hidden="true"></div>
+          <div class="ds-side ds-side-l" aria-hidden="true"></div>
+          <div class="ds-side ds-side-r" aria-hidden="true"></div>
+          <div class="ds-hero-inner">
+            <div class="logo-container">
+              <div class="logo-glow"></div>
+              <img src="/MARTINEZ.png" alt="Hunters" class="logo-img" onerror="this.style.display='none'">
+            </div>
+            <h1 class="brand-name">HUNTERS</h1>
+            <p class="brand-tag">M A N P O W E R</p>
+            <div class="divider">
+              <span class="divider-line"></span>
+              <span class="divider-text">ECOSSISTEMA HUNTERS</span>
+              <span class="divider-line"></span>
+            </div>
+            <p class="ds-hero-sub">Fornecemos mão de obra qualificada para operações marítimas, offshore e industriais.</p>
+            <div class="ds-hero-ctas">
+              <button class="ds-btn-primary" onclick="document.getElementById('main-mic-btn').click()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                Falar com a MarIA
+              </button>
+              <a href="ar.html" class="ds-btn-ghost" onclick="document.getElementById('btn-unlock').click(); return false;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+                Realidade Aumentada
+              </a>
+            </div>
+          </div>
+          <div class="ds-scroll-hint" aria-hidden="true">
+            <span>EXPLORE</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </section>
+
+        <!-- S1: Aimbarcadora -->
+        <section class="ds-section ds-tool" id="ds-s1">
+          <div class="ds-particles" aria-hidden="true"></div>
+          <div class="ds-tool-inner">
+            <div class="ds-tool-visual">
+              <div class="ds-tool-img-wrap"><img src="/Aimbarcadora.png" alt="Aimbarcadora"></div>
+            </div>
+            <div class="ds-tool-copy">
+              <span class="ds-tag">REDE SOCIAL</span>
+              <h2 class="ds-title">Aimbarcadora</h2>
+              <p class="ds-desc">A rede social inteligente do universo marítimo e offshore. Construa sua presença profissional, compartilhe experiências e conecte-se com quem move a indústria.</p>
+              <a href="https://aimbarcadora.com.br/" target="_blank" rel="noopener noreferrer" class="ds-link">
+                Acessar a AImbarcadora
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- S2: Sistema Hunters -->
+        <section class="ds-section ds-tool ds-tool-alt" id="ds-s2">
+          <div class="ds-particles" aria-hidden="true"></div>
+          <div class="ds-tool-inner">
+            <div class="ds-tool-copy">
+              <span class="ds-tag">HUNTERS.IO</span>
+              <h2 class="ds-title">Sistema Hunters</h2>
+              <p class="ds-desc">Gerencie seu cadastro profissional, acompanhe processos seletivos, documentação e certificações. Uma plataforma completa para profissionais e operações da Hunters.</p>
+              <a href="https://hunterembarque.com/" target="_blank" rel="noopener noreferrer" class="ds-link">
+                Acessar o Sistema
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </a>
+            </div>
+            <div class="ds-tool-visual">
+              <div class="ds-tool-img-wrap"><img src="/andercelo.png" alt="Sistema Hunters"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- S3: Hunters Manpower -->
+        <section class="ds-section ds-tool" id="ds-s3">
+          <div class="ds-particles" aria-hidden="true"></div>
+          <div class="ds-tool-inner">
+            <div class="ds-tool-visual">
+              <div class="ds-tool-img-wrap"><img src="/MARTINEZ.png" alt="Hunters Manpower"></div>
+            </div>
+            <div class="ds-tool-copy">
+              <span class="ds-tag">MANPOWER</span>
+              <h2 class="ds-title">Hunters Manpower</h2>
+              <p class="ds-desc">Precisa de profissionais qualificados para sua operação? Conheça nossos serviços ou fale diretamente com nossa equipe comercial especializada em operações marítimas e offshore.</p>
+              <div class="ds-link-group">
+                <a href="https://hunters.com.br/" target="_blank" rel="noopener noreferrer" class="ds-link">
+                  Site Hunters <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+                <a href="https://wa.me/5521967398654" target="_blank" rel="noopener noreferrer" class="ds-link ds-link-ghost">
+                  WhatsApp <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- S4: Realidade Aumentada -->
+        <section class="ds-section ds-ar" id="ds-s4">
+          <div class="ds-particles" aria-hidden="true"></div>
+          <div class="ds-ar-inner">
+            <div class="ds-ar-icon">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+            </div>
+            <span class="ds-tag">EXPERIÊNCIA IMERSIVA</span>
+            <h2 class="ds-title">Realidade Aumentada</h2>
+            <p class="ds-desc">Aponte sua câmera para camisas, panfletos ou materiais da Hunters e veja o holograma ganhar vida. Tecnologia imersiva a serviço do ecossistema.</p>
+            <a href="ar.html" class="ds-btn-primary ds-ar-cta" onclick="document.getElementById('btn-unlock').click(); return false;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+              Ativar Câmera
+            </a>
+          </div>
+        </section>
+
+      </div><!-- /desktop-layout -->
+
+    </div><!-- /#app -->
 
     <script type="module" src="/src/js/realtimeVoice.js"></script>
+    <script>
+      // Navegação por dots + animações de entrada (desktop only)
+      (function () {
+        if (window.innerWidth < 1024) return;
+        var app      = document.getElementById('app');
+        var sections = document.querySelectorAll('.ds-section');
+        var dots     = document.querySelectorAll('.ds-dot');
+        if (!sections.length || !dots.length) return;
+
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            e.target.classList.add('is-visible');
+            var idx = Array.prototype.indexOf.call(sections, e.target);
+            dots.forEach(function (d, i) { d.classList.toggle('active', i === idx); });
+          });
+        }, { threshold: 0.4, root: app });
+
+        sections.forEach(function (s) { io.observe(s); });
+        dots.forEach(function (dot, i) {
+          dot.addEventListener('click', function () {
+            sections[i] && sections[i].scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
