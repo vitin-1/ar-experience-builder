@@ -931,8 +931,83 @@ html, body {
   }
 }
 
+/* Deco lateral: oculto por padrão (mobile-first) */
+.deco-side { display: none; }
+
 /* ===== DESKTOP REFINEMENTS — apenas >= 1024px ===== */
 @media (min-width: 1024px) {
+
+  /* Eleva conteúdo acima dos painéis decorativos */
+  .header, .hero-card, .nav-grid, .cta-button, .ai-trigger-wrap {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Painéis laterais decorativos */
+  .deco-side {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .deco-left {
+    left: 0;
+    right: calc(50% + 370px);
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        transparent 0px, transparent 28px,
+        rgba(0, 212, 255, 0.045) 28px, rgba(0, 212, 255, 0.045) 29px
+      ),
+      linear-gradient(to right, transparent 60%, rgba(0, 80, 200, 0.07) 100%);
+    border-right: 1px solid rgba(0, 212, 255, 0.12);
+  }
+
+  .deco-right {
+    right: 0;
+    left: calc(50% + 370px);
+    background:
+      repeating-linear-gradient(
+        45deg,
+        transparent 0px, transparent 28px,
+        rgba(0, 212, 255, 0.045) 28px, rgba(0, 212, 255, 0.045) 29px
+      ),
+      linear-gradient(to left, transparent 60%, rgba(0, 80, 200, 0.07) 100%);
+    border-left: 1px solid rgba(0, 212, 255, 0.12);
+  }
+
+  /* Texto vertical temático */
+  .deco-left::before {
+    content: 'MARITIME · OFFSHORE · INDUSTRIAL';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: rgba(0, 212, 255, 0.22);
+    white-space: nowrap;
+  }
+
+  .deco-right::before {
+    content: 'ECOSSISTEMA · HUNTERS · MANPOWER';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: rgba(0, 212, 255, 0.22);
+    white-space: nowrap;
+  }
 
   /* Tipografia Epilogue em elementos de destaque */
   .brand-name {
