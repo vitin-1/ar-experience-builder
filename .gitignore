@@ -24,6 +24,12 @@ dist-ssr
 # SSL certs (local dev only)
 .certs/
 
+# Vercel
+.vercel/
+
+# Supabase local temp
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

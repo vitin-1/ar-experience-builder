@@ -1,16 +1,23 @@
 // Vercel Serverless Function — gera token efêmero para a OpenAI Realtime API
 // A OPENAI_API_KEY deve ser configurada nas variáveis de ambiente da Vercel, nunca no código.
 import { MARIA_INSTRUCTIONS } from './_shared.js';
+import { applyCors } from './_http.js';
+import { checkRateLimit } from './_ratelimit.js';
 
 const MODEL = 'gpt-realtime';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  applyCors(req, res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Produto mais caro da OpenAI: limite apertado por IP.
+  const rl = await checkRateLimit(req, { name: 'realtime', limit: 5, windowSec: 60 });
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retryAfter));
+    return res.status(429).json({ error: 'Muitas sessões em pouco tempo. Aguarde um instante.' });
+  }
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

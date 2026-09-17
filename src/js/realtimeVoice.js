@@ -1,6 +1,5 @@
 // OpenAI Realtime API — voz-a-voz via WebRTC
-
-const REALTIME_MODEL = 'gpt-4o-realtime-preview';
+// O modelo é definido no backend (api/realtime-session.js).
 
 // === DOM ===
 const chatModal    = document.getElementById('ai-chat-modal');
@@ -30,7 +29,10 @@ let audioEl        = null;
 let connected      = false;
 let isMuted           = false;
 let aiMsgEl           = null;
-const textChatHistory = [];
+// Histórico unificado voz+texto — fonte única de verdade para os dois canais.
+// Voz e texto escrevem aqui; a sessão de voz é semeada com ele ao conectar.
+const conversationHistory = [];
+const MAX_HISTORY = 20; // janela deslizante do histórico
 let aiTranscript   = '';
 let audioCtx       = null;
 let analyser       = null;
@@ -42,9 +44,32 @@ const blobEl   = document.getElementById('maria-blob');
 const blobCore = blobEl?.querySelector('.maria-blob-core');
 
 // === HELPERS ===
+// fetch com timeout — evita ficar preso em "Conectando..." se o servidor travar.
+const fetchWithTimeout = async (url, opts = {}, ms = 15000) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 const getTimeNow = () => {
   const d = new Date();
   return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+};
+
+// Registra um turno no histórico unificado (com janela e dedupe do último turno).
+const pushHistory = (role, content) => {
+  const text = (content || '').trim();
+  if (!text) return;
+  const last = conversationHistory[conversationHistory.length - 1];
+  if (last && last.role === role && last.content === text) return;
+  conversationHistory.push({ role, content: text });
+  if (conversationHistory.length > MAX_HISTORY) {
+    conversationHistory.splice(0, conversationHistory.length - MAX_HISTORY);
+  }
 };
 
 const setStatus = (text) => {
@@ -107,6 +132,7 @@ const handleEvent = (e) => {
       if (userText) {
         openChat();
         appendBubble(userText, 'user');
+        pushHistory('user', userText);
       }
       break;
     }
@@ -130,8 +156,9 @@ const handleEvent = (e) => {
       }
       break;
 
-    // Transcript da IA completo
+    // Transcript da IA completo — grava o turno no histórico unificado
     case 'response.output_audio_transcript.done':
+      pushHistory('assistant', event.transcript || aiTranscript);
       aiTranscript = '';
       aiMsgEl = null;
       break;
@@ -141,6 +168,49 @@ const handleEvent = (e) => {
       stopBlob();
       setStatus(isMuted ? 'Microfone mudo' : 'Ouvindo...');
       break;
+
+    // Erro reportado pela OpenAI pelo data channel.
+    // Muitos são não-fatais (ex.: item rejeitado na semeadura de histórico) — apenas
+    // logamos e voltamos a ouvir. Queda real de conexão é tratada em onconnectionstatechange.
+    case 'error':
+      console.error('[RealtimeVoice] Erro da OpenAI:', event.error || event);
+      stopBlob();
+      if (connected) setStatus(isMuted ? 'Microfone mudo' : 'Ouvindo...');
+      break;
+  }
+};
+
+// Ao abrir o data channel:
+//  - conversa nova (histórico vazio) → MarIA cumprimenta (response.create SEM
+//    instructions: usa o prompt completo da sessão, incl. a saudação da seção 10.
+//    Passar instructions aqui SOBRESCREVERIA o prompt e derrubaria as regras).
+//  - conversa em andamento (veio do texto/sessão anterior) → semeia o histórico
+//    como itens da conversa, SEM response.create, para continuidade sem falar sozinha.
+const initVoiceSession = () => {
+  if (dc?.readyState !== 'open') return;
+
+  if (conversationHistory.length === 0) {
+    dc.send(JSON.stringify({ type: 'response.create' }));
+    return;
+  }
+
+  // Semeadura é best-effort: se um item for rejeitado, só perdemos continuidade
+  // parcial — nunca deve derrubar a sessão de voz.
+  try {
+    for (const turn of conversationHistory) {
+      dc.send(JSON.stringify({
+        type: 'conversation.item.create',
+        item: {
+          type: 'message',
+          role: turn.role,
+          // user usa 'input_text'; assistant (histórico) usa 'text' por convenção
+          // da Realtime API (não verificado em runtime — degrada com segurança se mudar).
+          content: [{ type: turn.role === 'user' ? 'input_text' : 'text', text: turn.content }],
+        },
+      }));
+    }
+  } catch (err) {
+    console.error('[RealtimeVoice] Falha ao semear histórico na sessão de voz:', err);
   }
 };
 
@@ -177,7 +247,7 @@ const stopBlob = () => {
 
 // === CHAT DE TEXTO (REST — sem WebRTC) ===
 const sendTextToAPI = async (text) => {
-  textChatHistory.push({ role: 'user', content: text });
+  pushHistory('user', text);
 
   // Typing indicator
   const group = document.createElement('div');
@@ -194,20 +264,27 @@ const sendTextToAPI = async (text) => {
   const bubble = group.querySelector('.chat-msg');
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await fetchWithTimeout('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: textChatHistory }),
-    });
+      body: JSON.stringify({ messages: conversationHistory }),
+    }, 35000);
+    if (res.status === 429) throw new Error('rate-limit');
     if (!res.ok) throw new Error(`${res.status}`);
     const { reply } = await res.json();
     bubble.className = 'chat-msg ai';
     bubble.textContent = reply;
-    textChatHistory.push({ role: 'assistant', content: reply });
-  } catch {
+    pushHistory('assistant', reply);
+  } catch (err) {
     bubble.className = 'chat-msg error';
-    bubble.textContent = 'Não foi possível obter resposta. Tente novamente.';
-    textChatHistory.pop();
+    bubble.textContent = err.message === 'rate-limit'
+      ? 'Muitas mensagens em pouco tempo. Aguarde um instante.'
+      : err.name === 'AbortError'
+        ? 'A IA demorou para responder. Tente novamente.'
+        : 'Não foi possível obter resposta. Tente novamente.';
+    // Remove o turno do usuário que falhou (se ainda for o último)
+    const last = conversationHistory[conversationHistory.length - 1];
+    if (last && last.role === 'user' && last.content === text.trim()) conversationHistory.pop();
   }
 
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -279,7 +356,10 @@ const connect = async () => {
     blobEl?.classList.add('active');
 
     // 1. Token efêmero via nosso backend (nunca expõe a API key no frontend)
-    const sessionRes = await fetch('/api/realtime-session', { method: 'POST' });
+    const sessionRes = await fetchWithTimeout('/api/realtime-session', { method: 'POST' });
+    if (sessionRes.status === 429) {
+      throw new Error('rate-limit');
+    }
     if (!sessionRes.ok) {
       const errBody = await sessionRes.text().catch(() => '');
       throw new Error(`Sessão falhou: ${sessionRes.status} — ${errBody}`);
@@ -290,6 +370,21 @@ const connect = async () => {
 
     // 2. PeerConnection
     pc = new RTCPeerConnection();
+
+    // Só derruba em 'failed' (terminal). 'disconnected' costuma ser um blip de rede
+    // transitório — o WebRTC se recupera sozinho, então não encerramos a sessão à toa.
+    pc.onconnectionstatechange = () => {
+      if (!pc) return;
+      if (pc.connectionState === 'failed') {
+        console.warn('[RealtimeVoice] Conexão perdida (failed)');
+        const wasConnected = connected;
+        disconnect();
+        if (wasConnected) {
+          openChat();
+          appendBubble('A conexão com a IA de voz caiu. Toque no microfone para reconectar.', 'ai error');
+        }
+      }
+    };
 
     // 3. Elemento de áudio para a voz da IA
     audioEl = document.createElement('audio');
@@ -320,13 +415,14 @@ const connect = async () => {
     dc = pc.createDataChannel('oai-events');
     dc.onerror   = (err) => console.error('[RealtimeVoice] DataChannel erro:', err);
     dc.onmessage = handleEvent;
+    dc.onopen    = initVoiceSession; // cumprimenta (nova) ou semeia histórico (continuação)
 
     // 6. Oferta SDP
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
     // 7. Troca de SDP com a OpenAI
-    const sdpRes = await fetch('https://api.openai.com/v1/realtime/calls', {
+    const sdpRes = await fetchWithTimeout('https://api.openai.com/v1/realtime/calls', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -349,7 +445,12 @@ const connect = async () => {
     console.error('[RealtimeVoice] Erro ao conectar:', err);
     disconnect();
     openChat();
-    appendBubble('Não foi possível conectar à IA de voz. Verifique o microfone e tente novamente.', 'ai error');
+    const msg = err.message === 'rate-limit'
+      ? 'Muitas tentativas em pouco tempo. Aguarde um instante e tente novamente.'
+      : err.name === 'AbortError'
+        ? 'A conexão demorou demais. Verifique sua internet e tente novamente.'
+        : 'Não foi possível conectar à IA de voz. Verifique o microfone e tente novamente.';
+    appendBubble(msg, 'ai error');
   }
 };
 
