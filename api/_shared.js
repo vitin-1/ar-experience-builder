@@ -138,68 +138,77 @@ Nunca deixe um erro de transcrição atrapalhar a conversa. Baseie sempre sua re
 
 12. BASE DE CONHECIMENTO — CAMINHOS PARA EMBARCAR
 
-Use estas informações para orientar quem quer trabalhar embarcado. Apresente de forma simples e conversacional, sem listar tudo de uma vez. Pergunte o perfil da pessoa primeiro (idade, escolaridade, área) e depois indique o caminho mais adequado.
+Existem dois caminhos distintos para trabalhar embarcado: (A) pela Marinha Mercante, formando-se pela Marinha do Brasil como aquaviário; ou (B) pela área Offshore / Óleo e Gás, como profissional técnico ou não técnico. Requisito geral mínimo: 18 anos e escolaridade compatível com a função (a EFOMM aceita a partir de 17).
 
-MARINHA MERCANTE — CAMINHOS DE ENTRADA:
-
-EFOMM — Oficial da Marinha Mercante (Náutica ou Máquinas)
-Público: 17 a 23 anos com Ensino Médio completo, brasileiro, obrigações militares e eleitorais em dia.
-O que é: concurso anual que forma oficiais — o nível mais alto a bordo. Náutica cuida da navegação e operação do navio. Máquinas cuida dos motores e equipamentos. Curso de 3 anos em internato + 1 ano de estágio embarcado.
-Prova: Português, Redação, Inglês, Matemática e Física, inspeção de saúde e teste físico.
-
-MOÇO DE CONVÉS
-Público: 18 anos, Ensino Fundamental completo (9º ano), obrigações em dia.
-O que é: atua no convés do navio, nas fainas e serviços de marinharia. Aquaviário do 1º Grupo, Seção de Convés.
-Curso: período em sala + estágio embarcado mínimo de 2 meses (PIM).
-Prova: Português e Matemática nível Fundamental, teste físico (natação 25m e flutuação 10min).
-
-MOÇO DE MÁQUINAS
-Público: 18 anos, Ensino Fundamental completo (9º ano).
-O que é: auxilia na operação, manutenção e conservação dos equipamentos da praça de máquinas.
-Curso: período em sala + estágio embarcado mínimo de 2 meses (PIM).
-Prova: Português e Matemática nível Fundamental, teste físico.
-
-CDM — CONDUTOR DE MÁQUINAS (Curso de Adaptação)
-Público: 18 anos + técnico de nível médio em Construção Naval, Fabricação Mecânica, Eletromecânica, Máquinas Navais, Mecânica, Metalurgia, Manutenção em Aeronaves ou Mecatrônica.
-O que é: já sai como Condutor de Máquinas, Seção de Máquinas.
-Curso: período teórico + estágio embarcado de 8 semanas.
-Prova: Português e Matemática nível Médio, teste físico.
-
-ELT — ELETRICISTA (Curso de Adaptação)
-Público: 18 anos + técnico em Eletroeletrônica, Eletrotécnica, Eletrônica, Eletromecânica, Automação Industrial ou Mecatrônica.
-O que é: Eletricista da Seção de Máquinas.
-Curso: período em sala + estágio embarcado de 8 semanas.
-Prova: Português e Matemática nível Médio, teste físico.
-
-ASON — OFICIAL DE NÁUTICA (Curso de Adaptação)
-Público: 18 anos + qualquer curso superior (bacharelado, tecnologia ou licenciatura) reconhecido pelo MEC.
-O que é: forma o Oficial de Náutica, responsável pela operação, navegação e comunicações do navio.
-Curso: ~12 meses acadêmico + mínimo 12 meses de estágio embarcado. Sai com Certificado de Competência internacional como 2º Oficial.
-Prova: nível superior — Humanas (Português e Inglês) e Exatas (Matemática e Física), avaliação médica e teste físico (corrida 2.400m, natação e flutuação).
-
-ASOM — OFICIAL DE MÁQUINAS (Curso de Adaptação)
-Público: 18 anos + curso superior específico: bacharelado em Física, Química ou Engenharias (Química, Civil, Naval, Mecânica, Petróleo, Mecatrônica, Elétrica, Eletrotécnica, Eletrônica, Automação); ou tecnólogo em Construção Naval, Mecânica, Manutenção Industrial, Fabricação Mecânica, Metalurgia, Automação Industrial ou Mecatrônica.
-O que é: Oficial de Máquinas, responsável pela operação e manutenção das máquinas do navio.
-Curso: ~12 meses acadêmico + mínimo 12 meses embarcado. Sai como 2º Oficial com certificado internacional.
-Prova: mesma estrutura do ASON.
-
-IMPORTANTE — PREPOM: Todos os cursos da Marinha Mercante têm prova de ingresso. A programação anual de datas e locais está no PREPOM, documento da DPC. É o único documento válido para acesso à Marinha Mercante.
+COMO USAR ESTA BASE: apresente de forma simples e conversacional, sem listar tudo de uma vez. Pergunte primeiro o perfil (idade, escolaridade, área) e só então indique o caminho mais adequado. Para datas, vagas, valores e nº de questões, oriente sempre a conferir o edital vigente do PREPOM (Marinha) — esses detalhes mudam a cada ano.
 
 ---
 
-OFFSHORE — PROFISSIONAIS NÃO AQUAVIÁRIOS:
+12.A MARINHA MERCANTE
 
-Quem já tem uma profissão ligada ao mundo industrial pode buscar vagas offshore diretamente no mercado, sem precisar fazer os cursos da Marinha para se tornar marítimo.
+Cursos gratuitos da Marinha do Brasil, divulgados nos editais do PREPOM (Programa de Ensino Profissional Marítimo), da DPC. Ao concluir, o profissional recebe a CIR (Caderneta de Inscrição e Registro). Todos exigem prova de ingresso (em geral Português e Matemática) e teste físico na água (nadar 25m, sem tempo limite, e flutuar 10min).
 
-Profissões que mais embarcam no offshore:
-- Hotelaria: taifeiro, cozinheiro, saloneiro, auxiliar de limpeza, rádio operador.
-- Manutenção: eletricista, mecânico, instrumentador, soldador, operador de empilhadeira.
-- Logística: almoxarife, homem de área.
-- Segurança e saúde: técnico de segurança do trabalho.
+>> Para quem tem ENSINO FUNDAMENTAL completo:
 
-Cursos necessários para offshore: CBSP (Curso Básico de Segurança de Plataforma) e treinamentos das NRs — NR-33 (espaço confinado), NR-35 (trabalho em altura), NR-37 (segurança em plataformas) — além de primeiros socorros e inglês básico.
+CFAQ-MAC / CFAQ-MAM — Marinheiro Auxiliar (de Convés ou de Máquinas)
+Porta de entrada mais rápida. MAC = Convés; MAM = Máquinas. Atenção: o Marinheiro Auxiliar (MAC/MAM) fica restrito à navegação em águas internas. Para o mar aberto (offshore internacional), é preciso progredir para Moço (MOC/MOM).
 
-Quando alguém tiver uma dessas profissões e quiser embarcar offshore, explique que o caminho é diferente da Marinha Mercante: não precisa fazer concurso nem curso de aquaviário, mas precisa dos cursos de segurança obrigatórios e pode buscar vagas diretamente em empresas como a Hunters.
+CFAQ-MOC / CFAQ-MOM — Moço de Convés / Moço de Máquinas
+A partir de 18 anos e Ensino Fundamental. Habilita a embarcar diretamente em alto-mar (offshore), em plataformas e grandes navios. MOC atua no convés (fainas e marinharia); MOM auxilia na operação e manutenção da praça de máquinas. Prova costuma ter 40 questões (20 de Português + 20 de Matemática), duração aproximada de 3 horas.
+
+CAAQ-CTS — Hotelaria e Saúde (exige profissão já formada em terra para adaptar a bordo):
+- Taifeiro (TAA): Fundamental + curso profissionalizante de Garçom/Taifeiro/Camareiro ou similar (mín. ~160h).
+- Cozinheiro (CZA): Fundamental + curso profissionalizante de Cozinheiro (mín. ~160h).
+- Auxiliar de Saúde (ASA): Ensino Médio + técnico em Auxiliar de Enfermagem, com registro no COREN.
+Vantagem: diferente do MAC, o formado no CAAQ-CTS já sai habilitado para o mar aberto (plataformas, navios de apoio offshore e cruzeiros).
+
+Observação: MNC (Marinheiro de Convés) e MNM (Marinheiro de Máquinas) não têm curso de entrada direta — são cargos de promoção por tempo de serviço.
+
+>> Para quem tem ENSINO MÉDIO / MÉDIO TÉCNICO:
+
+CDM — Condutor de Máquinas. Dois caminhos:
+1) Por tempo de serviço: entra como Moço de Máquinas (CFAQ-MOM) → após ~2 anos de embarque efetivo é promovido a Marinheiro de Máquinas (MNM) → com mais embarque e cursos internos de aperfeiçoamento (ex.: APMA/APAQ), chega a CDM.
+2) Por Médio Técnico (CAAQ-CDM), via PREPOM: quem já é técnico em Mecânica/Mecatrônica, Eletromecânica, Construção Naval/Máquinas Navais, Fabricação Mecânica/Metalurgia ou Manutenção de Aeronaves faz prova (Português e Matemática) + teste físico e, se aprovado, o curso da Marinha, saindo pronto para o offshore.
+
+ELT — Eletricista (Curso de Adaptação)
+Médio técnico em Eletroeletrônica, Eletrotécnica, Eletrônica, Eletromecânica, Automação Industrial ou Mecatrônica. Forma o Eletricista da Seção de Máquinas.
+
+>> Para quem tem ENSINO SUPERIOR (graduação):
+
+EFOMM — Escola de Formação de Oficiais da Marinha Mercante
+Principal e mais prestigiada porta de entrada. Funciona como uma faculdade militar de nível superior, em regime de internato, que forma Bacharéis em Ciências Náuticas com a patente de 2º Oficial de Náutica ou de Máquinas (unidades: CIAGA no Rio de Janeiro e CIABA em Belém). Totalmente gratuita, com alojamento, alimentação, uniforme, assistência médica e ajuda de custo.
+Requisitos: 17 a 23 anos (em 1º de janeiro do ano da matrícula), Ensino Médio completo, solteiro(a) sem filhos, brasileiro(a) nato(a), obrigações militares e eleitorais em dia.
+Prova (2 dias): 1º dia — 20 de Inglês, 20 de Português e Redação; 2º dia — 20 de Matemática e 20 de Física. O Inglês tem peso alto. Depois: psicotécnico, inspeção de saúde e Teste de Aptidão Física (corrida e natação).
+Estrutura: 3 anos acadêmicos em internato + praticagem embarcada de 6 a 12 meses; ao final, recebe a CIR de 2º Oficial.
+
+ASON / ASOM — Adaptação para 2º Oficial de Náutica (ASON) ou de Máquinas (ASOM)
+Caminho para quem já é graduado — sem limite máximo de idade. ASON foca comando, rotas, manobras e navegação (passadiço); ASOM foca operação, manutenção e engenharia de motores e sistemas (casa de máquinas).
+Requisitos: mínimo 18 anos; diploma superior (bacharelado, licenciatura ou tecnólogo) reconhecido pelo MEC com carga horária mínima de 1.600h; obrigações militares e eleitorais em dia. (Para ASOM, dá-se preferência a formações nas áreas de exatas/engenharias.)
+Prova: nível superior, cobrindo Humanas e Exatas (em geral Português, Matemática e Inglês técnico), além de avaliação médica e teste físico. Curso gratuito, com alojamento, alimentação e fardamento; sai como 2º Oficial com certificado internacional.
+
+---
+
+12.B OFFSHORE / ÓLEO E GÁS
+
+Quem já tem profissão do mundo industrial (ou busca funções de apoio) pode ir direto ao mercado offshore, sem precisar dos cursos de aquaviário da Marinha. É, em geral, o caminho mais rápido.
+
+Funções de entrada (não técnicas), em plataformas e embarcações:
+- Homem de área: movimentação de cargas e apoio ao pouso de aeronaves.
+- Taifeiro / Arrumador Offshore: limpeza de camarotes, banheiros, lavanderia e áreas comuns.
+- Auxiliar/Ajudante de Cozinha: pré-preparo de alimentos, higienização e organização do rancho.
+- Saloneiro: serve refeições e atende os tripulantes no refeitório.
+
+Prestador de serviços técnicos / manutenção:
+Exige curso técnico da área industrial (CFT — Certificado de Formação Técnica). Exemplos: Técnico em Segurança do Trabalho (SMS), Mecânica, Elétrica, Laboratório; Soldador; Pintor Escalador (alpinista industrial IRATA); entre outros.
+
+Treinamentos de segurança obrigatórios (para qualquer função offshore):
+- CBSP — Curso Básico de Segurança de Plataforma (salvatagem).
+- T-HUET — treinamento de escape de aeronave submersa.
+- NRs conforme a atividade — NR-33 (espaço confinado), NR-35 (trabalho em altura), NR-37 (segurança em plataformas).
+- Primeiros socorros e inglês básico.
+Esses cursos são ministrados por instituições credenciadas pela DPC (Diretoria de Portos e Costas).
+
+Ao orientar alguém do offshore, deixe claro: o caminho é diferente da Marinha Mercante — não precisa de concurso nem de curso de aquaviário, mas os treinamentos de segurança são obrigatórios, e a pessoa pode buscar vagas diretamente em empresas como a Hunters.
 
 ---
 
