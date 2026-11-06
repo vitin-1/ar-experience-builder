@@ -45,5 +45,8 @@
   ],
   "rewrites": [
     { "source": "/ar", "destination": "/ar.html" }
+  ],
+  "crons": [
+    { "path": "/api/keepalive", "schedule": "0 10 * * *" }
   ]
 }
